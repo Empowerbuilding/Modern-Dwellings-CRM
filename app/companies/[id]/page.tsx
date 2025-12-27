@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { Company, Contact, Deal, Activity, ClientType, DealType, ActivityType } from '@/lib/types'
 import { STAGE_COLORS, STAGE_LABELS } from '@/lib/types'
+import { CompanyActions } from './company-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -141,12 +142,15 @@ export default async function CompanyDetailPage({
       <div className="p-4 sm:p-6 max-w-6xl mx-auto pt-14 md:pt-6">
         {/* Header */}
         <div className="mb-6">
-          <Link
-            href="/companies"
-            className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block"
-          >
-            ← Back to Companies
-          </Link>
+          <div className="flex items-center justify-between mb-2">
+            <Link
+              href="/companies"
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              ← Back to Companies
+            </Link>
+            <CompanyActions company={company} />
+          </div>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{company.name}</h1>
