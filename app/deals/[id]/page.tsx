@@ -5,6 +5,7 @@ import type { Deal, Company, Contact, DealValueHistory, DealType } from '@/lib/t
 import { STAGE_LABELS, STAGE_COLORS, getStagesForSalesType } from '@/lib/types'
 import { DealValueEditor } from './deal-value-editor'
 import { LinkedDealsSection } from './linked-deals-section'
+import { DealActions } from './deal-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,6 +73,26 @@ async function getContact(id: string): Promise<Contact | null> {
   return data as Contact | null
 }
 
+async function getAllCompanies(): Promise<Pick<Company, 'id' | 'name'>[]> {
+  const { data } = await supabase
+    .from('companies')
+    .select('id, name')
+    .order('name')
+    .returns<Pick<Company, 'id' | 'name'>[]>()
+
+  return data ?? []
+}
+
+async function getAllContacts(): Promise<Pick<Contact, 'id' | 'first_name' | 'last_name'>[]> {
+  const { data } = await supabase
+    .from('contacts')
+    .select('id, first_name, last_name')
+    .order('first_name')
+    .returns<Pick<Contact, 'id' | 'first_name' | 'last_name'>[]>()
+
+  return data ?? []
+}
+
 export default async function DealDetailPage({
   params,
 }: {
@@ -83,11 +104,13 @@ export default async function DealDetailPage({
     notFound()
   }
 
-  const [company, contact, valueHistory, linkedDeals] = await Promise.all([
+  const [company, contact, valueHistory, linkedDeals, allCompanies, allContacts] = await Promise.all([
     deal.company_id ? getCompany(deal.company_id) : null,
     deal.contact_id ? getContact(deal.contact_id) : null,
     getDealValueHistory(deal.id),
     getLinkedDeals(deal.id),
+    getAllCompanies(),
+    getAllContacts(),
   ])
 
   const stages = getStagesForSalesType(deal.sales_type)
@@ -105,12 +128,15 @@ export default async function DealDetailPage({
       <div className="p-4 sm:p-6 max-w-5xl mx-auto pt-14 md:pt-6">
         {/* Header */}
         <div className="mb-6">
-          <Link
-            href="/pipeline"
-            className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block"
-          >
-            ← Back to Pipeline
-          </Link>
+          <div className="flex items-center justify-between mb-2">
+            <Link
+              href="/pipeline"
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              ← Back to Pipeline
+            </Link>
+            <DealActions deal={deal} companies={allCompanies} contacts={allContacts} />
+          </div>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{deal.title}</h1>

@@ -68,6 +68,12 @@ export function CompaniesTable({ initialCompanies }: CompaniesTableProps) {
     setEditingCompany(null)
   }
 
+  const handleDelete = (companyId: string) => {
+    setCompanies((prev) => prev.filter((c) => c.id !== companyId))
+    setSlideOverOpen(false)
+    setEditingCompany(null)
+  }
+
   const filteredCompanies = useMemo(() => {
     let result = [...companies]
 
@@ -228,6 +234,7 @@ export function CompaniesTable({ initialCompanies }: CompaniesTableProps) {
         }}
         company={editingCompany}
         onSave={handleSave}
+        onDelete={handleDelete}
       />
     </>
   )

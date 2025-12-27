@@ -26,6 +26,7 @@ interface CompanySlideOverProps {
   onClose: () => void
   company: CompanyWithStats | null
   onSave: (company: CompanyWithStats) => void
+  onDelete: (companyId: string) => void
 }
 
 interface FormData {
@@ -44,6 +45,7 @@ export function CompanySlideOver({
   onClose,
   company,
   onSave,
+  onDelete,
 }: CompanySlideOverProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -56,6 +58,7 @@ export function CompanySlideOver({
     notes: '',
   })
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -135,6 +138,27 @@ export function CompanySlideOver({
       setError('Failed to save company. Please try again.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!company) return
+    if (!confirm('Are you sure you want to delete this company? This will also unlink any associated contacts and deals.')) return
+
+    setDeleting(true)
+    try {
+      const { error: deleteError } = await (supabase.from('companies') as any)
+        .delete()
+        .eq('id', company.id)
+
+      if (deleteError) throw deleteError
+
+      onDelete(company.id)
+    } catch (err) {
+      console.error('Failed to delete company:', err)
+      setError('Failed to delete company. Please try again.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -282,21 +306,35 @@ export function CompanySlideOver({
         </form>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3 bg-gray-50">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            {saving ? 'Saving...' : company ? 'Update' : 'Create'}
-          </button>
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+          {company ? (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </button>
+          ) : (
+            <div />
+          )}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {saving ? 'Saving...' : company ? 'Update' : 'Create'}
+            </button>
+          </div>
         </div>
       </div>
     </>
