@@ -1,0 +1,337 @@
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { supabase, getDealValueHistory, getLinkedDeals } from '@/lib/supabase'
+import type { Deal, Company, Contact, DealValueHistory, DealType } from '@/lib/types'
+import { STAGE_LABELS, STAGE_COLORS, getStagesForSalesType } from '@/lib/types'
+import { DealValueEditor } from './deal-value-editor'
+import { LinkedDealsSection } from './linked-deals-section'
+
+export const dynamic = 'force-dynamic'
+
+const DEAL_TYPE_LABELS: Record<DealType, string> = {
+  custom_design: 'Custom Design',
+  builder_design: 'Builder Design',
+  engineering: 'Engineering',
+  software_fees: 'Software Fees',
+  referral: 'Referral',
+  budget_builder: 'Budget Builder',
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+function formatDate(dateString?: string | null): string {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function formatDateTime(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+async function getDeal(id: string): Promise<Deal | null> {
+  const { data } = await (supabase.from('deals') as any)
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  return data as Deal | null
+}
+
+async function getCompany(id: string): Promise<Company | null> {
+  const { data } = await (supabase.from('companies') as any)
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  return data as Company | null
+}
+
+async function getContact(id: string): Promise<Contact | null> {
+  const { data } = await (supabase.from('contacts') as any)
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  return data as Contact | null
+}
+
+export default async function DealDetailPage({
+  params,
+}: {
+  params: { id: string }
+}) {
+  const deal = await getDeal(params.id)
+
+  if (!deal) {
+    notFound()
+  }
+
+  const [company, contact, valueHistory, linkedDeals] = await Promise.all([
+    deal.company_id ? getCompany(deal.company_id) : null,
+    deal.contact_id ? getContact(deal.contact_id) : null,
+    getDealValueHistory(deal.id),
+    getLinkedDeals(deal.id),
+  ])
+
+  const stages = getStagesForSalesType(deal.sales_type)
+  const currentStageIndex = stages.indexOf(deal.stage)
+
+  // Calculate value changes
+  const valueChanges = valueHistory.map((entry, index) => {
+    const prevValue = index > 0 ? valueHistory[index - 1].value : 0
+    const change = entry.value - prevValue
+    return { ...entry, change }
+  })
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <div className="p-6 max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <Link
+            href="/pipeline"
+            className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block"
+          >
+            ← Back to Pipeline
+          </Link>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">{deal.title}</h1>
+              <div className="flex items-center gap-3 mt-2">
+                <span className={`px-2 py-1 rounded text-xs font-medium ${STAGE_COLORS[deal.stage]}`}>
+                  {STAGE_LABELS[deal.stage]}
+                </span>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  deal.sales_type === 'b2c'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {deal.sales_type === 'b2c' ? 'B2C Consumer' : 'B2B Builder'}
+                </span>
+                {deal.deal_type && (
+                  <span className="text-sm text-gray-500">
+                    {DEAL_TYPE_LABELS[deal.deal_type]}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-3xl font-semibold text-gray-900">
+                {deal.value ? formatCurrency(deal.value) : '$0'}
+              </p>
+              <p className="text-sm text-gray-500">Current Value</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stage Progress */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+          <h2 className="text-sm font-medium text-gray-700 mb-3">Progress</h2>
+          <div className="flex items-center gap-1">
+            {stages.map((stage, index) => {
+              const isCompleted = index < currentStageIndex
+              const isCurrent = index === currentStageIndex
+              const isLost = deal.stage === 'lost'
+
+              return (
+                <div key={stage} className="flex-1 flex items-center">
+                  <div
+                    className={`flex-1 h-2 rounded-full ${
+                      isLost && isCurrent
+                        ? 'bg-red-500'
+                        : isCompleted || isCurrent
+                          ? 'bg-blue-500'
+                          : 'bg-gray-200'
+                    }`}
+                  />
+                  {index < stages.length - 1 && <div className="w-1" />}
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex justify-between mt-2">
+            {stages.map((stage, index) => (
+              <span
+                key={stage}
+                className={`text-xs ${
+                  index <= currentStageIndex ? 'text-gray-900' : 'text-gray-400'
+                }`}
+              >
+                {STAGE_LABELS[stage]}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Deal Info */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Deal Details */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="font-medium text-gray-900 mb-3">Deal Details</h2>
+              <dl className="space-y-3 text-sm">
+                {company && (
+                  <div>
+                    <dt className="text-gray-500">Company</dt>
+                    <dd>
+                      <Link
+                        href={`/companies/${company.id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {company.name}
+                      </Link>
+                    </dd>
+                  </div>
+                )}
+                {contact && (
+                  <div>
+                    <dt className="text-gray-500">Contact</dt>
+                    <dd className="text-gray-900">
+                      {contact.first_name} {contact.last_name}
+                      {contact.email && (
+                        <a
+                          href={`mailto:${contact.email}`}
+                          className="block text-blue-600 hover:underline text-xs"
+                        >
+                          {contact.email}
+                        </a>
+                      )}
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-gray-500">Expected Close</dt>
+                  <dd className="text-gray-900">{formatDate(deal.expected_close_date)}</dd>
+                </div>
+                {deal.probability !== null && (
+                  <div>
+                    <dt className="text-gray-500">Probability</dt>
+                    <dd className="text-gray-900">{deal.probability}%</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-gray-500">Created</dt>
+                  <dd className="text-gray-900">{formatDate(deal.created_at)}</dd>
+                </div>
+                {deal.notes && (
+                  <div>
+                    <dt className="text-gray-500">Notes</dt>
+                    <dd className="text-gray-900 whitespace-pre-wrap">{deal.notes}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+
+            {/* Linked Deals */}
+            <LinkedDealsSection dealId={deal.id} linkedDeals={linkedDeals} />
+          </div>
+
+          {/* Right Column - Value History */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-medium text-gray-900">Value History</h2>
+                <DealValueEditor dealId={deal.id} currentValue={deal.value ?? 0} />
+              </div>
+
+              {valueChanges.length === 0 ? (
+                <p className="text-sm text-gray-500 py-8 text-center">
+                  No value history yet. Update the deal value to start tracking.
+                </p>
+              ) : (
+                <div className="relative">
+                  {/* Timeline line */}
+                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+
+                  {/* Timeline entries */}
+                  <div className="space-y-4">
+                    {valueChanges.map((entry, index) => (
+                      <div key={entry.id} className="relative flex gap-4">
+                        {/* Timeline dot */}
+                        <div
+                          className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            index === valueChanges.length - 1
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-200 text-gray-600'
+                          }`}
+                        >
+                          <span className="text-xs font-medium">
+                            {index + 1}
+                          </span>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 bg-gray-50 rounded-lg p-3 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {formatCurrency(entry.value)}
+                              </p>
+                              {entry.change !== 0 && index > 0 && (
+                                <p className={`text-sm ${
+                                  entry.change > 0 ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                  {entry.change > 0 ? '+' : ''}{formatCurrency(entry.change)}
+                                </p>
+                              )}
+                              {entry.note && (
+                                <p className="text-sm text-gray-600 mt-1">{entry.note}</p>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 flex-shrink-0">
+                              {formatDateTime(entry.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Summary */}
+                  {valueChanges.length > 1 && (
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Total Change</span>
+                        <span className={`font-medium ${
+                          (deal.value ?? 0) - valueChanges[0].value > 0
+                            ? 'text-green-600'
+                            : (deal.value ?? 0) - valueChanges[0].value < 0
+                              ? 'text-red-600'
+                              : 'text-gray-600'
+                        }`}>
+                          {(deal.value ?? 0) - valueChanges[0].value > 0 ? '+' : ''}
+                          {formatCurrency((deal.value ?? 0) - valueChanges[0].value)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mt-1">
+                        <span className="text-gray-600">Starting Value</span>
+                        <span className="text-gray-900">{formatCurrency(valueChanges[0].value)}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}

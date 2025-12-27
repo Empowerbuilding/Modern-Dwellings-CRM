@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import type { Company, Contact, Deal, Activity, ClientType, PipelineStage, DealType, ActivityType } from '@/lib/types'
+import type { Company, Contact, Deal, Activity, ClientType, DealType, ActivityType } from '@/lib/types'
+import { STAGE_COLORS, STAGE_LABELS } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,15 +20,6 @@ const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
   subcontractor: 'bg-orange-100 text-orange-800',
   engineer: 'bg-purple-100 text-purple-800',
   architect: 'bg-pink-100 text-pink-800',
-}
-
-const STAGE_COLORS: Record<PipelineStage, string> = {
-  lead: 'bg-gray-100 text-gray-800',
-  qualified: 'bg-blue-100 text-blue-800',
-  proposal: 'bg-yellow-100 text-yellow-800',
-  negotiation: 'bg-purple-100 text-purple-800',
-  won: 'bg-green-100 text-green-800',
-  lost: 'bg-red-100 text-red-800',
 }
 
 const DEAL_TYPE_LABELS: Record<DealType, string> = {
@@ -137,11 +129,11 @@ export default async function CompanyDetailPage({
   }
 
   const totalRevenue = deals
-    .filter((d) => d.stage === 'won')
+    .filter((d) => d.stage === 'complete')
     .reduce((sum, d) => sum + (d.value ?? 0), 0)
 
   const openDealsValue = deals
-    .filter((d) => d.stage !== 'won' && d.stage !== 'lost')
+    .filter((d) => d.stage !== 'complete' && d.stage !== 'lost')
     .reduce((sum, d) => sum + (d.value ?? 0), 0)
 
   return (
@@ -302,9 +294,12 @@ export default async function CompanyDetailPage({
                       {deals.map((deal) => (
                         <tr key={deal.id}>
                           <td className="py-2">
-                            <p className="text-sm font-medium text-gray-900">
+                            <Link
+                              href={`/deals/${deal.id}`}
+                              className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                            >
                               {deal.title}
-                            </p>
+                            </Link>
                             {deal.deal_type && (
                               <p className="text-xs text-gray-500">
                                 {DEAL_TYPE_LABELS[deal.deal_type]}
@@ -318,16 +313,16 @@ export default async function CompanyDetailPage({
                           </td>
                           <td className="py-2">
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${STAGE_COLORS[deal.stage]}`}
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STAGE_COLORS[deal.stage]}`}
                             >
-                              {deal.stage}
+                              {STAGE_LABELS[deal.stage]}
                             </span>
                           </td>
                           <td className="py-2 text-sm text-gray-900 text-right">
                             {deal.value ? formatCurrency(deal.value) : '-'}
                           </td>
                           <td className="py-2 text-sm text-gray-600 text-right">
-                            {deal.stage === 'won' || deal.stage === 'lost'
+                            {deal.stage === 'complete' || deal.stage === 'lost'
                               ? formatDate(deal.actual_close_date)
                               : formatDate(deal.expected_close_date)}
                           </td>

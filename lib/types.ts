@@ -3,7 +3,53 @@ export type ClientType = 'builder' | 'consumer' | 'subcontractor' | 'engineer' |
 
 export type DealType = 'custom_design' | 'builder_design' | 'engineering' | 'software_fees' | 'referral' | 'budget_builder'
 
-export type PipelineStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
+export type SalesType = 'b2c' | 'b2b'
+
+// Combined stages from both workflows
+// B2C: lead → qualified → concept → design → engineering → complete → lost
+// B2B: lead → qualified → proposal → active → complete → lost
+export type PipelineStage =
+  | 'lead'
+  | 'qualified'
+  | 'concept'      // B2C only
+  | 'design'       // B2C only
+  | 'engineering'  // B2C only
+  | 'proposal'     // B2B only
+  | 'active'       // B2B only
+  | 'complete'
+  | 'lost'
+
+// Stage configurations by sales type
+export const B2C_STAGES: PipelineStage[] = ['lead', 'qualified', 'concept', 'design', 'engineering', 'complete', 'lost']
+export const B2B_STAGES: PipelineStage[] = ['lead', 'qualified', 'proposal', 'active', 'complete', 'lost']
+
+export const STAGE_LABELS: Record<PipelineStage, string> = {
+  lead: 'Lead',
+  qualified: 'Qualified',
+  concept: 'Concept',
+  design: 'Design',
+  engineering: 'Engineering',
+  proposal: 'Proposal',
+  active: 'Active',
+  complete: 'Complete',
+  lost: 'Lost',
+}
+
+export const STAGE_COLORS: Record<PipelineStage, string> = {
+  lead: 'bg-gray-100 text-gray-800',
+  qualified: 'bg-blue-100 text-blue-800',
+  concept: 'bg-cyan-100 text-cyan-800',
+  design: 'bg-indigo-100 text-indigo-800',
+  engineering: 'bg-violet-100 text-violet-800',
+  proposal: 'bg-yellow-100 text-yellow-800',
+  active: 'bg-purple-100 text-purple-800',
+  complete: 'bg-green-100 text-green-800',
+  lost: 'bg-red-100 text-red-800',
+}
+
+export function getStagesForSalesType(salesType: SalesType): PipelineStage[] {
+  return salesType === 'b2c' ? B2C_STAGES : B2B_STAGES
+}
 
 export type LeadSource = 'facebook' | 'google' | 'referral' | 'website' | 'cold' | 'repeat' | 'other'
 
@@ -46,6 +92,7 @@ export interface Deal {
   title: string
   value: number | null
   stage: PipelineStage
+  sales_type: SalesType
   deal_type: DealType | null
   probability: number | null
   expected_close_date: string | null
@@ -69,6 +116,55 @@ export interface Activity {
   completed_at: string | null
   created_at?: string
   updated_at?: string
+}
+
+export interface DealValueHistory {
+  id: string
+  deal_id: string
+  value: number
+  note: string | null
+  created_at: string
+}
+
+// Linked deals types
+export type DealRelationshipType = 'referral_source' | 'referral_generated' | 'same_client'
+
+export const RELATIONSHIP_LABELS: Record<DealRelationshipType, string> = {
+  referral_source: 'Referral Source',
+  referral_generated: 'Generated Referral',
+  same_client: 'Same Client',
+}
+
+export const RELATIONSHIP_DESCRIPTIONS: Record<DealRelationshipType, string> = {
+  referral_source: 'This deal led to the linked deal',
+  referral_generated: 'This deal was generated from the linked deal',
+  same_client: 'Both deals are for the same client',
+}
+
+// Get the inverse relationship type (for bidirectional linking)
+export function getInverseRelationship(type: DealRelationshipType): DealRelationshipType {
+  switch (type) {
+    case 'referral_source':
+      return 'referral_generated'
+    case 'referral_generated':
+      return 'referral_source'
+    case 'same_client':
+      return 'same_client'
+  }
+}
+
+export interface LinkedDeal {
+  id: string
+  deal_id: string
+  linked_deal_id: string
+  relationship_type: DealRelationshipType
+  created_at: string
+}
+
+export interface LinkedDealWithDetails extends LinkedDeal {
+  linked_deal: Deal & {
+    company_name?: string | null
+  }
 }
 
 // Joined types for queries

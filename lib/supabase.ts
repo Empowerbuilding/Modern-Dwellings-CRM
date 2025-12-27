@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import type { Database, PipelineStage } from './types'
+import type { Database, PipelineStage, DealValueHistory, DealRelationshipType, LinkedDealWithDetails, Deal } from './types'
+import { getInverseRelationship } from './types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
@@ -14,8 +15,187 @@ function createSupabaseClient(): SupabaseClient<Database> {
 
 export const supabase = createSupabaseClient()
 
-// Update function with explicit typing
+// Update deal stage
 export async function updateDealStage(dealId: string, stage: PipelineStage) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (supabase.from('deals') as any).update({ stage }).eq('id', dealId)
+}
+
+// Log a value change to the deal_value_history table
+export async function logDealValueChange(
+  dealId: string,
+  value: number,
+  note?: string
+): Promise<{ error: Error | null }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('deal_value_history') as any).insert({
+    deal_id: dealId,
+    value,
+    note: note || null,
+  })
+  return { error }
+}
+
+// Update deal value and log the change
+export async function updateDealValue(
+  dealId: string,
+  newValue: number,
+  note?: string
+): Promise<{ error: Error | null }> {
+  // Update the deal value
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: updateError } = await (supabase.from('deals') as any)
+    .update({ value: newValue })
+    .eq('id', dealId)
+
+  if (updateError) return { error: updateError }
+
+  // Log the value change
+  const { error: logError } = await logDealValueChange(dealId, newValue, note)
+  return { error: logError }
+}
+
+// Get value history for a deal
+export async function getDealValueHistory(
+  dealId: string
+): Promise<DealValueHistory[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from('deal_value_history') as any)
+    .select('*')
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: true })
+
+  return (data as DealValueHistory[]) ?? []
+}
+
+// ============ Linked Deals Functions ============
+
+// Get all linked deals for a deal (both directions)
+export async function getLinkedDeals(
+  dealId: string
+): Promise<LinkedDealWithDetails[]> {
+  // Get deals where this deal is the source
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: outgoing } = await (supabase.from('linked_deals') as any)
+    .select(`
+      id,
+      deal_id,
+      linked_deal_id,
+      relationship_type,
+      created_at,
+      linked_deal:deals!linked_deals_linked_deal_id_fkey(
+        id, title, value, stage, sales_type, deal_type, company_id,
+        companies(name)
+      )
+    `)
+    .eq('deal_id', dealId)
+
+  // Get deals where this deal is the target (inverse relationship)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: incoming } = await (supabase.from('linked_deals') as any)
+    .select(`
+      id,
+      deal_id,
+      linked_deal_id,
+      relationship_type,
+      created_at,
+      linked_deal:deals!linked_deals_deal_id_fkey(
+        id, title, value, stage, sales_type, deal_type, company_id,
+        companies(name)
+      )
+    `)
+    .eq('linked_deal_id', dealId)
+
+  const results: LinkedDealWithDetails[] = []
+
+  // Process outgoing links
+  if (outgoing) {
+    for (const link of outgoing) {
+      if (link.linked_deal) {
+        results.push({
+          id: link.id,
+          deal_id: link.deal_id,
+          linked_deal_id: link.linked_deal_id,
+          relationship_type: link.relationship_type,
+          created_at: link.created_at,
+          linked_deal: {
+            ...link.linked_deal,
+            company_name: link.linked_deal.companies?.name ?? null,
+          },
+        })
+      }
+    }
+  }
+
+  // Process incoming links (flip the relationship)
+  if (incoming) {
+    for (const link of incoming) {
+      if (link.linked_deal) {
+        results.push({
+          id: link.id,
+          deal_id: dealId,
+          linked_deal_id: link.deal_id,
+          relationship_type: getInverseRelationship(link.relationship_type),
+          created_at: link.created_at,
+          linked_deal: {
+            ...link.linked_deal,
+            company_name: link.linked_deal.companies?.name ?? null,
+          },
+        })
+      }
+    }
+  }
+
+  return results
+}
+
+// Link two deals together
+export async function linkDeals(
+  dealId: string,
+  linkedDealId: string,
+  relationshipType: DealRelationshipType
+): Promise<{ error: Error | null }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('linked_deals') as any).insert({
+    deal_id: dealId,
+    linked_deal_id: linkedDealId,
+    relationship_type: relationshipType,
+  })
+
+  return { error }
+}
+
+// Unlink two deals
+export async function unlinkDeals(
+  linkId: string
+): Promise<{ error: Error | null }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('linked_deals') as any)
+    .delete()
+    .eq('id', linkId)
+
+  return { error }
+}
+
+// Search deals for linking (excludes already linked and current deal)
+export async function searchDealsForLinking(
+  currentDealId: string,
+  query: string,
+  excludeIds: string[]
+): Promise<(Deal & { company_name?: string | null })[]> {
+  const allExcluded = [currentDealId, ...excludeIds]
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from('deals') as any)
+    .select('*, companies(name)')
+    .ilike('title', `%${query}%`)
+    .not('id', 'in', `(${allExcluded.join(',')})`)
+    .limit(10)
+
+  if (!data) return []
+
+  return data.map((deal: any) => ({
+    ...deal,
+    company_name: deal.companies?.name ?? null,
+  }))
 }

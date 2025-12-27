@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import type { DealType, Company, Contact } from '@/lib/types'
+import { supabase, logDealValueChange } from '@/lib/supabase'
+import type { DealType, SalesType, ClientType } from '@/lib/types'
 import { useQuickAddDeal } from './context'
 
 const DEAL_TYPES: { value: DealType; label: string }[] = [
@@ -15,9 +15,15 @@ const DEAL_TYPES: { value: DealType; label: string }[] = [
   { value: 'budget_builder', label: 'Budget Builder' },
 ]
 
+// Map company type to sales type
+function getSalesTypeFromCompanyType(companyType: ClientType): SalesType {
+  return companyType === 'consumer' ? 'b2c' : 'b2b'
+}
+
 interface CompanyOption {
   id: string
   name: string
+  type?: ClientType
   isNew?: boolean
 }
 
@@ -38,13 +44,14 @@ export function QuickAddDeal() {
   const [value, setValue] = useState('')
   const [dealType, setDealType] = useState<DealType | ''>('')
   const [expectedCloseDate, setExpectedCloseDate] = useState('')
+  const [salesType, setSalesType] = useState<SalesType>('b2c')
 
   // Company autocomplete
   const [companySearch, setCompanySearch] = useState('')
   const [companyOptions, setCompanyOptions] = useState<CompanyOption[]>([])
   const [selectedCompany, setSelectedCompany] = useState<CompanyOption | null>(null)
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false)
-  const [newCompanyType, setNewCompanyType] = useState<'consumer' | 'builder'>('consumer')
+  const [newCompanyType, setNewCompanyType] = useState<ClientType>('consumer')
 
   // Contact autocomplete
   const [contactSearch, setContactSearch] = useState('')
@@ -63,8 +70,10 @@ export function QuickAddDeal() {
       setValue('')
       setDealType('')
       setExpectedCloseDate('')
+      setSalesType('b2c')
       setCompanySearch('')
       setSelectedCompany(null)
+      setNewCompanyType('consumer')
       setContactSearch('')
       setSelectedContact(null)
       setError(null)
@@ -101,11 +110,15 @@ export function QuickAddDeal() {
     }
 
     const { data } = await (supabase.from('companies') as any)
-      .select('id, name')
+      .select('id, name, type')
       .ilike('name', `%${query}%`)
       .limit(5)
 
-    const options: CompanyOption[] = data ?? []
+    const options: CompanyOption[] = (data ?? []).map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      type: c.type as ClientType,
+    }))
 
     // Add "create new" option if no exact match
     const hasExactMatch = options.some(
@@ -224,19 +237,36 @@ export function QuickAddDeal() {
         contactId = selectedContact.id
       }
 
+      // Determine sales type based on company type
+      let finalSalesType: SalesType = salesType
+      if (selectedCompany?.isNew) {
+        finalSalesType = getSalesTypeFromCompanyType(newCompanyType)
+      } else if (selectedCompany?.type) {
+        finalSalesType = getSalesTypeFromCompanyType(selectedCompany.type)
+      }
+
       // Create the deal
-      const { error: dealError } = await (supabase.from('deals') as any)
+      const dealValue = value ? parseFloat(value) : null
+      const { data: newDeal, error: dealError } = await (supabase.from('deals') as any)
         .insert({
           title: title.trim(),
-          value: value ? parseFloat(value) : null,
+          value: dealValue,
           deal_type: dealType || null,
           expected_close_date: expectedCloseDate || null,
           stage: 'lead',
+          sales_type: finalSalesType,
           company_id: companyId,
           contact_id: contactId,
         })
+        .select('id')
+        .single()
 
       if (dealError) throw dealError
+
+      // Log initial value to history if value was set
+      if (dealValue !== null && newDeal?.id) {
+        await logDealValueChange(newDeal.id, dealValue, 'Initial value')
+      }
 
       close()
       router.refresh()
@@ -508,10 +538,55 @@ export function QuickAddDeal() {
             </div>
           </div>
 
+          {/* Sales Type selector (only shown when no company selected) */}
+          {!selectedCompany && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sales Type
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSalesType('b2c')}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    salesType === 'b2c'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="font-medium">B2C</span>
+                  <span className="block text-xs opacity-75">Consumer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSalesType('b2b')}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    salesType === 'b2b'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="font-medium">B2B</span>
+                  <span className="block text-xs opacity-75">Builder</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Stage indicator */}
           <div className="mt-6 p-3 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600">
               This deal will be added to the <span className="font-medium text-gray-900">Lead</span> stage
+              {' '}in the{' '}
+              <span className="font-medium text-gray-900">
+                {selectedCompany?.isNew
+                  ? (newCompanyType === 'consumer' ? 'B2C' : 'B2B')
+                  : selectedCompany?.type
+                    ? (selectedCompany.type === 'consumer' ? 'B2C' : 'B2B')
+                    : (salesType === 'b2c' ? 'B2C' : 'B2B')
+                }
+              </span>
+              {' '}pipeline
             </p>
           </div>
         </form>

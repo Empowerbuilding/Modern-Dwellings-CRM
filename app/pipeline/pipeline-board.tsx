@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import {
   DragDropContext,
   Droppable,
@@ -8,33 +9,26 @@ import {
   type DropResult,
 } from '@hello-pangea/dnd'
 import { updateDealStage } from '@/lib/supabase'
-import type { PipelineStage, DealType } from '@/lib/types'
+import {
+  type PipelineStage,
+  type DealType,
+  type SalesType,
+  B2C_STAGES,
+  B2B_STAGES,
+  STAGE_LABELS,
+  getStagesForSalesType,
+} from '@/lib/types'
 import type { DealWithCompany } from './page'
 
-const STAGES: PipelineStage[] = [
-  'lead',
-  'qualified',
-  'proposal',
-  'negotiation',
-  'won',
-  'lost',
-]
-
-const STAGE_LABELS: Record<PipelineStage, string> = {
-  lead: 'Lead',
-  qualified: 'Qualified',
-  proposal: 'Proposal',
-  negotiation: 'Negotiation',
-  won: 'Won',
-  lost: 'Lost',
-}
-
-const STAGE_COLORS: Record<PipelineStage, string> = {
+const STAGE_DOT_COLORS: Record<PipelineStage, string> = {
   lead: 'bg-gray-500',
   qualified: 'bg-blue-500',
+  concept: 'bg-cyan-500',
+  design: 'bg-indigo-500',
+  engineering: 'bg-violet-500',
   proposal: 'bg-yellow-500',
-  negotiation: 'bg-purple-500',
-  won: 'bg-green-500',
+  active: 'bg-purple-500',
+  complete: 'bg-green-500',
   lost: 'bg-red-500',
 }
 
@@ -78,15 +72,29 @@ interface PipelineBoardProps {
 
 export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
   const [deals, setDeals] = useState<DealWithCompany[]>(initialDeals)
+  const [salesType, setSalesType] = useState<SalesType>('b2c')
   const [updating, setUpdating] = useState<string | null>(null)
 
-  const dealsByStage = STAGES.reduce(
-    (acc, stage) => {
-      acc[stage] = deals.filter((deal) => deal.stage === stage)
-      return acc
-    },
-    {} as Record<PipelineStage, DealWithCompany[]>
-  )
+  const stages = getStagesForSalesType(salesType)
+
+  // Filter deals by sales type and group by stage
+  const { filteredDeals, dealsByStage, totalPipelineValue } = useMemo(() => {
+    const filtered = deals.filter((deal) => deal.sales_type === salesType)
+
+    const byStage = stages.reduce(
+      (acc, stage) => {
+        acc[stage] = filtered.filter((deal) => deal.stage === stage)
+        return acc
+      },
+      {} as Record<PipelineStage, DealWithCompany[]>
+    )
+
+    const totalValue = filtered
+      .filter((d) => d.stage !== 'complete' && d.stage !== 'lost')
+      .reduce((sum, d) => sum + (d.value || 0), 0)
+
+    return { filteredDeals: filtered, dealsByStage: byStage, totalPipelineValue: totalValue }
+  }, [deals, salesType, stages])
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result
@@ -141,102 +149,147 @@ export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {STAGES.map((stage) => {
-          const stageDeals = dealsByStage[stage]
-          const totalValue = stageDeals.reduce(
-            (sum, deal) => sum + (deal.value || 0),
-            0
-          )
+    <div>
+      {/* Sales Type Toggle */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => setSalesType('b2c')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              salesType === 'b2c'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            B2C Consumer
+          </button>
+          <button
+            onClick={() => setSalesType('b2b')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              salesType === 'b2b'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            B2B Builder
+          </button>
+        </div>
+        <div className="text-sm text-gray-600">
+          <span className="font-medium text-gray-900">{filteredDeals.length}</span> deals
+          <span className="mx-2">•</span>
+          <span className="font-medium text-gray-900">{formatCurrency(totalPipelineValue)}</span> in pipeline
+        </div>
+      </div>
 
-          return (
-            <div
-              key={stage}
-              className="flex-shrink-0 w-72 bg-gray-100 rounded-lg"
-            >
-              {/* Column Header */}
-              <div className="p-3 border-b border-gray-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className={`w-2 h-2 rounded-full ${STAGE_COLORS[stage]}`} />
-                  <h2 className="font-medium text-gray-900">
-                    {STAGE_LABELS[stage]}
-                  </h2>
-                  <span className="ml-auto text-sm text-gray-500">
-                    {stageDeals.length}
-                  </span>
+      {/* Workflow description */}
+      <p className="text-xs text-gray-500 mb-4">
+        {salesType === 'b2c'
+          ? 'Consumer workflow: One client = one deal that grows in value over time'
+          : 'Builder workflow: One company = many deals over time (design, software, referral fees)'
+        }
+      </p>
+
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {stages.map((stage) => {
+            const stageDeals = dealsByStage[stage] || []
+            const totalValue = stageDeals.reduce(
+              (sum, deal) => sum + (deal.value || 0),
+              0
+            )
+
+            return (
+              <div
+                key={stage}
+                className="flex-shrink-0 w-64 bg-gray-100 rounded-lg"
+              >
+                {/* Column Header */}
+                <div className="p-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`w-2 h-2 rounded-full ${STAGE_DOT_COLORS[stage]}`} />
+                    <h2 className="font-medium text-gray-900">
+                      {STAGE_LABELS[stage]}
+                    </h2>
+                    <span className="ml-auto text-sm text-gray-500">
+                      {stageDeals.length}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {formatCurrency(totalValue)}
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600">
-                  {formatCurrency(totalValue)}
-                </p>
-              </div>
 
-              {/* Droppable Area */}
-              <Droppable droppableId={stage}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`p-2 min-h-[calc(100vh-220px)] transition-colors ${
-                      snapshot.isDraggingOver ? 'bg-gray-200' : ''
-                    }`}
-                  >
-                    {stageDeals.map((deal, index) => (
-                      <Draggable
-                        key={deal.id}
-                        draggableId={deal.id}
-                        index={index}
-                      >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`mb-2 p-3 bg-white rounded-lg shadow-sm border-l-4 ${
-                              deal.deal_type
-                                ? DEAL_TYPE_COLORS[deal.deal_type]
-                                : 'border-l-gray-300'
-                            } ${
-                              snapshot.isDragging
-                                ? 'shadow-lg ring-2 ring-blue-400'
-                                : ''
-                            } ${updating === deal.id ? 'opacity-50' : ''}`}
-                          >
-                            <p className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
-                              {deal.title}
-                            </p>
-                            {deal.company_name && (
-                              <p className="text-xs text-gray-500 mb-2">
-                                {deal.company_name}
-                              </p>
-                            )}
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-medium text-gray-900">
-                                {deal.value ? formatCurrency(deal.value) : '-'}
-                              </span>
-                              {deal.expected_close_date && (
-                                <span className="text-gray-500">
-                                  {formatDate(deal.expected_close_date)}
+                {/* Droppable Area */}
+                <Droppable droppableId={stage}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`p-2 min-h-[calc(100vh-280px)] transition-colors ${
+                        snapshot.isDraggingOver ? 'bg-gray-200' : ''
+                      }`}
+                    >
+                      {stageDeals.map((deal, index) => (
+                        <Draggable
+                          key={deal.id}
+                          draggableId={deal.id}
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`mb-2 p-3 bg-white rounded-lg shadow-sm border-l-4 ${
+                                deal.deal_type
+                                  ? DEAL_TYPE_COLORS[deal.deal_type]
+                                  : 'border-l-gray-300'
+                              } ${
+                                snapshot.isDragging
+                                  ? 'shadow-lg ring-2 ring-blue-400'
+                                  : ''
+                              } ${updating === deal.id ? 'opacity-50' : ''}`}
+                            >
+                              <Link
+                                href={`/deals/${deal.id}`}
+                                className="font-medium text-gray-900 text-sm mb-1 line-clamp-2 hover:text-blue-600 block"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {deal.title}
+                              </Link>
+                              {deal.company_name && (
+                                <p className="text-xs text-gray-500 mb-2">
+                                  {deal.company_name}
+                                </p>
+                              )}
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="font-medium text-gray-900">
+                                  {deal.value ? formatCurrency(deal.value) : '-'}
+                                </span>
+                                {deal.expected_close_date && (
+                                  <span className="text-gray-500">
+                                    {formatDate(deal.expected_close_date)}
+                                  </span>
+                                )}
+                              </div>
+                              {deal.deal_type && (
+                                <span className="inline-block mt-2 text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                  {DEAL_TYPE_LABELS[deal.deal_type]}
                                 </span>
                               )}
                             </div>
-                            {deal.deal_type && (
-                              <span className="inline-block mt-2 text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                {DEAL_TYPE_LABELS[deal.deal_type]}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          )
-        })}
-      </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            )
+          })}
+        </div>
+      </DragDropContext>
 
       {/* Legend */}
       <div className="mt-4 pt-4 border-t border-gray-200">
@@ -254,6 +307,6 @@ export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
           ))}
         </div>
       </div>
-    </DragDropContext>
+    </div>
   )
 }
