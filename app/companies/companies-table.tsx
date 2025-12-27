@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ClientType } from '@/lib/types'
 import type { CompanyWithStats } from './page'
+import { CompanySlideOver } from './company-slide-over'
 
 const CLIENT_TYPES: ClientType[] = [
   'builder',
@@ -39,13 +40,33 @@ function formatCurrency(value: number): string {
 }
 
 interface CompaniesTableProps {
-  companies: CompanyWithStats[]
+  initialCompanies: CompanyWithStats[]
 }
 
-export function CompaniesTable({ companies }: CompaniesTableProps) {
+export function CompaniesTable({ initialCompanies }: CompaniesTableProps) {
   const router = useRouter()
+  const [companies, setCompanies] = useState(initialCompanies)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<ClientType | ''>('')
+  const [slideOverOpen, setSlideOverOpen] = useState(false)
+  const [editingCompany, setEditingCompany] = useState<CompanyWithStats | null>(null)
+
+  const handleAddNew = () => {
+    setEditingCompany(null)
+    setSlideOverOpen(true)
+  }
+
+  const handleSave = (savedCompany: CompanyWithStats) => {
+    if (editingCompany) {
+      setCompanies((prev) =>
+        prev.map((c) => (c.id === savedCompany.id ? savedCompany : c))
+      )
+    } else {
+      setCompanies((prev) => [savedCompany, ...prev])
+    }
+    setSlideOverOpen(false)
+    setEditingCompany(null)
+  }
 
   const filteredCompanies = useMemo(() => {
     let result = [...companies]
@@ -76,6 +97,12 @@ export function CompaniesTable({ companies }: CompaniesTableProps) {
     <>
       <div className="flex items-center justify-between mb-6 pt-14 md:pt-0">
         <h1 className="text-2xl font-semibold text-gray-900">Companies</h1>
+        <button
+          onClick={handleAddNew}
+          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          New Company
+        </button>
       </div>
 
       {/* Filters */}
@@ -192,6 +219,16 @@ export function CompaniesTable({ companies }: CompaniesTableProps) {
       <p className="mt-4 text-sm text-gray-500">
         {filteredCompanies.length} of {companies.length} companies
       </p>
+
+      <CompanySlideOver
+        open={slideOverOpen}
+        onClose={() => {
+          setSlideOverOpen(false)
+          setEditingCompany(null)
+        }}
+        company={editingCompany}
+        onSave={handleSave}
+      />
     </>
   )
 }

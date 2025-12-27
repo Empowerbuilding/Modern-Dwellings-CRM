@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import type { LeadSource, Company } from '@/lib/types'
+import type { LeadSource, Company, ClientType } from '@/lib/types'
 import type { ContactWithCompany } from './page'
 import { ContactSlideOver } from './contact-slide-over'
 
@@ -25,6 +25,22 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   other: 'Other',
 }
 
+const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
+  builder: 'Builder',
+  consumer: 'Consumer',
+  subcontractor: 'Subcontractor',
+  engineer: 'Engineer',
+  architect: 'Architect',
+}
+
+const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
+  builder: 'bg-blue-100 text-blue-800',
+  consumer: 'bg-green-100 text-green-800',
+  subcontractor: 'bg-orange-100 text-orange-800',
+  engineer: 'bg-purple-100 text-purple-800',
+  architect: 'bg-pink-100 text-pink-800',
+}
+
 type SortField = 'name' | 'company' | 'email' | 'phone' | 'lead_source' | 'created_at'
 type SortDirection = 'asc' | 'desc'
 
@@ -39,7 +55,12 @@ function formatDate(dateString?: string): string {
 
 interface ContactsTableProps {
   initialContacts: ContactWithCompany[]
-  companies: Pick<Company, 'id' | 'name'>[]
+  companies: Pick<Company, 'id' | 'name' | 'type'>[]
+}
+
+// Helper to get effective client type (company type takes precedence)
+function getEffectiveClientType(contact: ContactWithCompany): ClientType | null {
+  return contact.company_type ?? contact.client_type ?? null
 }
 
 export function ContactsTable({ initialContacts, companies }: ContactsTableProps) {
@@ -221,6 +242,9 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                 >
                   Company <SortIcon field="company" />
                 </th>
+                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
+                </th>
                 <th
                   onClick={() => handleSort('email')}
                   className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -250,7 +274,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
             <tbody className="divide-y divide-gray-200">
               {filteredAndSortedContacts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     {contacts.length === 0
                       ? 'No contacts yet. Add your first contact to get started.'
                       : 'No contacts match your search criteria.'}
@@ -284,6 +308,17 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                     </td>
                     <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-600">
                       {contact.company_name ?? '-'}
+                    </td>
+                    <td className="hidden sm:table-cell px-4 py-3">
+                      {(() => {
+                        const clientType = getEffectiveClientType(contact)
+                        if (!clientType) return <span className="text-sm text-gray-400">-</span>
+                        return (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${CLIENT_TYPE_COLORS[clientType]}`}>
+                            {CLIENT_TYPE_LABELS[clientType]}
+                          </span>
+                        )
+                      })()}
                     </td>
                     <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-600">
                       {contact.email ?? '-'}

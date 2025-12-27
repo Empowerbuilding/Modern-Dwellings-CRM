@@ -80,6 +80,7 @@ export interface Contact {
   role: string | null
   is_primary: boolean
   lead_source: LeadSource | null
+  client_type: ClientType | null
   notes: string | null
   created_at?: string
   updated_at?: string

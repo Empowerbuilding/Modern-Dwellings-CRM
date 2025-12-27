@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { LeadSource, Company, Contact } from '@/lib/types'
+import type { LeadSource, Company, ClientType } from '@/lib/types'
 import type { ContactWithCompany } from './page'
 
 const LEAD_SOURCES: LeadSource[] = [
@@ -25,11 +25,27 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   other: 'Other',
 }
 
+const CLIENT_TYPES: ClientType[] = [
+  'consumer',
+  'builder',
+  'subcontractor',
+  'engineer',
+  'architect',
+]
+
+const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
+  builder: 'Builder',
+  consumer: 'Consumer',
+  subcontractor: 'Subcontractor',
+  engineer: 'Engineer',
+  architect: 'Architect',
+}
+
 interface ContactSlideOverProps {
   open: boolean
   onClose: () => void
   contact: ContactWithCompany | null
-  companies: Pick<Company, 'id' | 'name'>[]
+  companies: Pick<Company, 'id' | 'name' | 'type'>[]
   onSave: (contact: ContactWithCompany) => void
   onDelete: (contactId: string) => void
 }
@@ -42,6 +58,7 @@ interface FormData {
   role: string
   company_id: string
   lead_source: LeadSource | ''
+  client_type: ClientType | ''
   is_primary: boolean
   notes: string
 }
@@ -62,12 +79,18 @@ export function ContactSlideOver({
     role: '',
     company_id: '',
     lead_source: '',
+    client_type: '',
     is_primary: false,
     notes: '',
   })
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Get the selected company's type (if any)
+  const selectedCompany = formData.company_id
+    ? companies.find((c) => c.id === formData.company_id)
+    : null
 
   useEffect(() => {
     if (contact) {
@@ -79,6 +102,7 @@ export function ContactSlideOver({
         role: contact.role ?? '',
         company_id: contact.company_id ?? '',
         lead_source: contact.lead_source ?? '',
+        client_type: contact.client_type ?? '',
         is_primary: contact.is_primary,
         notes: contact.notes ?? '',
       })
@@ -91,6 +115,7 @@ export function ContactSlideOver({
         role: '',
         company_id: '',
         lead_source: '',
+        client_type: '',
         is_primary: false,
         notes: '',
       })
@@ -104,6 +129,11 @@ export function ContactSlideOver({
     setSaving(true)
 
     try {
+      // If linked to a company, use company's type; otherwise use the selected client_type
+      const effectiveClientType = formData.company_id
+        ? selectedCompany?.type ?? null
+        : formData.client_type || null
+
       const payload = {
         first_name: formData.first_name,
         last_name: formData.last_name,
@@ -112,6 +142,7 @@ export function ContactSlideOver({
         role: formData.role || null,
         company_id: formData.company_id || null,
         lead_source: formData.lead_source || null,
+        client_type: effectiveClientType,
         is_primary: formData.is_primary,
         notes: formData.notes || null,
       }
@@ -124,14 +155,11 @@ export function ContactSlideOver({
 
         if (updateError) throw updateError
 
-        const companyName = formData.company_id
-          ? companies.find((c) => c.id === formData.company_id)?.name ?? null
-          : null
-
         onSave({
           ...contact,
           ...payload,
-          company_name: companyName,
+          company_name: selectedCompany?.name ?? null,
+          company_type: selectedCompany?.type ?? null,
         } as ContactWithCompany)
       } else {
         // Create new
@@ -142,13 +170,10 @@ export function ContactSlideOver({
 
         if (insertError) throw insertError
 
-        const companyName = formData.company_id
-          ? companies.find((c) => c.id === formData.company_id)?.name ?? null
-          : null
-
         onSave({
           ...data,
-          company_name: companyName,
+          company_name: selectedCompany?.name ?? null,
+          company_type: selectedCompany?.type ?? null,
         } as ContactWithCompany)
       }
     } catch (err) {
@@ -260,6 +285,27 @@ export function ContactSlideOver({
                 ))}
               </select>
             </div>
+
+            {/* Show Client Type dropdown only for standalone contacts (no company) */}
+            {!formData.company_id && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Client Type
+                </label>
+                <select
+                  value={formData.client_type}
+                  onChange={(e) => setFormData({ ...formData, client_type: e.target.value as ClientType | '' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                >
+                  <option value="">Select type</option>
+                  {CLIENT_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {CLIENT_TYPE_LABELS[type]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

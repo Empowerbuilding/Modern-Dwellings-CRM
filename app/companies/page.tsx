@@ -67,7 +67,7 @@ export default async function CompaniesPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="p-6">
-        <CompaniesTable companies={companies} />
+        <CompaniesTable initialCompanies={companies} />
       </div>
     </main>
   )

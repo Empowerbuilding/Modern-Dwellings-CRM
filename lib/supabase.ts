@@ -10,7 +10,12 @@ function createSupabaseClient(): SupabaseClient<Database> {
     // Return a mock client for build time - queries will fail gracefully at runtime
     return createClient<Database>('http://localhost', 'placeholder')
   }
-  return createClient<Database>(supabaseUrl, supabaseAnonKey)
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    global: {
+      // Disable Next.js fetch caching so data is always fresh
+      fetch: (url, options = {}) => fetch(url, { ...options, cache: 'no-store' }),
+    },
+  })
 }
 
 export const supabase = createSupabaseClient()
