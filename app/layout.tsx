@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <QuickAddDealWrapper>
           <Sidebar />
-          <div className="ml-16 lg:ml-56 min-h-screen transition-all">
+          <div className="md:ml-16 lg:ml-56 min-h-screen transition-all">
             {children}
           </div>
         </QuickAddDealWrapper>

@@ -168,7 +168,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 pt-14 md:pt-0">
         <h1 className="text-2xl font-semibold text-gray-900">Contacts</h1>
         <button
           onClick={handleAddNew}
@@ -179,7 +179,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
         <div className="flex-1">
           <input
             type="text"
@@ -217,31 +217,31 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                 </th>
                 <th
                   onClick={() => handleSort('company')}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
                   Company <SortIcon field="company" />
                 </th>
                 <th
                   onClick={() => handleSort('email')}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
                   Email <SortIcon field="email" />
                 </th>
                 <th
                   onClick={() => handleSort('phone')}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
                   Phone <SortIcon field="phone" />
                 </th>
                 <th
                   onClick={() => handleSort('lead_source')}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
                   Lead Source <SortIcon field="lead_source" />
                 </th>
                 <th
                   onClick={() => handleSort('created_at')}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
                   Created <SortIcon field="created_at" />
                 </th>
@@ -265,29 +265,33 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-600 mr-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-600 mr-3 flex-shrink-0">
                           {contact.first_name[0]}{contact.last_name[0]}
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate">
                             {contact.first_name} {contact.last_name}
                           </p>
                           {contact.role && (
-                            <p className="text-xs text-gray-500">{contact.role}</p>
+                            <p className="text-xs text-gray-500 truncate">{contact.role}</p>
                           )}
+                          {/* Show company on mobile */}
+                          <p className="text-xs text-gray-500 truncate sm:hidden">
+                            {contact.company_name}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-600">
                       {contact.company_name ?? '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-600">
                       {contact.email ?? '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="hidden lg:table-cell px-4 py-3 text-sm text-gray-600">
                       {contact.phone ?? '-'}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="hidden lg:table-cell px-4 py-3">
                       {contact.lead_source ? (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                           {LEAD_SOURCE_LABELS[contact.lead_source]}
@@ -296,7 +300,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                         <span className="text-sm text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
                       {formatDate(contact.created_at)}
                     </td>
                   </tr>

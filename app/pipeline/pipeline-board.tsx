@@ -149,40 +149,40 @@ export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
   }
 
   return (
-    <div>
+    <div className="pt-14 md:pt-0">
       {/* Sales Type Toggle */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => setSalesType('b2c')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
               salesType === 'b2c'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            B2C Consumer
+            B2C
           </button>
           <button
             onClick={() => setSalesType('b2b')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
               salesType === 'b2b'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            B2B Builder
+            B2B
           </button>
         </div>
         <div className="text-sm text-gray-600">
           <span className="font-medium text-gray-900">{filteredDeals.length}</span> deals
           <span className="mx-2">•</span>
-          <span className="font-medium text-gray-900">{formatCurrency(totalPipelineValue)}</span> in pipeline
+          <span className="font-medium text-gray-900">{formatCurrency(totalPipelineValue)}</span> pipeline
         </div>
       </div>
 
-      {/* Workflow description */}
-      <p className="text-xs text-gray-500 mb-4">
+      {/* Workflow description - hidden on mobile */}
+      <p className="hidden sm:block text-xs text-gray-500 mb-4">
         {salesType === 'b2c'
           ? 'Consumer workflow: One client = one deal that grows in value over time'
           : 'Builder workflow: One company = many deals over time (design, software, referral fees)'

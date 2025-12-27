@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -44,6 +45,21 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  // Close on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [])
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -53,48 +69,89 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-16 lg:w-56 bg-slate-900 flex flex-col z-30 transition-all">
-      {/* Logo */}
-      <div className="h-16 flex items-center justify-center lg:justify-start lg:px-4 border-b border-slate-800">
-        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-sm">C</span>
-        </div>
-        <span className="hidden lg:block ml-3 text-white font-semibold">CRM</span>
-      </div>
+    <>
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-4 left-4 z-40 p-2 bg-slate-900 text-white rounded-lg md:hidden"
+        aria-label="Open menu"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
 
-      {/* Navigation */}
-      <nav className="flex-1 py-4">
-        <ul className="space-y-1 px-2">
-          {NAV_ITEMS.map((item) => {
-            const active = isActive(item.href)
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center justify-center lg:justify-start gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                    active
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                  }`}
-                  title={item.label}
-                >
-                  {item.icon}
-                  <span className="hidden lg:block text-sm font-medium">
-                    {item.label}
-                  </span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-      {/* Footer */}
-      <div className="p-4 border-t border-slate-800">
-        <div className="hidden lg:block text-xs text-slate-500">
-          Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-400">⌘K</kbd> to add deal
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 h-full bg-slate-900 flex flex-col z-50 transition-transform duration-200 ease-in-out
+          w-56 md:w-16 lg:w-56
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+        `}
+      >
+        {/* Logo */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
+          <div className="flex items-center">
+            <img
+              src="https://aepixjgabpgkvoxmudwo.supabase.co/storage/v1/object/public/company-logos/0cf9dac9-b539-4d3f-9ad0-303332323442/company_logo_112b338d.png"
+              alt="Logo"
+              className="w-8 h-8 rounded-lg object-contain"
+            />
+            <span className="ml-3 text-white font-semibold md:hidden lg:block">CRM</span>
+          </div>
+          {/* Mobile close button */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="p-1 text-slate-400 hover:text-white md:hidden"
+            aria-label="Close menu"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-      </div>
-    </aside>
+
+        {/* Navigation */}
+        <nav className="flex-1 py-4">
+          <ul className="space-y-1 px-2">
+            {NAV_ITEMS.map((item) => {
+              const active = isActive(item.href)
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors md:justify-center lg:justify-start ${
+                      active
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    }`}
+                    title={item.label}
+                  >
+                    {item.icon}
+                    <span className="text-sm font-medium md:hidden lg:block">
+                      {item.label}
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-800">
+          <div className="text-xs text-slate-500 md:hidden lg:block">
+            Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-400">⌘K</kbd> to add deal
+          </div>
+        </div>
+      </aside>
+    </>
   )
 }

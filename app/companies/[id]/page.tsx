@@ -138,7 +138,7 @@ export default async function CompanyDetailPage({
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto pt-14 md:pt-6">
         {/* Header */}
         <div className="mb-6">
           <Link
@@ -147,18 +147,18 @@ export default async function CompanyDetailPage({
           >
             ← Back to Companies
           </Link>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">{company.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{company.name}</h1>
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-2 ${CLIENT_TYPE_COLORS[company.type]}`}
               >
                 {CLIENT_TYPE_LABELS[company.type]}
               </span>
             </div>
-            <div className="text-right">
+            <div className="sm:text-right">
               <p className="text-sm text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-semibold text-green-600">
+              <p className="text-xl sm:text-2xl font-semibold text-green-600">
                 {formatCurrency(totalRevenue)}
               </p>
               {openDealsValue > 0 && (

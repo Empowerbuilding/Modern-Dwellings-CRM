@@ -74,12 +74,12 @@ export function CompaniesTable({ companies }: CompaniesTableProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 pt-14 md:pt-0">
         <h1 className="text-2xl font-semibold text-gray-900">Companies</h1>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
         <div className="flex-1">
           <input
             type="text"
@@ -112,20 +112,20 @@ export function CompaniesTable({ companies }: CompaniesTableProps) {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Primary Contact
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   City
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden sm:table-cell px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Open Deals
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Revenue
+                  Revenue
                 </th>
               </tr>
             </thead>
@@ -147,21 +147,27 @@ export function CompaniesTable({ companies }: CompaniesTableProps) {
                   >
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900">{company.name}</p>
+                      {/* Show type badge on mobile */}
+                      <span
+                        className={`inline-flex sm:hidden items-center px-2 py-0.5 rounded text-xs font-medium mt-1 ${CLIENT_TYPE_COLORS[company.type]}`}
+                      >
+                        {CLIENT_TYPE_LABELS[company.type]}
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="hidden sm:table-cell px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${CLIENT_TYPE_COLORS[company.type]}`}
                       >
                         {CLIENT_TYPE_LABELS[company.type]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-600">
                       {company.primary_contact ?? '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="hidden lg:table-cell px-4 py-3 text-sm text-gray-600">
                       {company.city ?? '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-900 text-right">
                       {company.open_deals_count > 0 ? (
                         <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                           {company.open_deals_count}

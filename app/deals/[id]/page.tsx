@@ -102,7 +102,7 @@ export default async function DealDetailPage({
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-5xl mx-auto pt-14 md:pt-6">
         {/* Header */}
         <div className="mb-6">
           <Link
@@ -111,10 +111,10 @@ export default async function DealDetailPage({
           >
             ← Back to Pipeline
           </Link>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">{deal.title}</h1>
-              <div className="flex items-center gap-3 mt-2">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{deal.title}</h1>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span className={`px-2 py-1 rounded text-xs font-medium ${STAGE_COLORS[deal.stage]}`}>
                   {STAGE_LABELS[deal.stage]}
                 </span>
@@ -123,17 +123,17 @@ export default async function DealDetailPage({
                     ? 'bg-green-100 text-green-700'
                     : 'bg-blue-100 text-blue-700'
                 }`}>
-                  {deal.sales_type === 'b2c' ? 'B2C Consumer' : 'B2B Builder'}
+                  {deal.sales_type === 'b2c' ? 'B2C' : 'B2B'}
                 </span>
                 {deal.deal_type && (
-                  <span className="text-sm text-gray-500">
+                  <span className="text-xs sm:text-sm text-gray-500">
                     {DEAL_TYPE_LABELS[deal.deal_type]}
                   </span>
                 )}
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-3xl font-semibold text-gray-900">
+            <div className="sm:text-right">
+              <p className="text-2xl sm:text-3xl font-semibold text-gray-900">
                 {deal.value ? formatCurrency(deal.value) : '$0'}
               </p>
               <p className="text-sm text-gray-500">Current Value</p>

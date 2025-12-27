@@ -102,9 +102,9 @@ export default async function Dashboard() {
   ])
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-8">Dashboard</h1>
+    <main className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto pt-12 md:pt-0">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">Dashboard</h1>
 
         {/* Pipeline Summary */}
         <section className="mb-8">
