@@ -1,0 +1,399 @@
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import type { Company, Contact, Deal, Activity, ClientType, PipelineStage, DealType, ActivityType } from '@/lib/types'
+
+export const dynamic = 'force-dynamic'
+
+const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
+  builder: 'Builder',
+  consumer: 'Consumer',
+  subcontractor: 'Subcontractor',
+  engineer: 'Engineer',
+  architect: 'Architect',
+}
+
+const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
+  builder: 'bg-blue-100 text-blue-800',
+  consumer: 'bg-green-100 text-green-800',
+  subcontractor: 'bg-orange-100 text-orange-800',
+  engineer: 'bg-purple-100 text-purple-800',
+  architect: 'bg-pink-100 text-pink-800',
+}
+
+const STAGE_COLORS: Record<PipelineStage, string> = {
+  lead: 'bg-gray-100 text-gray-800',
+  qualified: 'bg-blue-100 text-blue-800',
+  proposal: 'bg-yellow-100 text-yellow-800',
+  negotiation: 'bg-purple-100 text-purple-800',
+  won: 'bg-green-100 text-green-800',
+  lost: 'bg-red-100 text-red-800',
+}
+
+const DEAL_TYPE_LABELS: Record<DealType, string> = {
+  custom_design: 'Custom Design',
+  builder_design: 'Builder Design',
+  engineering: 'Engineering',
+  software_fees: 'Software Fees',
+  referral: 'Referral',
+  budget_builder: 'Budget Builder',
+}
+
+const ACTIVITY_ICONS: Record<ActivityType, string> = {
+  call: '📞',
+  email: '✉️',
+  meeting: '👥',
+  task: '✓',
+  note: '📝',
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+function formatDate(dateString?: string | null): string {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function formatDateTime(dateString?: string | null): string {
+  if (!dateString) return ''
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+async function getCompany(id: string) {
+  const { data } = await supabase
+    .from('companies')
+    .select('*')
+    .eq('id', id)
+    .single()
+    .returns<Company>()
+
+  return data
+}
+
+async function getContacts(companyId: string) {
+  const { data } = await supabase
+    .from('contacts')
+    .select('*')
+    .eq('company_id', companyId)
+    .order('is_primary', { ascending: false })
+    .order('first_name')
+    .returns<Contact[]>()
+
+  return data ?? []
+}
+
+async function getDeals(companyId: string) {
+  const { data } = await supabase
+    .from('deals')
+    .select('*, contacts(first_name, last_name)')
+    .eq('company_id', companyId)
+    .order('created_at', { ascending: false })
+    .returns<(Deal & { contacts: { first_name: string; last_name: string } | null })[]>()
+
+  return data ?? []
+}
+
+async function getActivities(companyId: string) {
+  const { data } = await supabase
+    .from('activities')
+    .select('*, contacts(first_name, last_name), deals(title)')
+    .eq('company_id', companyId)
+    .order('created_at', { ascending: false })
+    .limit(20)
+    .returns<(Activity & {
+      contacts: { first_name: string; last_name: string } | null
+      deals: { title: string } | null
+    })[]>()
+
+  return data ?? []
+}
+
+export default async function CompanyDetailPage({
+  params,
+}: {
+  params: { id: string }
+}) {
+  const [company, contacts, deals, activities] = await Promise.all([
+    getCompany(params.id),
+    getContacts(params.id),
+    getDeals(params.id),
+    getActivities(params.id),
+  ])
+
+  if (!company) {
+    notFound()
+  }
+
+  const totalRevenue = deals
+    .filter((d) => d.stage === 'won')
+    .reduce((sum, d) => sum + (d.value ?? 0), 0)
+
+  const openDealsValue = deals
+    .filter((d) => d.stage !== 'won' && d.stage !== 'lost')
+    .reduce((sum, d) => sum + (d.value ?? 0), 0)
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <div className="p-6 max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <Link
+            href="/companies"
+            className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block"
+          >
+            ← Back to Companies
+          </Link>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">{company.name}</h1>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-2 ${CLIENT_TYPE_COLORS[company.type]}`}
+              >
+                {CLIENT_TYPE_LABELS[company.type]}
+              </span>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Total Revenue</p>
+              <p className="text-2xl font-semibold text-green-600">
+                {formatCurrency(totalRevenue)}
+              </p>
+              {openDealsValue > 0 && (
+                <p className="text-sm text-gray-500">
+                  {formatCurrency(openDealsValue)} in pipeline
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Company Info & Contacts */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Company Info */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="font-medium text-gray-900 mb-3">Company Info</h2>
+              <dl className="space-y-2 text-sm">
+                {company.phone && (
+                  <div>
+                    <dt className="text-gray-500">Phone</dt>
+                    <dd className="text-gray-900">{company.phone}</dd>
+                  </div>
+                )}
+                {company.website && (
+                  <div>
+                    <dt className="text-gray-500">Website</dt>
+                    <dd>
+                      <a
+                        href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {company.website}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+                {(company.address || company.city || company.state) && (
+                  <div>
+                    <dt className="text-gray-500">Address</dt>
+                    <dd className="text-gray-900">
+                      {company.address && <span>{company.address}<br /></span>}
+                      {company.city}{company.city && company.state && ', '}{company.state}
+                    </dd>
+                  </div>
+                )}
+                {company.notes && (
+                  <div>
+                    <dt className="text-gray-500">Notes</dt>
+                    <dd className="text-gray-900 whitespace-pre-wrap">{company.notes}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+
+            {/* Contacts */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="font-medium text-gray-900 mb-3">
+                Contacts ({contacts.length})
+              </h2>
+              {contacts.length === 0 ? (
+                <p className="text-sm text-gray-500">No contacts yet</p>
+              ) : (
+                <ul className="space-y-3">
+                  {contacts.map((contact) => (
+                    <li key={contact.id} className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
+                        {contact.first_name[0]}{contact.last_name[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">
+                          {contact.first_name} {contact.last_name}
+                          {contact.is_primary && (
+                            <span className="ml-2 text-xs text-blue-600">Primary</span>
+                          )}
+                        </p>
+                        {contact.role && (
+                          <p className="text-xs text-gray-500">{contact.role}</p>
+                        )}
+                        {contact.email && (
+                          <a
+                            href={`mailto:${contact.email}`}
+                            className="text-xs text-blue-600 hover:underline block truncate"
+                          >
+                            {contact.email}
+                          </a>
+                        )}
+                        {contact.phone && (
+                          <p className="text-xs text-gray-500">{contact.phone}</p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Deals & Activities */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Deals */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="font-medium text-gray-900 mb-3">
+                Deals ({deals.length})
+              </h2>
+              {deals.length === 0 ? (
+                <p className="text-sm text-gray-500">No deals yet</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Deal
+                        </th>
+                        <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Contact
+                        </th>
+                        <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Stage
+                        </th>
+                        <th className="pb-2 text-right text-xs font-medium text-gray-500 uppercase">
+                          Value
+                        </th>
+                        <th className="pb-2 text-right text-xs font-medium text-gray-500 uppercase">
+                          Close Date
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {deals.map((deal) => (
+                        <tr key={deal.id}>
+                          <td className="py-2">
+                            <p className="text-sm font-medium text-gray-900">
+                              {deal.title}
+                            </p>
+                            {deal.deal_type && (
+                              <p className="text-xs text-gray-500">
+                                {DEAL_TYPE_LABELS[deal.deal_type]}
+                              </p>
+                            )}
+                          </td>
+                          <td className="py-2 text-sm text-gray-600">
+                            {deal.contacts
+                              ? `${deal.contacts.first_name} ${deal.contacts.last_name}`
+                              : '-'}
+                          </td>
+                          <td className="py-2">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${STAGE_COLORS[deal.stage]}`}
+                            >
+                              {deal.stage}
+                            </span>
+                          </td>
+                          <td className="py-2 text-sm text-gray-900 text-right">
+                            {deal.value ? formatCurrency(deal.value) : '-'}
+                          </td>
+                          <td className="py-2 text-sm text-gray-600 text-right">
+                            {deal.stage === 'won' || deal.stage === 'lost'
+                              ? formatDate(deal.actual_close_date)
+                              : formatDate(deal.expected_close_date)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Activity Timeline */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="font-medium text-gray-900 mb-3">Recent Activity</h2>
+              {activities.length === 0 ? (
+                <p className="text-sm text-gray-500">No activity yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {activities.map((activity) => (
+                    <div key={activity.id} className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm">
+                        {ACTIVITY_ICONS[activity.type]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {activity.title}
+                            </p>
+                            {activity.description && (
+                              <p className="text-sm text-gray-600 mt-0.5">
+                                {activity.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                              {activity.contacts && (
+                                <span>
+                                  {activity.contacts.first_name} {activity.contacts.last_name}
+                                </span>
+                              )}
+                              {activity.contacts && activity.deals && <span>•</span>}
+                              {activity.deals && <span>{activity.deals.title}</span>}
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 text-right">
+                            <p className="text-xs text-gray-500">
+                              {formatDateTime(activity.created_at)}
+                            </p>
+                            {activity.completed && (
+                              <span className="text-xs text-green-600">Completed</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}
