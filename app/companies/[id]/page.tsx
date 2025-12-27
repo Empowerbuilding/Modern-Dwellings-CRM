@@ -75,53 +75,49 @@ function formatDateTime(dateString?: string | null): string {
   })
 }
 
-async function getCompany(id: string) {
+type DealWithContact = Deal & { contacts: { first_name: string; last_name: string } | null }
+type ActivityWithRelations = Activity & {
+  contacts: { first_name: string; last_name: string } | null
+  deals: { title: string } | null
+}
+
+async function getCompany(id: string): Promise<Company | null> {
   const { data } = await supabase
     .from('companies')
     .select('*')
     .eq('id', id)
     .single()
-    .returns<Company>()
 
-  return data
+  return data as Company | null
 }
 
-async function getContacts(companyId: string) {
-  const { data } = await supabase
-    .from('contacts')
+async function getContacts(companyId: string): Promise<Contact[]> {
+  const { data } = await (supabase.from('contacts') as any)
     .select('*')
     .eq('company_id', companyId)
     .order('is_primary', { ascending: false })
     .order('first_name')
-    .returns<Contact[]>()
 
-  return data ?? []
+  return (data as Contact[]) ?? []
 }
 
-async function getDeals(companyId: string) {
-  const { data } = await supabase
-    .from('deals')
+async function getDeals(companyId: string): Promise<DealWithContact[]> {
+  const { data } = await (supabase.from('deals') as any)
     .select('*, contacts(first_name, last_name)')
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
-    .returns<(Deal & { contacts: { first_name: string; last_name: string } | null })[]>()
 
-  return data ?? []
+  return (data as DealWithContact[]) ?? []
 }
 
-async function getActivities(companyId: string) {
-  const { data } = await supabase
-    .from('activities')
+async function getActivities(companyId: string): Promise<ActivityWithRelations[]> {
+  const { data } = await (supabase.from('activities') as any)
     .select('*, contacts(first_name, last_name), deals(title)')
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
     .limit(20)
-    .returns<(Activity & {
-      contacts: { first_name: string; last_name: string } | null
-      deals: { title: string } | null
-    })[]>()
 
-  return data ?? []
+  return (data as ActivityWithRelations[]) ?? []
 }
 
 export default async function CompanyDetailPage({
