@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from './auth-provider'
 
 const NAV_ITEMS = [
@@ -46,6 +45,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { crmUser, signOut } = useAuth()
@@ -128,9 +128,9 @@ export function Sidebar() {
               const active = isActive(item.href)
               return (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors md:justify-center lg:justify-start ${
+                  <button
+                    onClick={() => router.push(item.href)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors md:justify-center lg:justify-start ${
                       active
                         ? 'bg-blue-600 text-white'
                         : 'text-slate-400 hover:bg-slate-800 hover:text-white'
@@ -141,16 +141,16 @@ export function Sidebar() {
                     <span className="text-sm font-medium md:hidden lg:block">
                       {item.label}
                     </span>
-                  </Link>
+                  </button>
                 </li>
               )
             })}
             {/* Team - Admin only */}
             {crmUser?.role === 'admin' && (
               <li>
-                <Link
-                  href="/settings?tab=team"
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors md:justify-center lg:justify-start ${
+                <button
+                  onClick={() => router.push('/settings?tab=team')}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors md:justify-center lg:justify-start ${
                     pathname === '/settings' && pathname.includes('team')
                       ? 'bg-blue-600 text-white'
                       : 'text-slate-400 hover:bg-slate-800 hover:text-white'
@@ -163,7 +163,7 @@ export function Sidebar() {
                   <span className="text-sm font-medium md:hidden lg:block">
                     Team
                   </span>
-                </Link>
+                </button>
               </li>
             )}
           </ul>
@@ -200,9 +200,12 @@ export function Sidebar() {
                     onClick={() => setUserMenuOpen(false)}
                   />
                   <div className="absolute bottom-full left-3 right-3 mb-2 bg-slate-800 rounded-lg shadow-lg border border-slate-700 overflow-hidden z-50">
-                    <Link
-                      href="/settings"
-                      onClick={() => setUserMenuOpen(false)}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false)
+                        router.push('/settings')
+                      }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +213,7 @@ export function Sidebar() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       Settings
-                    </Link>
+                    </button>
                     <button
                       type="button"
                       onClick={async (e) => {
