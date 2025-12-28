@@ -174,7 +174,10 @@ export function Sidebar() {
           {crmUser ? (
             <>
               <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                onClick={() => {
+                  console.log('User menu toggle clicked, current state:', userMenuOpen)
+                  setUserMenuOpen(!userMenuOpen)
+                }}
                 className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors md:justify-center lg:justify-start"
               >
                 <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium flex-shrink-0">
@@ -209,10 +212,15 @@ export function Sidebar() {
                       Settings
                     </Link>
                     <button
+                      type="button"
                       onClick={async (e) => {
+                        e.preventDefault()
                         e.stopPropagation()
+                        console.log('Sign out button clicked')
                         setUserMenuOpen(false)
+                        console.log('Calling signOut...')
                         await signOut()
+                        console.log('signOut completed')
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-700 transition-colors"
                     >
