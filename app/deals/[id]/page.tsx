@@ -297,8 +297,8 @@ export default async function DealDetailPage({
 
           {/* Right Column - Value History & Activities */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Activities - temporarily disabled for debugging */}
-            {/* <ActivitiesSection dealId={deal.id} activities={activities} /> */}
+            {/* Activities */}
+            <ActivitiesSection dealId={deal.id} activities={activities} />
 
             {/* Value History */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
