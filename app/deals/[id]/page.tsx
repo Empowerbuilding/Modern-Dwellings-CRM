@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase, getDealValueHistory, getLinkedDeals } from '@/lib/supabase'
-import type { Deal, Company, Contact, DealValueHistory, DealType, User } from '@/lib/types'
+import type { Deal, Company, Contact, DealValueHistory, DealType, User, Activity } from '@/lib/types'
 import { STAGE_LABELS, STAGE_COLORS, getStagesForSalesType } from '@/lib/types'
 import { DealValueEditor } from './deal-value-editor'
 import { LinkedDealsSection } from './linked-deals-section'
 import { DealActions } from './deal-actions'
+import { ActivitiesSection } from './activities-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,6 +104,19 @@ async function getAllUsers(): Promise<User[]> {
   return data ?? []
 }
 
+interface ActivityWithUser extends Activity {
+  created_by?: User | null
+}
+
+async function getDealActivities(dealId: string): Promise<ActivityWithUser[]> {
+  const { data } = await (supabase.from('activities') as any)
+    .select('*, created_by:users(*)')
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false })
+
+  return (data as ActivityWithUser[]) ?? []
+}
+
 export default async function DealDetailPage({
   params,
 }: {
@@ -114,7 +128,7 @@ export default async function DealDetailPage({
     notFound()
   }
 
-  const [company, contact, valueHistory, linkedDeals, allCompanies, allContacts, allUsers] = await Promise.all([
+  const [company, contact, valueHistory, linkedDeals, allCompanies, allContacts, allUsers, activities] = await Promise.all([
     deal.company_id ? getCompany(deal.company_id) : null,
     deal.contact_id ? getContact(deal.contact_id) : null,
     getDealValueHistory(deal.id),
@@ -122,6 +136,7 @@ export default async function DealDetailPage({
     getAllCompanies(),
     getAllContacts(),
     getAllUsers(),
+    getDealActivities(deal.id),
   ])
 
   const stages = getStagesForSalesType(deal.sales_type)
@@ -280,8 +295,12 @@ export default async function DealDetailPage({
             <LinkedDealsSection dealId={deal.id} linkedDeals={linkedDeals} />
           </div>
 
-          {/* Right Column - Value History */}
-          <div className="lg:col-span-2">
+          {/* Right Column - Value History & Activities */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Activities */}
+            <ActivitiesSection dealId={deal.id} activities={activities} />
+
+            {/* Value History */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-medium text-gray-900">Value History</h2>
