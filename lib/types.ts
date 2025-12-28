@@ -92,6 +92,7 @@ export interface Contact {
   is_primary: boolean
   lead_source: LeadSource | null
   client_type: ClientType | null
+  fbclid: string | null
   notes: string | null
   created_at?: string
   updated_at?: string
