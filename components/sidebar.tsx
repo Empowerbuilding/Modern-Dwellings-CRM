@@ -180,7 +180,7 @@ export function Sidebar() {
                 <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium flex-shrink-0">
                   {crmUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </div>
-                <div className="flex-1 text-left md:hidden lg:block">
+                <div className="flex-1 min-w-0 text-left md:hidden lg:block overflow-hidden">
                   <p className="text-sm font-medium text-white truncate">{crmUser.name}</p>
                   <p className="text-xs text-slate-400 truncate">{crmUser.email}</p>
                 </div>
