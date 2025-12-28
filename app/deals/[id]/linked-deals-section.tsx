@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useTransition } from 'react'
+import { useState, useEffect, useCallback, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -46,8 +46,8 @@ export function LinkedDealsSection({ dealId, linkedDeals: initialLinkedDeals }: 
   const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Get already linked deal IDs to exclude from search
-  const linkedDealIds = linkedDeals.map(ld => ld.linked_deal_id)
+  // Get already linked deal IDs to exclude from search (memoized to prevent infinite useEffect loops)
+  const linkedDealIds = useMemo(() => linkedDeals.map(ld => ld.linked_deal_id), [linkedDeals])
 
   // Debounced search
   useEffect(() => {
