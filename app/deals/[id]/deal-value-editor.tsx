@@ -74,15 +74,16 @@ export function DealValueEditor({ dealId, currentValue }: DealValueEditorProps) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <>
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="fixed inset-0 bg-black/50 z-40"
         onClick={handleCancel}
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6 pointer-events-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Update Deal Value
         </h3>
@@ -160,7 +161,8 @@ export function DealValueEditor({ dealId, currentValue }: DealValueEditorProps) 
             </button>
           </div>
         </form>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

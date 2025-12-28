@@ -155,7 +155,7 @@ export default async function DealDetailPage({
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <Link
+<Link
               href="/pipeline"
               className="text-sm text-gray-500 hover:text-gray-700"
             >
