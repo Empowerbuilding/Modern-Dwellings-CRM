@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import type { LeadSource } from '@/lib/types'
+import type { LeadSource, SalesType } from '@/lib/types'
 
 // Use service role key for server-side operations (bypasses RLS)
 const supabase = createClient(
@@ -14,6 +14,7 @@ interface LeadWebhookPayload {
   email: string
   phone?: string
   source: LeadSource
+  sales_type?: SalesType
   fbclid?: string
   metadata?: Record<string, unknown>
 }
@@ -52,6 +53,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Determine sales_type based on source
+    const salesType = determineSalesType(payload.source, payload.sales_type)
+
     // Check if contact already exists by email
     const { data: existingContact } = await supabase
       .from('contacts')
@@ -72,6 +76,9 @@ export async function POST(request: NextRequest) {
       }
       console.log(`[${timestamp}] Using existing contact: ${contactId}`)
     } else {
+      // Determine client_type for cost_calc source
+      const clientType = payload.source === 'cost_calc' ? 'consumer' : null
+
       // Create new contact
       const { data: newContact, error: contactError } = await supabase
         .from('contacts')
@@ -81,6 +88,7 @@ export async function POST(request: NextRequest) {
           email: payload.email,
           phone: payload.phone || null,
           lead_source: payload.source,
+          client_type: clientType,
           fbclid: payload.fbclid || null,
           is_primary: true,
         })
@@ -99,20 +107,10 @@ export async function POST(request: NextRequest) {
       console.log(`[${timestamp}] Created new contact: ${contactId}`)
     }
 
-    // Format metadata as notes
-    let dealNotes = ''
-    if (payload.metadata && Object.keys(payload.metadata).length > 0) {
-      dealNotes = 'Lead Details:\n' + Object.entries(payload.metadata)
-        .map(([key, value]) => `- ${formatKey(key)}: ${value}`)
-        .join('\n')
-    }
+    // Format metadata as nicely structured notes
+    const dealNotes = formatDealNotes(payload.source, payload.metadata)
 
-    // Get deal value from metadata if present
-    const dealValue = payload.metadata?.estimated_price
-      ? Number(payload.metadata.estimated_price)
-      : null
-
-    // Create deal
+    // Create deal - value is always null, to be set manually later
     const dealTitle = `${payload.first_name} ${payload.last_name} - ${formatSource(payload.source)}`
 
     const { data: newDeal, error: dealError } = await supabase
@@ -120,9 +118,9 @@ export async function POST(request: NextRequest) {
       .insert({
         contact_id: contactId,
         title: dealTitle,
-        value: dealValue,
+        value: null,
         stage: 'lead',
-        sales_type: 'b2c',
+        sales_type: salesType,
         notes: dealNotes || null,
       })
       .select('id')
@@ -153,6 +151,105 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Determine sales_type based on source
+function determineSalesType(source: LeadSource, explicitType?: SalesType): SalesType {
+  // If explicitly provided, use that
+  if (explicitType) {
+    return explicitType
+  }
+
+  // Default to b2c for consumer-facing sources
+  const b2cSources: LeadSource[] = ['cost_calc', 'website', 'contact_form', 'facebook', 'facebook_ad']
+  if (b2cSources.includes(source)) {
+    return 'b2c'
+  }
+
+  // Default to b2c for other sources as well
+  return 'b2c'
+}
+
+// Format metadata into nicely structured notes
+function formatDealNotes(source: LeadSource, metadata?: Record<string, unknown>): string {
+  if (!metadata || Object.keys(metadata).length === 0) {
+    return `Source: ${formatSource(source)}`
+  }
+
+  const lines: string[] = []
+
+  // Add source
+  lines.push(`Source: ${formatSource(source)}`)
+
+  // Handle cost calculator specific fields
+  if (source === 'cost_calc') {
+    if (metadata.estimated_price || metadata.estimated_cost || metadata.build_cost) {
+      const cost = metadata.estimated_price || metadata.estimated_cost || metadata.build_cost
+      lines.push(`Estimated Build Cost: ${formatCurrency(Number(cost))}`)
+    }
+
+    // Build project summary line
+    const projectParts: string[] = []
+    if (metadata.bedrooms) projectParts.push(`${metadata.bedrooms}BR`)
+    if (metadata.bathrooms) projectParts.push(`${metadata.bathrooms}BA`)
+    if (metadata.sqft || metadata.square_feet) {
+      const sqft = metadata.sqft || metadata.square_feet
+      projectParts.push(`${Number(sqft).toLocaleString()} sq ft`)
+    }
+    if (projectParts.length > 0) {
+      lines.push(`Project: ${projectParts.join(' • ')}`)
+    }
+
+    if (metadata.location || metadata.city) {
+      lines.push(`Location: ${metadata.location || metadata.city}`)
+    }
+
+    if (metadata.foundation) {
+      lines.push(`Foundation: ${metadata.foundation}`)
+    }
+
+    if (metadata.stories) {
+      lines.push(`Stories: ${metadata.stories}`)
+    }
+
+    if (metadata.garage) {
+      lines.push(`Garage: ${metadata.garage}`)
+    }
+  } else {
+    // For other sources, include any provided metadata
+    const skipKeys = ['message', 'notes', 'comments']
+
+    for (const [key, value] of Object.entries(metadata)) {
+      if (skipKeys.includes(key.toLowerCase())) continue
+      if (value === null || value === undefined || value === '') continue
+
+      const formattedKey = formatKey(key)
+      const formattedValue = typeof value === 'number' && key.toLowerCase().includes('price')
+        ? formatCurrency(value)
+        : String(value)
+
+      lines.push(`${formattedKey}: ${formattedValue}`)
+    }
+  }
+
+  // Add message/notes at the end if present
+  const message = metadata.message || metadata.notes || metadata.comments
+  if (message) {
+    lines.push(``)
+    lines.push(`Message: ${message}`)
+  }
+
+  return lines.join('\n')
+}
+
+// Helper to format currency
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 // Helper to format metadata keys for display
 function formatKey(key: string): string {
   return key
@@ -160,13 +257,16 @@ function formatKey(key: string): string {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
-// Helper to format source for deal title
+// Helper to format source for deal title and notes
 function formatSource(source: string): string {
   const sourceMap: Record<string, string> = {
     facebook: 'Facebook',
+    facebook_ad: 'Facebook Ad',
     google: 'Google',
     referral: 'Referral',
     website: 'Website',
+    contact_form: 'Contact Form',
+    cost_calc: 'Cost Calculator',
     cold: 'Cold',
     repeat: 'Repeat',
     other: 'Other',
