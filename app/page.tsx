@@ -76,9 +76,9 @@ async function getRecentDeals(): Promise<(Deal & { company_name?: string })[]> {
   }))
 }
 
-async function getUpcomingTasks(): Promise<(Activity & { contact_name?: string })[]> {
+async function getUpcomingTasks(): Promise<(Activity & { contact_name?: string; created_by_name?: string })[]> {
   const { data } = await (supabase.from('activities') as any)
-    .select('*, contacts(first_name, last_name)')
+    .select('*, contacts(first_name, last_name), users:created_by_id(name)')
     .eq('completed', false)
     .not('due_date', 'is', null)
     .order('due_date', { ascending: true })
@@ -91,6 +91,7 @@ async function getUpcomingTasks(): Promise<(Activity & { contact_name?: string }
     contact_name: activity.contacts
       ? `${activity.contacts.first_name} ${activity.contacts.last_name}`
       : undefined,
+    created_by_name: activity.users?.name,
   }))
 }
 
@@ -210,6 +211,9 @@ export default async function Dashboard() {
                         <p className="font-medium text-gray-900">{task.title}</p>
                         {task.contact_name && (
                           <p className="text-sm text-gray-500">{task.contact_name}</p>
+                        )}
+                        {task.created_by_name && (
+                          <p className="text-xs text-gray-400">by {task.created_by_name}</p>
                         )}
                       </div>
                       <div className="text-right">

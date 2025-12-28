@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase, logDealValueChange } from '@/lib/supabase'
 import type { DealType, SalesType, ClientType } from '@/lib/types'
 import { useQuickAddDeal } from './context'
+import { useAuth } from '@/components/auth-provider'
 
 const DEAL_TYPES: { value: DealType; label: string }[] = [
   { value: 'custom_design', label: 'Custom Design' },
@@ -38,6 +39,7 @@ export function QuickAddDeal() {
   const { isOpen, close } = useQuickAddDeal()
   const router = useRouter()
   const titleInputRef = useRef<HTMLInputElement>(null)
+  const { crmUser } = useAuth()
 
   // Form state
   const [title, setTitle] = useState('')
@@ -257,6 +259,7 @@ export function QuickAddDeal() {
           sales_type: finalSalesType,
           company_id: companyId,
           contact_id: contactId,
+          owner_id: crmUser?.id || null,
         })
         .select('id')
         .single()

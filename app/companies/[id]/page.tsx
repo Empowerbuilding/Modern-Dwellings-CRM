@@ -72,6 +72,7 @@ type DealWithContact = Deal & { contacts: { first_name: string; last_name: strin
 type ActivityWithRelations = Activity & {
   contacts: { first_name: string; last_name: string } | null
   deals: { title: string } | null
+  users: { name: string } | null
 }
 
 async function getCompany(id: string): Promise<Company | null> {
@@ -105,7 +106,7 @@ async function getDeals(companyId: string): Promise<DealWithContact[]> {
 
 async function getActivities(companyId: string): Promise<ActivityWithRelations[]> {
   const { data } = await (supabase.from('activities') as any)
-    .select('*, contacts(first_name, last_name), deals(title)')
+    .select('*, contacts(first_name, last_name), deals(title), users:created_by_id(name)')
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
     .limit(20)
@@ -375,6 +376,11 @@ export default async function CompanyDetailPage({
                             <p className="text-xs text-gray-500">
                               {formatDateTime(activity.created_at)}
                             </p>
+                            {activity.users && (
+                              <p className="text-xs text-gray-400">
+                                by {activity.users.name}
+                              </p>
+                            )}
                             {activity.completed && (
                               <span className="text-xs text-green-600">Completed</span>
                             )}

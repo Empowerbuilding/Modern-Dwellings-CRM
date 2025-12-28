@@ -55,7 +55,18 @@ export type LeadSource = 'facebook' | 'google' | 'referral' | 'website' | 'cold'
 
 export type ActivityType = 'call' | 'email' | 'meeting' | 'task' | 'note'
 
+export type UserRole = 'admin' | 'sales'
+
 // Table row types
+export interface User {
+  id: string
+  email: string
+  name: string
+  avatar_url: string | null
+  role: UserRole
+  created_at?: string
+}
+
 export interface Company {
   id: string
   name: string
@@ -90,6 +101,7 @@ export interface Deal {
   id: string
   company_id: string | null
   contact_id: string | null
+  owner_id: string | null
   title: string
   value: number | null
   stage: PipelineStage
@@ -109,6 +121,7 @@ export interface Activity {
   deal_id: string | null
   contact_id: string | null
   company_id: string | null
+  created_by_id: string | null
   type: ActivityType
   title: string
   description: string | null
@@ -178,6 +191,7 @@ export interface ActivityWithRelations extends Activity {
   deal?: Deal | null
   contact?: Contact | null
   company?: Company | null
+  created_by?: User | null
 }
 
 // Supabase Database type for client

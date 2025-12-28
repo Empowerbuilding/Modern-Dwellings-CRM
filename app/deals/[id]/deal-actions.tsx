@@ -1,16 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import type { Deal, Company, Contact } from '@/lib/types'
+import type { Deal, Company, Contact, User } from '@/lib/types'
 import { DealSlideOver } from './deal-slide-over'
 
 interface DealActionsProps {
   deal: Deal
   companies: Pick<Company, 'id' | 'name'>[]
   contacts: Pick<Contact, 'id' | 'first_name' | 'last_name'>[]
+  users: User[]
 }
 
-export function DealActions({ deal, companies, contacts }: DealActionsProps) {
+export function DealActions({ deal, companies, contacts, users }: DealActionsProps) {
   const [slideOverOpen, setSlideOverOpen] = useState(false)
 
   return (
@@ -28,6 +29,7 @@ export function DealActions({ deal, companies, contacts }: DealActionsProps) {
         deal={deal}
         companies={companies}
         contacts={contacts}
+        users={users}
       />
     </>
   )

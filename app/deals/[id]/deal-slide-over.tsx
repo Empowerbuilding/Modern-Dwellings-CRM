@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import type { Deal, DealType, SalesType, PipelineStage, Company, Contact } from '@/lib/types'
+import type { Deal, DealType, SalesType, PipelineStage, Company, Contact, User } from '@/lib/types'
 import { getStagesForSalesType, STAGE_LABELS } from '@/lib/types'
 
 const DEAL_TYPES: DealType[] = [
@@ -30,12 +30,14 @@ interface DealSlideOverProps {
   deal: Deal
   companies: Pick<Company, 'id' | 'name'>[]
   contacts: Pick<Contact, 'id' | 'first_name' | 'last_name'>[]
+  users: User[]
 }
 
 interface FormData {
   title: string
   company_id: string
   contact_id: string
+  owner_id: string
   value: string
   stage: PipelineStage
   sales_type: SalesType
@@ -51,12 +53,14 @@ export function DealSlideOver({
   deal,
   companies,
   contacts,
+  users,
 }: DealSlideOverProps) {
   const router = useRouter()
   const [formData, setFormData] = useState<FormData>({
     title: '',
     company_id: '',
     contact_id: '',
+    owner_id: '',
     value: '',
     stage: 'lead',
     sales_type: 'b2c',
@@ -77,6 +81,7 @@ export function DealSlideOver({
         title: deal.title,
         company_id: deal.company_id ?? '',
         contact_id: deal.contact_id ?? '',
+        owner_id: deal.owner_id ?? '',
         value: deal.value?.toString() ?? '',
         stage: deal.stage,
         sales_type: deal.sales_type,
@@ -99,6 +104,7 @@ export function DealSlideOver({
         title: formData.title,
         company_id: formData.company_id || null,
         contact_id: formData.contact_id || null,
+        owner_id: formData.owner_id || null,
         value: formData.value ? parseFloat(formData.value) : null,
         stage: formData.stage,
         sales_type: formData.sales_type,
@@ -281,6 +287,24 @@ export function DealSlideOver({
                 {contacts.map((contact) => (
                   <option key={contact.id} value={contact.id}>
                     {contact.first_name} {contact.last_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Owner
+              </label>
+              <select
+                value={formData.owner_id}
+                onChange={(e) => setFormData({ ...formData, owner_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="">Unassigned</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
                   </option>
                 ))}
               </select>

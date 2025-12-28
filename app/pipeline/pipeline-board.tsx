@@ -13,12 +13,20 @@ import {
   type PipelineStage,
   type DealType,
   type SalesType,
-  B2C_STAGES,
-  B2B_STAGES,
+  type User,
   STAGE_LABELS,
   getStagesForSalesType,
 } from '@/lib/types'
 import type { DealWithCompany } from './page'
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
 
 const STAGE_DOT_COLORS: Record<PipelineStage, string> = {
   lead: 'bg-gray-500',
@@ -68,18 +76,25 @@ function formatDate(dateString: string): string {
 
 interface PipelineBoardProps {
   initialDeals: DealWithCompany[]
+  users: User[]
 }
 
-export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
+export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
   const [deals, setDeals] = useState<DealWithCompany[]>(initialDeals)
   const [salesType, setSalesType] = useState<SalesType>('b2c')
+  const [ownerFilter, setOwnerFilter] = useState<string>('all') // 'all' | owner_id
   const [updating, setUpdating] = useState<string | null>(null)
 
   const stages = getStagesForSalesType(salesType)
 
-  // Filter deals by sales type and group by stage
+  // Filter deals by sales type, owner, and group by stage
   const { filteredDeals, dealsByStage, totalPipelineValue } = useMemo(() => {
-    const filtered = deals.filter((deal) => deal.sales_type === salesType)
+    let filtered = deals.filter((deal) => deal.sales_type === salesType)
+
+    // Apply owner filter
+    if (ownerFilter !== 'all') {
+      filtered = filtered.filter((deal) => deal.owner_id === ownerFilter)
+    }
 
     const byStage = stages.reduce(
       (acc, stage) => {
@@ -94,7 +109,7 @@ export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
       .reduce((sum, d) => sum + (d.value || 0), 0)
 
     return { filteredDeals: filtered, dealsByStage: byStage, totalPipelineValue: totalValue }
-  }, [deals, salesType, stages])
+  }, [deals, salesType, ownerFilter, stages])
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result
@@ -150,29 +165,46 @@ export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
 
   return (
     <div className="pt-14 md:pt-0">
-      {/* Sales Type Toggle */}
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setSalesType('b2c')}
-            className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              salesType === 'b2c'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Sales Type Toggle */}
+          <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setSalesType('b2c')}
+              className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                salesType === 'b2c'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              B2C
+            </button>
+            <button
+              onClick={() => setSalesType('b2b')}
+              className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                salesType === 'b2b'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              B2B
+            </button>
+          </div>
+
+          {/* Owner Filter */}
+          <select
+            value={ownerFilter}
+            onChange={(e) => setOwnerFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
           >
-            B2C
-          </button>
-          <button
-            onClick={() => setSalesType('b2b')}
-            className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              salesType === 'b2b'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            B2B
-          </button>
+            <option value="all">All Owners</option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="text-sm text-gray-600">
           <span className="font-medium text-gray-900">{filteredDeals.length}</span> deals
@@ -272,11 +304,21 @@ export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
                                   </span>
                                 )}
                               </div>
-                              {deal.deal_type && (
-                                <span className="inline-block mt-2 text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                  {DEAL_TYPE_LABELS[deal.deal_type]}
-                                </span>
-                              )}
+                              <div className="flex items-center justify-between mt-2">
+                                {deal.deal_type && (
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                    {DEAL_TYPE_LABELS[deal.deal_type]}
+                                  </span>
+                                )}
+                                {deal.owner_name && (
+                                  <div
+                                    className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-medium ml-auto"
+                                    title={deal.owner_name}
+                                  >
+                                    {getInitials(deal.owner_name)}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                         </Draggable>
