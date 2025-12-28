@@ -94,7 +94,7 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full bg-slate-900 flex flex-col z-50 transition-transform duration-200 ease-in-out
+        className={`fixed left-0 top-0 h-full bg-slate-900 flex flex-col z-[100] transition-transform duration-200 ease-in-out
           w-56 md:w-16 lg:w-56
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
         `}
