@@ -7,9 +7,12 @@ import type { ContactWithCompany } from './page'
 
 const LEAD_SOURCES: LeadSource[] = [
   'facebook',
+  'facebook_ad',
   'google',
   'referral',
   'website',
+  'contact_form',
+  'cost_calc',
   'cold',
   'repeat',
   'other',
@@ -17,9 +20,12 @@ const LEAD_SOURCES: LeadSource[] = [
 
 const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   facebook: 'Facebook',
+  facebook_ad: 'Facebook Ad',
   google: 'Google',
   referral: 'Referral',
   website: 'Website',
+  contact_form: 'Contact Form',
+  cost_calc: 'Cost Calculator',
   cold: 'Cold',
   repeat: 'Repeat',
   other: 'Other',
