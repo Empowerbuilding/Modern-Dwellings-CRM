@@ -291,20 +291,20 @@ export default async function DealDetailPage({
               </dl>
             </div>
 
-            {/* Linked Deals */}
-            <LinkedDealsSection dealId={deal.id} linkedDeals={linkedDeals} />
+            {/* Linked Deals - temporarily disabled for debugging */}
+            {/* <LinkedDealsSection dealId={deal.id} linkedDeals={linkedDeals} /> */}
           </div>
 
           {/* Right Column - Value History & Activities */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Activities */}
-            <ActivitiesSection dealId={deal.id} activities={activities} />
+            {/* Activities - temporarily disabled for debugging */}
+            {/* <ActivitiesSection dealId={deal.id} activities={activities} /> */}
 
             {/* Value History */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-medium text-gray-900">Value History</h2>
-                <DealValueEditor dealId={deal.id} currentValue={deal.value ?? 0} />
+                {/* <DealValueEditor dealId={deal.id} currentValue={deal.value ?? 0} /> */}
               </div>
 
               {valueChanges.length === 0 ? (
