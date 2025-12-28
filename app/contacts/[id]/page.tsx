@@ -18,6 +18,9 @@ const LEAD_SOURCE_LABELS: Record<string, string> = {
   cost_calc: 'Cost Calculator',
   cold: 'Cold',
   repeat: 'Repeat',
+  guide_download: 'Guide Download',
+  empower_website: 'Empower Website',
+  barnhaus_contact: 'Barnhaus Contact',
   other: 'Other',
 }
 

@@ -16,6 +16,9 @@ const LEAD_SOURCES: LeadSource[] = [
   'cost_calc',
   'cold',
   'repeat',
+  'guide_download',
+  'empower_website',
+  'barnhaus_contact',
   'other',
 ]
 
@@ -29,6 +32,9 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   cost_calc: 'Cost Calculator',
   cold: 'Cold',
   repeat: 'Repeat',
+  guide_download: 'Guide Download',
+  empower_website: 'Empower Website',
+  barnhaus_contact: 'Barnhaus Contact',
   other: 'Other',
 }
 
