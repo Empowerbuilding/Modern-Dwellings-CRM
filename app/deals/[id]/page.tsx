@@ -291,8 +291,8 @@ export default async function DealDetailPage({
               </dl>
             </div>
 
-            {/* Linked Deals - temporarily disabled for debugging */}
-            {/* <LinkedDealsSection dealId={deal.id} linkedDeals={linkedDeals} /> */}
+            {/* Linked Deals */}
+            <LinkedDealsSection dealId={deal.id} linkedDeals={linkedDeals} />
           </div>
 
           {/* Right Column - Value History & Activities */}
