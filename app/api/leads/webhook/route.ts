@@ -159,7 +159,7 @@ function determineSalesType(source: LeadSource, explicitType?: SalesType): Sales
   }
 
   // Default to b2c for consumer-facing sources
-  const b2cSources: LeadSource[] = ['cost_calc', 'website', 'contact_form', 'facebook', 'facebook_ad']
+  const b2cSources: LeadSource[] = ['cost_calc', 'website', 'contact_form', 'facebook', 'facebook_ad', 'guide_download', 'empower_website', 'barnhaus_contact']
   if (b2cSources.includes(source)) {
     return 'b2c'
   }
@@ -269,6 +269,9 @@ function formatSource(source: string): string {
     cost_calc: 'Cost Calculator',
     cold: 'Cold',
     repeat: 'Repeat',
+    guide_download: 'Guide Download',
+    empower_website: 'Empower Website',
+    barnhaus_contact: 'Barnhaus Contact',
     other: 'Other',
   }
   return sourceMap[source] || source
