@@ -60,22 +60,24 @@ export function AuthProvider({ children, initialUser, initialCrmUser }: AuthProv
 
   const signOut = async () => {
     console.log('signOut function started')
-    try {
-      console.log('Calling supabase.auth.signOut()...')
-      const { error } = await supabase.auth.signOut()
-      console.log('supabase.auth.signOut() completed', error ? `with error: ${error.message}` : 'successfully')
-      if (error) {
-        console.error('Sign out error:', error)
-      }
-    } catch (err) {
-      console.error('Sign out failed:', err)
-    }
-    // Clear state and redirect regardless of error
-    console.log('Clearing state and redirecting...')
+
+    // Clear state immediately
     setSupabaseUser(null)
     setCrmUser(null)
-    // Force a full page reload to clear all state
-    window.location.replace('/login')
+
+    // Clear all Supabase auth data from storage
+    const storageKey = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0]}-auth-token`
+    console.log('Clearing storage key:', storageKey)
+    localStorage.removeItem(storageKey)
+
+    // Also try the signOut call but don't wait for it
+    supabase.auth.signOut().catch(err => {
+      console.error('signOut error (ignored):', err)
+    })
+
+    // Force redirect
+    console.log('Redirecting to login...')
+    window.location.href = '/login'
   }
 
   return (
