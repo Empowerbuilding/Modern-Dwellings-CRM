@@ -35,8 +35,11 @@ export async function middleware(request: NextRequest) {
   // Public routes that don't require authentication
   const isAuthPage = request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup'
 
+  // Public API routes that use their own authentication (e.g., API key)
+  const isPublicApiRoute = request.nextUrl.pathname === '/api/leads/webhook'
+
   // If user is not logged in and trying to access protected route, redirect to login
-  if (!user && !isAuthPage) {
+  if (!user && !isAuthPage && !isPublicApiRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
