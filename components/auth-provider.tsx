@@ -59,8 +59,11 @@ export function AuthProvider({ children, initialUser, initialCrmUser }: AuthProv
   }, [supabase])
 
   const signOut = async () => {
+    console.log('signOut function started')
     try {
+      console.log('Calling supabase.auth.signOut()...')
       const { error } = await supabase.auth.signOut()
+      console.log('supabase.auth.signOut() completed', error ? `with error: ${error.message}` : 'successfully')
       if (error) {
         console.error('Sign out error:', error)
       }
@@ -68,6 +71,7 @@ export function AuthProvider({ children, initialUser, initialCrmUser }: AuthProv
       console.error('Sign out failed:', err)
     }
     // Clear state and redirect regardless of error
+    console.log('Clearing state and redirecting...')
     setSupabaseUser(null)
     setCrmUser(null)
     // Force a full page reload to clear all state

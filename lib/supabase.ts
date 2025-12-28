@@ -11,6 +11,13 @@ function createSupabaseClient(): SupabaseClient<Database> {
     return createClient<Database>('http://localhost', 'placeholder')
   }
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      // Disable auth persistence to avoid multiple GoTrueClient instances
+      // Auth is handled by supabase-browser.ts via @supabase/ssr
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
     global: {
       // Disable Next.js fetch caching so data is always fresh
       fetch: (url, options = {}) => fetch(url, { ...options, cache: 'no-store' }),
