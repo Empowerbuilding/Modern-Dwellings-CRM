@@ -65,15 +65,24 @@ export function AuthProvider({ children, initialUser, initialCrmUser }: AuthProv
     setSupabaseUser(null)
     setCrmUser(null)
 
-    // Clear all Supabase auth data from storage
-    const storageKey = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0]}-auth-token`
-    console.log('Clearing storage key:', storageKey)
-    localStorage.removeItem(storageKey)
+    // Clear localStorage
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('sb-')) {
+          localStorage.removeItem(key)
+        }
+      }
+    } catch (err) {
+      console.error('Error clearing localStorage:', err)
+    }
 
-    // Also try the signOut call but don't wait for it
-    supabase.auth.signOut().catch(err => {
-      console.error('signOut error (ignored):', err)
-    })
+    // Call server-side signout to clear cookies
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' })
+    } catch (err) {
+      console.error('Server signout error:', err)
+    }
 
     // Force redirect
     console.log('Redirecting to login...')
