@@ -7,7 +7,6 @@ import { DealValueEditor } from './deal-value-editor'
 import { LinkedDealsSection } from './linked-deals-section'
 import { DealActions } from './deal-actions'
 import { ActivitiesSection } from './activities-section'
-import { BackButton } from './back-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -156,7 +155,12 @@ export default async function DealDetailPage({
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <BackButton />
+            <Link
+              href="/pipeline"
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              ← Back to Pipeline
+            </Link>
             <DealActions deal={deal} companies={allCompanies} contacts={allContacts} users={allUsers} />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
