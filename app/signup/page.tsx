@@ -1,18 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-browser'
 
 export default function SignUpPage() {
-  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,15 +70,45 @@ export default function SignUpPage() {
         throw new Error('Failed to create user profile. Please contact support.')
       }
 
-      // Redirect to dashboard
-      router.push('/')
-      router.refresh()
+      // Show success message instead of redirecting
+      setSuccess(true)
     } catch (err: any) {
       console.error('Sign up error:', err)
       setError(err.message || 'Failed to create account. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show success screen after signup
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Check your email</h1>
+            <p className="text-gray-600 mb-6">
+              We've sent a confirmation link to <span className="font-medium">{email}</span>.
+              Please click the link in the email to verify your account.
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Didn't receive the email? Check your spam folder or try signing up again.
+            </p>
+            <Link
+              href="/login"
+              className="inline-block px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Back to Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

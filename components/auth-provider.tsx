@@ -59,10 +59,19 @@ export function AuthProvider({ children, initialUser, initialCrmUser }: AuthProv
   }, [supabase])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Sign out error:', error)
+      }
+    } catch (err) {
+      console.error('Sign out failed:', err)
+    }
+    // Clear state and redirect regardless of error
     setSupabaseUser(null)
     setCrmUser(null)
-    window.location.href = '/login'
+    // Force a full page reload to clear all state
+    window.location.replace('/login')
   }
 
   return (
