@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import type { LeadSource, Company, ClientType } from '@/lib/types'
 import type { ContactWithCompany } from './page'
 import { ContactSlideOver } from './contact-slide-over'
@@ -70,6 +71,7 @@ function getEffectiveClientType(contact: ContactWithCompany): ClientType | null 
 }
 
 export function ContactsTable({ initialContacts, companies }: ContactsTableProps) {
+  const router = useRouter()
   const [contacts, setContacts] = useState(initialContacts)
   const [search, setSearch] = useState('')
   const [leadSourceFilter, setLeadSourceFilter] = useState<LeadSource | ''>('')
@@ -155,8 +157,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
   }
 
   const handleRowClick = (contact: ContactWithCompany) => {
-    setEditingContact(contact)
-    setSlideOverOpen(true)
+    router.push(`/contacts/${contact.id}`)
   }
 
   const handleAddNew = () => {

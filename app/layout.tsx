@@ -43,7 +43,7 @@ export default async function RootLayout({
           {supabaseUser ? (
             <QuickAddDealWrapper>
               <Sidebar />
-              <div className="md:ml-16 lg:ml-56 min-h-screen transition-all">
+              <div className="md:ml-16 lg:ml-56 min-h-screen transition-all relative z-0">
                 {children}
               </div>
             </QuickAddDealWrapper>
