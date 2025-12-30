@@ -5,7 +5,6 @@ import type { Contact, Company, Deal, Activity, User } from '@/lib/types'
 import { STAGE_LABELS, STAGE_COLORS } from '@/lib/types'
 import { ContactActivitiesSection } from './contact-activities-section'
 import { ContactActions } from './contact-actions'
-import { ActivityTimeline } from '@/components/activity-timeline'
 
 export const dynamic = 'force-dynamic'
 
@@ -277,13 +276,6 @@ export default async function ContactDetailPage({
             <ContactActivitiesSection
               contactId={contact.id}
               activities={activities}
-            />
-
-            {/* Activity History Timeline */}
-            <ActivityTimeline
-              activities={activities}
-              title="Activity History"
-              defaultExpanded={true}
             />
           </div>
         </div>

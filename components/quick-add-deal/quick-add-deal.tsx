@@ -255,7 +255,7 @@ export function QuickAddDeal() {
           value: dealValue,
           deal_type: dealType || null,
           expected_close_date: expectedCloseDate || null,
-          stage: 'lead',
+          stage: 'qualified',
           sales_type: finalSalesType,
           company_id: companyId,
           contact_id: contactId,

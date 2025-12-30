@@ -6,10 +6,9 @@ export type DealType = 'custom_design' | 'builder_design' | 'engineering' | 'sof
 export type SalesType = 'b2c' | 'b2b'
 
 // Combined stages from both workflows
-// B2C: lead → qualified → concept → design → engineering → complete → lost
-// B2B: lead → qualified → proposal → active → complete → lost
+// B2C: qualified → concept → design → engineering → complete → lost
+// B2B: qualified → proposal → active → complete → lost
 export type PipelineStage =
-  | 'lead'
   | 'qualified'
   | 'concept'      // B2C only
   | 'design'       // B2C only
@@ -20,11 +19,10 @@ export type PipelineStage =
   | 'lost'
 
 // Stage configurations by sales type
-export const B2C_STAGES: PipelineStage[] = ['lead', 'qualified', 'concept', 'design', 'engineering', 'complete', 'lost']
-export const B2B_STAGES: PipelineStage[] = ['lead', 'qualified', 'proposal', 'active', 'complete', 'lost']
+export const B2C_STAGES: PipelineStage[] = ['qualified', 'concept', 'design', 'engineering', 'complete', 'lost']
+export const B2B_STAGES: PipelineStage[] = ['qualified', 'proposal', 'active', 'complete', 'lost']
 
 export const STAGE_LABELS: Record<PipelineStage, string> = {
-  lead: 'Lead',
   qualified: 'Qualified',
   concept: 'Concept',
   design: 'Design',
@@ -36,7 +34,6 @@ export const STAGE_LABELS: Record<PipelineStage, string> = {
 }
 
 export const STAGE_COLORS: Record<PipelineStage, string> = {
-  lead: 'bg-gray-100 text-gray-800',
   qualified: 'bg-blue-100 text-blue-800',
   concept: 'bg-cyan-100 text-cyan-800',
   design: 'bg-indigo-100 text-indigo-800',

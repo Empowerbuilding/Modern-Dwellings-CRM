@@ -55,7 +55,7 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
           company_id: contact.company_id,
           title: dealTitle,
           value: value ? parseFloat(value) : null,
-          stage: 'lead',
+          stage: 'qualified',
           sales_type: salesType,
         })
         .select('id, title')

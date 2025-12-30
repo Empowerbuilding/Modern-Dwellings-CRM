@@ -62,7 +62,7 @@ export function DealSlideOver({
     contact_id: '',
     owner_id: '',
     value: '',
-    stage: 'lead',
+    stage: 'qualified',
     sales_type: 'b2c',
     deal_type: '',
     probability: '',
@@ -210,7 +210,7 @@ export function DealSlideOver({
                     const newSalesType = e.target.value as SalesType
                     const newStages = getStagesForSalesType(newSalesType)
                     // Reset stage if current stage isn't valid for new sales type
-                    const newStage = newStages.includes(formData.stage) ? formData.stage : 'lead'
+                    const newStage = newStages.includes(formData.stage) ? formData.stage : 'qualified'
                     setFormData({ ...formData, sales_type: newSalesType, stage: newStage })
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"

@@ -7,7 +7,6 @@ import { DealValueEditor } from './deal-value-editor'
 import { LinkedDealsSection } from './linked-deals-section'
 import { DealActions } from './deal-actions'
 import { ActivitiesSection } from './activities-section'
-import { ActivityTimeline } from '@/components/activity-timeline'
 
 export const dynamic = 'force-dynamic'
 
@@ -133,19 +132,39 @@ interface ActivityWithUser extends Activity {
   user?: User | null
 }
 
-async function getDealActivities(dealId: string): Promise<Activity[]> {
-  const { data, error } = await (supabase.from('activities') as any)
+async function getDealAndContactActivities(dealId: string, contactId: string | null): Promise<Activity[]> {
+  // Fetch activities for this deal
+  const { data: dealActivities, error: dealError } = await (supabase.from('activities') as any)
     .select('*')
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching deal activities:', error)
-    return []
+  if (dealError) {
+    console.error('Error fetching deal activities:', dealError)
   }
 
-  console.log(`Fetched ${data?.length ?? 0} activities for deal ${dealId}`)
-  return (data as Activity[]) ?? []
+  // If there's a contact, also fetch their activities (page views, etc.)
+  let contactActivities: Activity[] = []
+  if (contactId) {
+    const { data, error: contactError } = await (supabase.from('activities') as any)
+      .select('*')
+      .eq('contact_id', contactId)
+      .is('deal_id', null) // Only get activities not already linked to a deal
+      .order('created_at', { ascending: false })
+
+    if (contactError) {
+      console.error('Error fetching contact activities:', contactError)
+    } else {
+      contactActivities = data ?? []
+    }
+  }
+
+  // Merge and sort by created_at descending
+  const allActivities = [...(dealActivities ?? []), ...contactActivities]
+  allActivities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  console.log(`Fetched ${allActivities.length} activities for deal ${dealId}`)
+  return allActivities
 }
 
 export default async function DealDetailPage({
@@ -167,7 +186,7 @@ export default async function DealDetailPage({
     getAllCompanies(),
     getAllContacts(),
     getAllUsers(),
-    getDealActivities(deal.id),
+    getDealAndContactActivities(deal.id, deal.contact_id),
   ])
 
   const stages = getStagesForSalesType(deal.sales_type)
@@ -396,13 +415,6 @@ export default async function DealDetailPage({
           <div className="lg:col-span-2 space-y-6">
             {/* Activities */}
             <ActivitiesSection dealId={deal.id} activities={activities} />
-
-            {/* Activity History Timeline */}
-            <ActivityTimeline
-              activities={activities}
-              title="Activity History"
-              defaultExpanded={true}
-            />
 
             {/* Value History */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
