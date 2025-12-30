@@ -33,11 +33,15 @@ const DEAL_TYPE_LABELS: Record<DealType, string> = {
 }
 
 const ACTIVITY_ICONS: Record<ActivityType, string> = {
+  page_view: '👁️',
+  form_submit: '📋',
+  email_sent: '✉️',
+  sms_sent: '💬',
   call: '📞',
-  email: '✉️',
-  meeting: '👥',
-  task: '✓',
   note: '📝',
+  stage_change: '🔄',
+  deal_created: '🤝',
+  contact_created: '👤',
 }
 
 function formatCurrency(value: number): string {
@@ -72,7 +76,7 @@ type DealWithContact = Deal & { contacts: { first_name: string; last_name: strin
 type ActivityWithRelations = Activity & {
   contacts: { first_name: string; last_name: string } | null
   deals: { title: string } | null
-  users: { name: string } | null
+  user: { name: string } | null
 }
 
 async function getCompany(id: string): Promise<Company | null> {
@@ -106,7 +110,7 @@ async function getDeals(companyId: string): Promise<DealWithContact[]> {
 
 async function getActivities(companyId: string): Promise<ActivityWithRelations[]> {
   const { data } = await (supabase.from('activities') as any)
-    .select('*, contacts(first_name, last_name), deals(title), users:created_by_id(name)')
+    .select('*, contacts(first_name, last_name), deals(title), user:user_id(name)')
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
     .limit(20)
@@ -349,7 +353,7 @@ export default async function CompanyDetailPage({
                   {activities.map((activity) => (
                     <div key={activity.id} className="flex gap-3">
                       <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm">
-                        {ACTIVITY_ICONS[activity.type]}
+                        {ACTIVITY_ICONS[activity.activity_type]}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
@@ -376,13 +380,10 @@ export default async function CompanyDetailPage({
                             <p className="text-xs text-gray-500">
                               {formatDateTime(activity.created_at)}
                             </p>
-                            {activity.users && (
+                            {activity.user && (
                               <p className="text-xs text-gray-400">
-                                by {activity.users.name}
+                                by {activity.user.name}
                               </p>
-                            )}
-                            {activity.completed && (
-                              <span className="text-xs text-green-600">Completed</span>
                             )}
                           </div>
                         </div>

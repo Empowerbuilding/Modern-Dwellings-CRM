@@ -76,12 +76,10 @@ async function getRecentDeals(): Promise<(Deal & { company_name?: string })[]> {
   }))
 }
 
-async function getUpcomingTasks(): Promise<(Activity & { contact_name?: string; created_by_name?: string })[]> {
+async function getRecentActivities(): Promise<(Activity & { contact_name?: string; user_name?: string })[]> {
   const { data } = await (supabase.from('activities') as any)
-    .select('*, contacts(first_name, last_name), users:created_by_id(name)')
-    .eq('completed', false)
-    .not('due_date', 'is', null)
-    .order('due_date', { ascending: true })
+    .select('*, contacts(first_name, last_name), user:user_id(name)')
+    .order('created_at', { ascending: false })
     .limit(5)
 
   if (!data) return []
@@ -91,15 +89,15 @@ async function getUpcomingTasks(): Promise<(Activity & { contact_name?: string; 
     contact_name: activity.contacts
       ? `${activity.contacts.first_name} ${activity.contacts.last_name}`
       : undefined,
-    created_by_name: activity.users?.name,
+    user_name: activity.user?.name,
   }))
 }
 
 export default async function Dashboard() {
-  const [pipelineStats, recentDeals, upcomingTasks] = await Promise.all([
+  const [pipelineStats, recentDeals, recentActivities] = await Promise.all([
     getPipelineStats(),
     getRecentDeals(),
-    getUpcomingTasks(),
+    getRecentActivities(),
   ])
 
   return (
@@ -197,31 +195,31 @@ export default async function Dashboard() {
             </div>
           </section>
 
-          {/* Upcoming Tasks */}
+          {/* Recent Activities */}
           <section>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Upcoming Tasks</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
             <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200">
-              {upcomingTasks.length === 0 ? (
-                <p className="p-4 text-sm text-gray-500">No upcoming tasks</p>
+              {recentActivities.length === 0 ? (
+                <p className="p-4 text-sm text-gray-500">No recent activity</p>
               ) : (
-                upcomingTasks.map((task) => (
-                  <div key={task.id} className="p-4">
+                recentActivities.map((activity) => (
+                  <div key={activity.id} className="p-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">{task.title}</p>
-                        {task.contact_name && (
-                          <p className="text-sm text-gray-500">{task.contact_name}</p>
+                        <p className="font-medium text-gray-900">{activity.title}</p>
+                        {activity.contact_name && (
+                          <p className="text-sm text-gray-500">{activity.contact_name}</p>
                         )}
-                        {task.created_by_name && (
-                          <p className="text-xs text-gray-400">by {task.created_by_name}</p>
+                        {activity.user_name && (
+                          <p className="text-xs text-gray-400">by {activity.user_name}</p>
                         )}
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-gray-500">
-                          {task.due_date && formatDate(task.due_date)}
+                          {formatDate(activity.created_at)}
                         </p>
                         <span className="text-xs font-medium text-gray-600 capitalize">
-                          {task.type}
+                          {activity.activity_type.replace('_', ' ')}
                         </span>
                       </div>
                     </div>

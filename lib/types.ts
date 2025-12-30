@@ -53,7 +53,16 @@ export function getStagesForSalesType(salesType: SalesType): PipelineStage[] {
 
 export type LeadSource = 'facebook' | 'facebook_ad' | 'google' | 'referral' | 'website' | 'contact_form' | 'cost_calc' | 'cold' | 'repeat' | 'guide_download' | 'empower_website' | 'barnhaus_contact' | 'other'
 
-export type ActivityType = 'call' | 'email' | 'meeting' | 'task' | 'note'
+export type ActivityType =
+  | 'page_view'
+  | 'form_submit'
+  | 'email_sent'
+  | 'sms_sent'
+  | 'call'
+  | 'note'
+  | 'stage_change'
+  | 'deal_created'
+  | 'contact_created'
 
 export type UserRole = 'admin' | 'sales'
 
@@ -119,18 +128,16 @@ export interface Deal {
 
 export interface Activity {
   id: string
-  deal_id: string | null
   contact_id: string | null
+  deal_id: string | null
   company_id: string | null
-  created_by_id: string | null
-  type: ActivityType
+  user_id: string | null
+  activity_type: ActivityType
   title: string
   description: string | null
-  due_date: string | null
-  completed: boolean
-  completed_at: string | null
-  created_at?: string
-  updated_at?: string
+  metadata: Record<string, unknown> | null
+  anonymous_id: string | null
+  created_at: string
 }
 
 export interface DealValueHistory {
@@ -192,7 +199,7 @@ export interface ActivityWithRelations extends Activity {
   deal?: Deal | null
   contact?: Contact | null
   company?: Company | null
-  created_by?: User | null
+  user?: User | null
 }
 
 // Supabase Database type for client
@@ -239,15 +246,9 @@ export interface Database {
       }
       activities: {
         Row: Activity
-        Insert: Omit<Activity, 'id' | 'created_at' | 'updated_at'> & { id?: string }
+        Insert: Omit<Activity, 'id' | 'created_at'> & { id?: string; created_at?: string }
         Update: Partial<Omit<Activity, 'id'>>
         Relationships: [
-          {
-            foreignKeyName: 'activities_deal_id_fkey'
-            columns: ['deal_id']
-            referencedRelation: 'deals'
-            referencedColumns: ['id']
-          },
           {
             foreignKeyName: 'activities_contact_id_fkey'
             columns: ['contact_id']
@@ -255,9 +256,21 @@ export interface Database {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'activities_deal_id_fkey'
+            columns: ['deal_id']
+            referencedRelation: 'deals'
+            referencedColumns: ['id']
+          },
+          {
             foreignKeyName: 'activities_company_id_fkey'
             columns: ['company_id']
             referencedRelation: 'companies'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'activities_user_id_fkey'
+            columns: ['user_id']
+            referencedRelation: 'users'
             referencedColumns: ['id']
           }
         ]

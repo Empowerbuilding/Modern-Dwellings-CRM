@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Activity, ActivityType, User } from '@/lib/types'
 
-const ACTIVITY_TYPES: ActivityType[] = ['note', 'call', 'email', 'meeting', 'task']
+// Activity types that can be manually created by users
+const MANUAL_ACTIVITY_TYPES: ActivityType[] = ['note', 'call', 'email_sent', 'sms_sent']
 
-const ACTIVITY_TYPE_CONFIG: Record<ActivityType, { label: string; icon: JSX.Element; color: string }> = {
+const ACTIVITY_TYPE_CONFIG: Partial<Record<ActivityType, { label: string; icon: JSX.Element; color: string }>> = {
   note: {
     label: 'Note',
     color: 'bg-gray-100 text-gray-600',
@@ -26,7 +27,7 @@ const ACTIVITY_TYPE_CONFIG: Record<ActivityType, { label: string; icon: JSX.Elem
       </svg>
     ),
   },
-  email: {
+  email_sent: {
     label: 'Email',
     color: 'bg-blue-100 text-blue-600',
     icon: (
@@ -35,28 +36,65 @@ const ACTIVITY_TYPE_CONFIG: Record<ActivityType, { label: string; icon: JSX.Elem
       </svg>
     ),
   },
-  meeting: {
-    label: 'Meeting',
+  sms_sent: {
+    label: 'SMS',
     color: 'bg-purple-100 text-purple-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
     ),
   },
-  task: {
-    label: 'Task',
+  page_view: {
+    label: 'Page View',
+    color: 'bg-indigo-100 text-indigo-600',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+    ),
+  },
+  form_submit: {
+    label: 'Form',
+    color: 'bg-cyan-100 text-cyan-600',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+  },
+  stage_change: {
+    label: 'Stage Change',
     color: 'bg-yellow-100 text-yellow-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      </svg>
+    ),
+  },
+  deal_created: {
+    label: 'Deal Created',
+    color: 'bg-emerald-100 text-emerald-600',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+    ),
+  },
+  contact_created: {
+    label: 'Contact Created',
+    color: 'bg-teal-100 text-teal-600',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
       </svg>
     ),
   },
 }
 
 interface ActivityWithUser extends Activity {
-  created_by?: User | null
+  user?: User | null
 }
 
 interface ContactActivitiesSectionProps {
@@ -90,7 +128,7 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
   const [showForm, setShowForm] = useState(false)
   const [filterType, setFilterType] = useState<ActivityType | 'all'>('all')
   const [formData, setFormData] = useState({
-    type: 'note' as ActivityType,
+    activity_type: 'note' as ActivityType,
     title: '',
     description: '',
   })
@@ -98,7 +136,7 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
 
   const filteredActivities = filterType === 'all'
     ? activities
-    : activities.filter(a => a.type === filterType)
+    : activities.filter(a => a.activity_type === filterType)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -108,38 +146,21 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
     try {
       const { error } = await (supabase.from('activities') as any).insert({
         contact_id: contactId,
-        type: formData.type,
+        activity_type: formData.activity_type,
         title: formData.title.trim(),
         description: formData.description.trim() || null,
-        created_by_id: currentUserId || null,
-        completed: formData.type === 'note',
+        user_id: currentUserId || null,
       })
 
       if (error) throw error
 
-      setFormData({ type: 'note', title: '', description: '' })
+      setFormData({ activity_type: 'note', title: '', description: '' })
       setShowForm(false)
       router.refresh()
     } catch (err) {
       console.error('Failed to create activity:', err)
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleToggleComplete = async (activity: Activity) => {
-    try {
-      const { error } = await (supabase.from('activities') as any)
-        .update({
-          completed: !activity.completed,
-          completed_at: !activity.completed ? new Date().toISOString() : null,
-        })
-        .eq('id', activity.id)
-
-      if (error) throw error
-      router.refresh()
-    } catch (err) {
-      console.error('Failed to update activity:', err)
     }
   }
 
@@ -162,27 +183,31 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
           <div className="space-y-3">
             {/* Type selector */}
             <div className="flex gap-1">
-              {ACTIVITY_TYPES.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, type })}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    formData.type === type
-                      ? ACTIVITY_TYPE_CONFIG[type].color
-                      : 'text-gray-500 hover:bg-gray-100'
-                  }`}
-                >
-                  {ACTIVITY_TYPE_CONFIG[type].icon}
-                  <span className="hidden sm:inline">{ACTIVITY_TYPE_CONFIG[type].label}</span>
-                </button>
-              ))}
+              {MANUAL_ACTIVITY_TYPES.map((type) => {
+                const config = ACTIVITY_TYPE_CONFIG[type]
+                if (!config) return null
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, activity_type: type })}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      formData.activity_type === type
+                        ? config.color
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    {config.icon}
+                    <span className="hidden sm:inline">{config.label}</span>
+                  </button>
+                )
+              })}
             </div>
 
             {/* Title */}
             <input
               type="text"
-              placeholder={`${ACTIVITY_TYPE_CONFIG[formData.type].label} title...`}
+              placeholder={`${ACTIVITY_TYPE_CONFIG[formData.activity_type]?.label || 'Activity'} title...`}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
@@ -225,20 +250,22 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
           >
             All ({activities.length})
           </button>
-          {ACTIVITY_TYPES.map((type) => {
-            const count = activities.filter(a => a.type === type).length
-            if (count === 0) return null
+          {Object.keys(ACTIVITY_TYPE_CONFIG).map((type) => {
+            const activityType = type as ActivityType
+            const config = ACTIVITY_TYPE_CONFIG[activityType]
+            const count = activities.filter(a => a.activity_type === activityType).length
+            if (count === 0 || !config) return null
             return (
               <button
                 key={type}
-                onClick={() => setFilterType(type)}
+                onClick={() => setFilterType(activityType)}
                 className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                  filterType === type
+                  filterType === activityType
                     ? 'bg-gray-900 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {ACTIVITY_TYPE_CONFIG[type].label} ({count})
+                {config.label} ({count})
               </button>
             )
           })}
@@ -249,59 +276,35 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
       {filteredActivities.length === 0 ? (
         <p className="text-sm text-gray-500 py-8 text-center">
           {activities.length === 0
-            ? 'No activity yet. Add a note, log a call, or track tasks.'
+            ? 'No activity yet. Add a note or log a call.'
             : 'No activities match this filter.'}
         </p>
       ) : (
         <div className="space-y-3">
           {filteredActivities.map((activity) => {
-            const config = ACTIVITY_TYPE_CONFIG[activity.type]
-            const isTask = activity.type === 'task'
+            const config = ACTIVITY_TYPE_CONFIG[activity.activity_type]
 
             return (
               <div
                 key={activity.id}
-                className={`flex gap-3 p-3 rounded-lg border ${
-                  activity.completed && isTask
-                    ? 'bg-gray-50 border-gray-200'
-                    : 'bg-white border-gray-200'
-                }`}
+                className="flex gap-3 p-3 rounded-lg border bg-white border-gray-200"
               >
-                {/* Icon / Checkbox */}
+                {/* Icon */}
                 <div className="flex-shrink-0">
-                  {isTask ? (
-                    <button
-                      onClick={() => handleToggleComplete(activity)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                        activity.completed
-                          ? 'bg-green-100 text-green-600'
-                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                      }`}
-                    >
-                      {activity.completed ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                      )}
-                    </button>
-                  ) : (
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${config.color}`}>
-                      {config.icon}
-                    </div>
-                  )}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${config?.color || 'bg-gray-100 text-gray-600'}`}>
+                    {config?.icon || (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                  </div>
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className={`text-sm font-medium ${
-                        activity.completed && isTask ? 'text-gray-500 line-through' : 'text-gray-900'
-                      }`}>
+                      <p className="text-sm font-medium text-gray-900">
                         {activity.title}
                       </p>
                       {activity.description && (
@@ -310,13 +313,13 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
                         </p>
                       )}
                       <p className="text-xs text-gray-400 mt-1">
-                        {activity.created_by?.name || 'System'}
+                        {activity.user?.name || 'System'}
                         {' · '}
-                        {formatDateTime(activity.created_at!)}
+                        {formatDateTime(activity.created_at)}
                       </p>
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${config.color}`}>
-                      {config.label}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${config?.color || 'bg-gray-100 text-gray-600'}`}>
+                      {config?.label || activity.activity_type}
                     </span>
                   </div>
                 </div>

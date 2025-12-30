@@ -5,6 +5,7 @@ import type { Contact, Company, Deal, Activity, User } from '@/lib/types'
 import { STAGE_LABELS, STAGE_COLORS } from '@/lib/types'
 import { ContactActivitiesSection } from './contact-activities-section'
 import { ContactActions } from './contact-actions'
+import { ActivityTimeline } from '@/components/activity-timeline'
 
 export const dynamic = 'force-dynamic'
 
@@ -78,12 +79,12 @@ async function getContactDeals(contactId: string): Promise<Deal[]> {
 }
 
 interface ActivityWithUser extends Activity {
-  created_by?: User | null
+  user?: User | null
 }
 
 async function getContactActivities(contactId: string): Promise<ActivityWithUser[]> {
   const { data } = await (supabase.from('activities') as any)
-    .select('*, created_by:users(*)')
+    .select('*, user:user_id(id, name, email)')
     .eq('contact_id', contactId)
     .order('created_at', { ascending: false })
 
@@ -270,10 +271,17 @@ export default async function ContactDetailPage({
           </div>
 
           {/* Right Column - Activities */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <ContactActivitiesSection
               contactId={contact.id}
               activities={activities}
+            />
+
+            {/* Activity History Timeline */}
+            <ActivityTimeline
+              activities={activities}
+              title="Activity History"
+              defaultExpanded={false}
             />
           </div>
         </div>

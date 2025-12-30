@@ -1,0 +1,274 @@
+/**
+ * CRM Activity Tracking Script
+ *
+ * Add to your website before </body>:
+ * <script src="https://crm.yourdomain.com/tracking.js" data-site="barnhaus"></script>
+ *
+ * Supported data attributes:
+ * - data-site: Site identifier (e.g., "barnhaus", "empower")
+ * - data-endpoint: Custom API endpoint (optional, defaults to same origin)
+ * - data-debug: Set to "true" to enable console logging
+ */
+(function() {
+  'use strict';
+
+  // Configuration
+  var STORAGE_KEY = '_crm_visitor_id';
+  var LAST_VIEW_KEY = '_crm_last_view';
+  var DEBOUNCE_MS = 1000; // Minimum time between page views
+  var RETRY_ATTEMPTS = 2;
+  var RETRY_DELAY_MS = 1000;
+
+  // Get script element and configuration
+  var scripts = document.getElementsByTagName('script');
+  var currentScript = scripts[scripts.length - 1];
+  var config = {
+    site: currentScript.getAttribute('data-site') || 'unknown',
+    endpoint: currentScript.getAttribute('data-endpoint') || getDefaultEndpoint(),
+    debug: currentScript.getAttribute('data-debug') === 'true'
+  };
+
+  // Get default endpoint from script src
+  function getDefaultEndpoint() {
+    var src = currentScript.getAttribute('src') || '';
+    if (src.indexOf('://') !== -1) {
+      var parts = src.split('/');
+      return parts[0] + '//' + parts[2] + '/api/activities/track';
+    }
+    return '/api/activities/track';
+  }
+
+  // Debug logging
+  function log() {
+    if (config.debug && console && console.log) {
+      var args = Array.prototype.slice.call(arguments);
+      args.unshift('[CRM Tracking]');
+      console.log.apply(console, args);
+    }
+  }
+
+  // Generate a random UUID v4
+  function generateUUID() {
+    var d = new Date().getTime();
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+      d += performance.now();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = (d + Math.random() * 16) % 16 | 0;
+      d = Math.floor(d / 16);
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  // Get or create visitor ID
+  function getVisitorId() {
+    var id = null;
+    try {
+      id = localStorage.getItem(STORAGE_KEY);
+      if (!id) {
+        id = generateUUID();
+        localStorage.setItem(STORAGE_KEY, id);
+        log('Generated new visitor ID:', id);
+      } else {
+        log('Retrieved visitor ID:', id);
+      }
+    } catch (e) {
+      // localStorage might be disabled
+      id = generateUUID();
+      log('localStorage unavailable, using session ID:', id);
+    }
+    return id;
+  }
+
+  // Check if we should debounce this page view
+  function shouldDebounce() {
+    try {
+      var lastView = localStorage.getItem(LAST_VIEW_KEY);
+      if (lastView) {
+        var lastTime = parseInt(lastView, 10);
+        var now = Date.now();
+        if (now - lastTime < DEBOUNCE_MS) {
+          log('Debouncing page view (too soon after last view)');
+          return true;
+        }
+      }
+      localStorage.setItem(LAST_VIEW_KEY, Date.now().toString());
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+    return false;
+  }
+
+  // Get page title, handling edge cases
+  function getPageTitle() {
+    var title = document.title || '';
+    // Clean up common patterns
+    title = title.replace(/^\s+|\s+$/g, ''); // Trim
+    title = title.replace(/\s*[|\-–—]\s*$/, ''); // Remove trailing separators
+    return title || 'Untitled Page';
+  }
+
+  // Get clean referrer
+  function getReferrer() {
+    var ref = document.referrer || '';
+    // Don't include internal referrer (same domain)
+    if (ref) {
+      try {
+        var refHost = new URL(ref).hostname;
+        var currentHost = window.location.hostname;
+        if (refHost === currentHost) {
+          return ''; // Internal navigation
+        }
+      } catch (e) {
+        // Invalid URL, return as is
+      }
+    }
+    return ref;
+  }
+
+  // Send tracking request with retry
+  function sendTrackingRequest(data, attempt) {
+    attempt = attempt || 1;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', config.endpoint, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          log('Page view tracked successfully');
+        } else if (attempt < RETRY_ATTEMPTS) {
+          log('Tracking failed, retrying... (attempt ' + (attempt + 1) + ')');
+          setTimeout(function() {
+            sendTrackingRequest(data, attempt + 1);
+          }, RETRY_DELAY_MS);
+        } else {
+          log('Tracking failed after ' + attempt + ' attempts');
+        }
+      }
+    };
+
+    xhr.onerror = function() {
+      if (attempt < RETRY_ATTEMPTS) {
+        log('Network error, retrying... (attempt ' + (attempt + 1) + ')');
+        setTimeout(function() {
+          sendTrackingRequest(data, attempt + 1);
+        }, RETRY_DELAY_MS);
+      } else {
+        log('Network error after ' + attempt + ' attempts');
+      }
+    };
+
+    try {
+      xhr.send(JSON.stringify(data));
+    } catch (e) {
+      log('Failed to send tracking request:', e);
+    }
+  }
+
+  // Track page view
+  function trackPageView() {
+    // Check debounce
+    if (shouldDebounce()) {
+      return;
+    }
+
+    var visitorId = getVisitorId();
+    var pageUrl = window.location.href;
+    var pageTitle = getPageTitle();
+    var referrer = getReferrer();
+
+    var data = {
+      anonymous_id: visitorId,
+      activity_type: 'page_view',
+      title: 'Visited ' + pageTitle,
+      page_url: pageUrl,
+      metadata: {
+        site: config.site,
+        page_title: pageTitle,
+        page_path: window.location.pathname,
+        referrer: referrer || null,
+        screen_width: window.screen ? window.screen.width : null,
+        screen_height: window.screen ? window.screen.height : null,
+        viewport_width: window.innerWidth || null,
+        viewport_height: window.innerHeight || null,
+        timezone: Intl && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
+        language: navigator.language || null,
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    log('Tracking page view:', data);
+    sendTrackingRequest(data);
+  }
+
+  // Track custom events (exposed globally)
+  function trackEvent(eventType, eventTitle, metadata) {
+    var visitorId = getVisitorId();
+
+    var data = {
+      anonymous_id: visitorId,
+      activity_type: eventType || 'page_view',
+      title: eventTitle || 'Custom Event',
+      page_url: window.location.href,
+      metadata: Object.assign({
+        site: config.site,
+        page_path: window.location.pathname,
+        timestamp: new Date().toISOString()
+      }, metadata || {})
+    };
+
+    log('Tracking event:', data);
+    sendTrackingRequest(data);
+  }
+
+  // Get visitor ID (exposed globally)
+  function getPublicVisitorId() {
+    return getVisitorId();
+  }
+
+  // Initialize tracking
+  function init() {
+    log('Initializing with config:', config);
+
+    // Track initial page view
+    if (document.readyState === 'complete') {
+      trackPageView();
+    } else {
+      window.addEventListener('load', trackPageView);
+    }
+
+    // Track SPA navigation (History API)
+    var originalPushState = history.pushState;
+    var originalReplaceState = history.replaceState;
+
+    history.pushState = function() {
+      originalPushState.apply(this, arguments);
+      setTimeout(trackPageView, 0);
+    };
+
+    history.replaceState = function() {
+      originalReplaceState.apply(this, arguments);
+      setTimeout(trackPageView, 0);
+    };
+
+    window.addEventListener('popstate', function() {
+      setTimeout(trackPageView, 0);
+    });
+
+    log('Tracking initialized');
+  }
+
+  // Expose public API
+  window.CRMTracking = {
+    trackEvent: trackEvent,
+    trackPageView: trackPageView,
+    getVisitorId: getPublicVisitorId,
+    config: config
+  };
+
+  // Initialize
+  init();
+
+})();

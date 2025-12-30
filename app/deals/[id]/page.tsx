@@ -7,6 +7,7 @@ import { DealValueEditor } from './deal-value-editor'
 import { LinkedDealsSection } from './linked-deals-section'
 import { DealActions } from './deal-actions'
 import { ActivitiesSection } from './activities-section'
+import { ActivityTimeline } from '@/components/activity-timeline'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,12 +106,12 @@ async function getAllUsers(): Promise<User[]> {
 }
 
 interface ActivityWithUser extends Activity {
-  created_by?: User | null
+  user?: User | null
 }
 
 async function getDealActivities(dealId: string): Promise<ActivityWithUser[]> {
   const { data } = await (supabase.from('activities') as any)
-    .select('*, created_by:users(*)')
+    .select('*, user:user_id(id, name, email)')
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false })
 
@@ -299,6 +300,13 @@ export default async function DealDetailPage({
           <div className="lg:col-span-2 space-y-6">
             {/* Activities */}
             <ActivitiesSection dealId={deal.id} activities={activities} />
+
+            {/* Activity History Timeline */}
+            <ActivityTimeline
+              activities={activities}
+              title="Activity History"
+              defaultExpanded={false}
+            />
 
             {/* Value History */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">

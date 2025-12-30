@@ -17,6 +17,7 @@ interface LeadWebhookPayload {
   sales_type?: SalesType
   fbclid?: string
   metadata?: Record<string, unknown>
+  anonymous_id?: string  // For linking anonymous page views to the new contact
 }
 
 export async function POST(request: NextRequest) {
@@ -105,7 +106,47 @@ export async function POST(request: NextRequest) {
 
       contactId = newContact.id
       console.log(`[${timestamp}] Created new contact: ${contactId}`)
+
+      // Log contact_created activity
+      await supabase.from('activities').insert({
+        contact_id: contactId,
+        activity_type: 'contact_created',
+        title: `Contact created: ${payload.first_name} ${payload.last_name}`,
+        metadata: {
+          source: payload.source,
+          email: payload.email,
+          phone: payload.phone || null,
+        },
+        anonymous_id: payload.anonymous_id || null,
+      })
     }
+
+    // Link any anonymous activities to this contact
+    if (payload.anonymous_id) {
+      const { data: linkedActivities } = await supabase
+        .from('activities')
+        .update({ contact_id: contactId })
+        .eq('anonymous_id', payload.anonymous_id)
+        .is('contact_id', null)
+        .select('id')
+
+      const linkedCount = linkedActivities?.length || 0
+      if (linkedCount > 0) {
+        console.log(`[${timestamp}] Linked ${linkedCount} anonymous activities to contact: ${contactId}`)
+      }
+    }
+
+    // Log form_submit activity
+    await supabase.from('activities').insert({
+      contact_id: contactId,
+      activity_type: 'form_submit',
+      title: `Submitted ${formatSource(payload.source)} form`,
+      metadata: {
+        source: payload.source,
+        form_data: payload.metadata || null,
+      },
+      anonymous_id: payload.anonymous_id || null,
+    })
 
     // Format metadata as nicely structured notes
     const dealNotes = formatDealNotes(payload.source, payload.metadata)
@@ -135,6 +176,20 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[${timestamp}] Created deal: ${newDeal.id} for contact: ${contactId}`)
+
+    // Log deal_created activity
+    await supabase.from('activities').insert({
+      contact_id: contactId,
+      deal_id: newDeal.id,
+      activity_type: 'deal_created',
+      title: `Deal created: ${dealTitle}`,
+      metadata: {
+        source: payload.source,
+        sales_type: salesType,
+        deal_title: dealTitle,
+      },
+      anonymous_id: payload.anonymous_id || null,
+    })
 
     return NextResponse.json({
       success: true,
