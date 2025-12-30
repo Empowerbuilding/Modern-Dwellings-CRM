@@ -78,17 +78,19 @@ async function getContactDeals(contactId: string): Promise<Deal[]> {
   return (data as Deal[]) ?? []
 }
 
-interface ActivityWithUser extends Activity {
-  user?: User | null
-}
-
-async function getContactActivities(contactId: string): Promise<ActivityWithUser[]> {
-  const { data } = await (supabase.from('activities') as any)
-    .select('*, user:user_id(id, name, email)')
+async function getContactActivities(contactId: string): Promise<Activity[]> {
+  const { data, error } = await (supabase.from('activities') as any)
+    .select('*')
     .eq('contact_id', contactId)
     .order('created_at', { ascending: false })
 
-  return (data as ActivityWithUser[]) ?? []
+  if (error) {
+    console.error('Error fetching contact activities:', error)
+    return []
+  }
+
+  console.log(`Fetched ${data?.length ?? 0} activities for contact ${contactId}`)
+  return (data as Activity[]) ?? []
 }
 
 async function getAllCompanies(): Promise<Pick<Company, 'id' | 'name' | 'type'>[]> {
@@ -281,7 +283,7 @@ export default async function ContactDetailPage({
             <ActivityTimeline
               activities={activities}
               title="Activity History"
-              defaultExpanded={false}
+              defaultExpanded={true}
             />
           </div>
         </div>

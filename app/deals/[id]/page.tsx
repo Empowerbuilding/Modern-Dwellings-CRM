@@ -109,13 +109,19 @@ interface ActivityWithUser extends Activity {
   user?: User | null
 }
 
-async function getDealActivities(dealId: string): Promise<ActivityWithUser[]> {
-  const { data } = await (supabase.from('activities') as any)
-    .select('*, user:user_id(id, name, email)')
+async function getDealActivities(dealId: string): Promise<Activity[]> {
+  const { data, error } = await (supabase.from('activities') as any)
+    .select('*')
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false })
 
-  return (data as ActivityWithUser[]) ?? []
+  if (error) {
+    console.error('Error fetching deal activities:', error)
+    return []
+  }
+
+  console.log(`Fetched ${data?.length ?? 0} activities for deal ${dealId}`)
+  return (data as Activity[]) ?? []
 }
 
 export default async function DealDetailPage({
@@ -305,7 +311,7 @@ export default async function DealDetailPage({
             <ActivityTimeline
               activities={activities}
               title="Activity History"
-              defaultExpanded={false}
+              defaultExpanded={true}
             />
 
             {/* Value History */}
