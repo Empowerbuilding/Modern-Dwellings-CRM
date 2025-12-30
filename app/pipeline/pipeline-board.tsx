@@ -29,7 +29,6 @@ function getInitials(name: string): string {
 }
 
 const STAGE_DOT_COLORS: Record<PipelineStage, string> = {
-  lead: 'bg-gray-500',
   qualified: 'bg-blue-500',
   concept: 'bg-cyan-500',
   design: 'bg-indigo-500',
