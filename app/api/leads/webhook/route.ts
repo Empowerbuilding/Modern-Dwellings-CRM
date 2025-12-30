@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import type { LeadSource, SalesType } from '@/lib/types'
+import type { LeadSource } from '@/lib/types'
 
 // Use service role key for server-side operations (bypasses RLS)
 const supabase = createClient(
@@ -14,7 +14,6 @@ interface LeadWebhookPayload {
   email: string
   phone?: string
   source: LeadSource
-  sales_type?: SalesType
   fbclid?: string
   metadata?: Record<string, unknown>
   anonymous_id?: string  // For linking anonymous page views to the new contact
@@ -54,8 +53,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Determine sales_type based on source
-    const salesType = determineSalesType(payload.source, payload.sales_type)
+    // Format metadata into contact notes
+    const contactNotes = formatContactNotes(payload.source, payload.metadata)
 
     // Check if contact already exists by email
     const { data: existingContact } = await supabase
@@ -96,6 +95,7 @@ export async function POST(request: NextRequest) {
           client_type: clientType,
           fbclid: payload.fbclid || null,
           anonymous_id: payload.anonymous_id || null,
+          notes: contactNotes || null,
           is_primary: true,
         })
         .select('id')
@@ -153,53 +153,9 @@ export async function POST(request: NextRequest) {
       anonymous_id: payload.anonymous_id || null,
     })
 
-    // Format metadata as nicely structured notes
-    const dealNotes = formatDealNotes(payload.source, payload.metadata)
-
-    // Create deal - value is always null, to be set manually later
-    const dealTitle = `${payload.first_name} ${payload.last_name} - ${formatSource(payload.source)}`
-
-    const { data: newDeal, error: dealError } = await supabase
-      .from('deals')
-      .insert({
-        contact_id: contactId,
-        title: dealTitle,
-        value: null,
-        stage: 'lead',
-        sales_type: salesType,
-        notes: dealNotes || null,
-      })
-      .select('id')
-      .single()
-
-    if (dealError || !newDeal) {
-      console.error(`[${timestamp}] Failed to create deal:`, dealError)
-      return NextResponse.json(
-        { success: false, error: 'Failed to create deal' },
-        { status: 500 }
-      )
-    }
-
-    console.log(`[${timestamp}] Created deal: ${newDeal.id} for contact: ${contactId}`)
-
-    // Log deal_created activity
-    await supabase.from('activities').insert({
-      contact_id: contactId,
-      deal_id: newDeal.id,
-      activity_type: 'deal_created',
-      title: `Deal created: ${dealTitle}`,
-      metadata: {
-        source: payload.source,
-        sales_type: salesType,
-        deal_title: dealTitle,
-      },
-      anonymous_id: payload.anonymous_id || null,
-    })
-
     return NextResponse.json({
       success: true,
       contact_id: contactId,
-      deal_id: newDeal.id,
     })
 
   } catch (error) {
@@ -211,25 +167,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Determine sales_type based on source
-function determineSalesType(source: LeadSource, explicitType?: SalesType): SalesType {
-  // If explicitly provided, use that
-  if (explicitType) {
-    return explicitType
-  }
-
-  // Default to b2c for consumer-facing sources
-  const b2cSources: LeadSource[] = ['cost_calc', 'website', 'contact_form', 'facebook', 'facebook_ad', 'guide_download', 'empower_website', 'barnhaus_contact']
-  if (b2cSources.includes(source)) {
-    return 'b2c'
-  }
-
-  // Default to b2c for other sources as well
-  return 'b2c'
-}
-
-// Format metadata into nicely structured notes
-function formatDealNotes(source: LeadSource, metadata?: Record<string, unknown>): string {
+// Format metadata into nicely structured notes for contact
+function formatContactNotes(source: LeadSource, metadata?: Record<string, unknown>): string {
   if (!metadata || Object.keys(metadata).length === 0) {
     return `Source: ${formatSource(source)}`
   }

@@ -20,6 +20,30 @@ const DEAL_TYPE_LABELS: Record<DealType, string> = {
   budget_builder: 'Budget Builder',
 }
 
+const LEAD_SOURCE_LABELS: Record<string, string> = {
+  facebook: 'Facebook',
+  facebook_ad: 'Facebook Ad',
+  google: 'Google',
+  referral: 'Referral',
+  website: 'Website',
+  contact_form: 'Contact Form',
+  cost_calc: 'Cost Calculator',
+  cold: 'Cold',
+  repeat: 'Repeat',
+  guide_download: 'Guide Download',
+  empower_website: 'Empower Website',
+  barnhaus_contact: 'Barnhaus Contact',
+  other: 'Other',
+}
+
+const CLIENT_TYPE_LABELS: Record<string, string> = {
+  builder: 'Builder',
+  consumer: 'Consumer',
+  subcontractor: 'Subcontractor',
+  engineer: 'Engineer',
+  architect: 'Architect',
+}
+
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -262,16 +286,13 @@ export default async function DealDetailPage({
                 {contact && (
                   <div>
                     <dt className="text-gray-500">Contact</dt>
-                    <dd className="text-gray-900">
-                      {contact.first_name} {contact.last_name}
-                      {contact.email && (
-                        <a
-                          href={`mailto:${contact.email}`}
-                          className="block text-blue-600 hover:underline text-xs"
-                        >
-                          {contact.email}
-                        </a>
-                      )}
+                    <dd>
+                      <Link
+                        href={`/contacts/${contact.id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {contact.first_name} {contact.last_name}
+                      </Link>
                     </dd>
                   </div>
                 )}
@@ -297,6 +318,75 @@ export default async function DealDetailPage({
                 )}
               </dl>
             </div>
+
+            {/* Contact Info */}
+            {contact && (
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-medium text-gray-900">Contact Info</h2>
+                  <Link
+                    href={`/contacts/${contact.id}`}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    View Contact
+                  </Link>
+                </div>
+                <dl className="space-y-3 text-sm">
+                  <div>
+                    <dt className="text-gray-500">Name</dt>
+                    <dd className="text-gray-900 font-medium">
+                      {contact.first_name} {contact.last_name}
+                    </dd>
+                  </div>
+                  {contact.email && (
+                    <div>
+                      <dt className="text-gray-500">Email</dt>
+                      <dd>
+                        <a
+                          href={`mailto:${contact.email}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {contact.email}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {contact.phone && (
+                    <div>
+                      <dt className="text-gray-500">Phone</dt>
+                      <dd>
+                        <a
+                          href={`tel:${contact.phone}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {contact.phone}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {(contact.lead_source || contact.client_type) && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {contact.lead_source && (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          {LEAD_SOURCE_LABELS[contact.lead_source] || contact.lead_source}
+                        </span>
+                      )}
+                      {contact.client_type && (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                          {CLIENT_TYPE_LABELS[contact.client_type] || contact.client_type}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {contact.notes && (
+                    <div>
+                      <dt className="text-gray-500">Notes</dt>
+                      <dd className="text-gray-900 whitespace-pre-wrap">{contact.notes}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
 
             {/* Linked Deals */}
             <LinkedDealsSection dealId={deal.id} linkedDeals={linkedDeals} />

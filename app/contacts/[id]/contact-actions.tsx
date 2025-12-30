@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Contact, Company, LeadSource, ClientType } from '@/lib/types'
+import { CreateDealModal } from './create-deal-modal'
 
 const LEAD_SOURCES: LeadSource[] = [
   'facebook',
@@ -74,6 +75,7 @@ interface FormData {
 export function ContactActions({ contact, companies }: ContactActionsProps) {
   const router = useRouter()
   const [slideOverOpen, setSlideOverOpen] = useState(false)
+  const [dealModalOpen, setDealModalOpen] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     first_name: contact.first_name,
     last_name: contact.last_name,
@@ -148,12 +150,26 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
 
   return (
     <>
-      <button
-        onClick={() => setSlideOverOpen(true)}
-        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Edit Contact
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setDealModalOpen(true)}
+          className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+        >
+          Add to Pipeline
+        </button>
+        <button
+          onClick={() => setSlideOverOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Edit Contact
+        </button>
+      </div>
+
+      <CreateDealModal
+        contact={contact}
+        isOpen={dealModalOpen}
+        onClose={() => setDealModalOpen(false)}
+      />
 
       {slideOverOpen && (
         <>
