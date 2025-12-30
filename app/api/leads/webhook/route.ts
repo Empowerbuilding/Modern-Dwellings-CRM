@@ -271,6 +271,8 @@ function formatSource(source: string): string {
     guide_download: 'Guide Download',
     empower_website: 'Empower Website',
     barnhaus_contact: 'Barnhaus Contact',
+    barnhaus_store_contact: 'Barnhaus Store',
+    shopify_order: 'Shopify Order',
     other: 'Other',
   }
   return sourceMap[source] || source
