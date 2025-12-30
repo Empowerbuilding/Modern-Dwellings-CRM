@@ -102,6 +102,7 @@ export interface Contact {
   lead_source: LeadSource | null
   client_type: ClientType | null
   fbclid: string | null
+  anonymous_id: string | null
   notes: string | null
   created_at?: string
   updated_at?: string

@@ -67,12 +67,16 @@ export async function POST(request: NextRequest) {
     let contactId: string
 
     if (existingContact) {
-      // Update existing contact with fbclid if provided
+      // Update existing contact with fbclid and anonymous_id if provided
       contactId = existingContact.id
-      if (payload.fbclid) {
+      const updateData: Record<string, string> = {}
+      if (payload.fbclid) updateData.fbclid = payload.fbclid
+      if (payload.anonymous_id) updateData.anonymous_id = payload.anonymous_id
+
+      if (Object.keys(updateData).length > 0) {
         await supabase
           .from('contacts')
-          .update({ fbclid: payload.fbclid })
+          .update(updateData)
           .eq('id', contactId)
       }
       console.log(`[${timestamp}] Using existing contact: ${contactId}`)
@@ -91,6 +95,7 @@ export async function POST(request: NextRequest) {
           lead_source: payload.source,
           client_type: clientType,
           fbclid: payload.fbclid || null,
+          anonymous_id: payload.anonymous_id || null,
           is_primary: true,
         })
         .select('id')
