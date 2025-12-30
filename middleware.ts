@@ -36,7 +36,9 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup'
 
   // Public API routes that use their own authentication (e.g., API key)
-  const isPublicApiRoute = request.nextUrl.pathname === '/api/leads/webhook'
+  const isPublicApiRoute =
+    request.nextUrl.pathname === '/api/leads/webhook' ||
+    request.nextUrl.pathname === '/api/activities/track'
 
   // If user is not logged in and trying to access protected route, redirect to login
   if (!user && !isAuthPage && !isPublicApiRoute) {
@@ -62,8 +64,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - tracking.js (public tracking script)
+     * - public folder assets
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|tracking\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
