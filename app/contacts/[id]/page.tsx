@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import type { Contact, Company, Deal, Activity, User } from '@/lib/types'
+import type { Contact, Company, Deal, Activity, User, NoteWithAuthor } from '@/lib/types'
 import { STAGE_LABELS, STAGE_COLORS } from '@/lib/types'
 import { ContactActivitiesSection } from './contact-activities-section'
 import { ContactActions } from './contact-actions'
+import { NotesSection } from '@/components/notes-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,6 +95,20 @@ async function getContactActivities(contactId: string): Promise<Activity[]> {
   return (data as Activity[]) ?? []
 }
 
+async function getContactNotes(contactId: string): Promise<NoteWithAuthor[]> {
+  const { data, error } = await (supabase.from('notes') as any)
+    .select('*, author:users!notes_created_by_fkey(id, name)')
+    .eq('contact_id', contactId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching contact notes:', error)
+    return []
+  }
+
+  return (data as NoteWithAuthor[]) ?? []
+}
+
 async function getAllCompanies(): Promise<Pick<Company, 'id' | 'name' | 'type'>[]> {
   const { data } = await supabase
     .from('companies')
@@ -114,10 +129,11 @@ export default async function ContactDetailPage({
     notFound()
   }
 
-  const [company, deals, activities, allCompanies] = await Promise.all([
+  const [company, deals, activities, notes, allCompanies] = await Promise.all([
     contact.company_id ? getCompany(contact.company_id) : null,
     getContactDeals(contact.id),
     getContactActivities(contact.id),
+    getContactNotes(contact.id),
     getAllCompanies(),
   ])
 
@@ -273,8 +289,12 @@ export default async function ContactDetailPage({
             </div>
           </div>
 
-          {/* Right Column - Activities */}
+          {/* Right Column - Notes & Activities */}
           <div className="lg:col-span-2 space-y-6">
+            <NotesSection
+              contactId={contact.id}
+              notes={notes}
+            />
             <ContactActivitiesSection
               contactId={contact.id}
               activities={activities}

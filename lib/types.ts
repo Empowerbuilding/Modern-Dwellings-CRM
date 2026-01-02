@@ -138,6 +138,91 @@ export interface Activity {
   created_at: string
 }
 
+// Task types
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+export type TaskType = 'to_do' | 'call' | 'email' | 'meeting' | 'follow_up'
+
+export const TASK_PRIORITIES: TaskPriority[] = ['low', 'medium', 'high', 'urgent']
+export const TASK_TYPES: TaskType[] = ['to_do', 'call', 'email', 'meeting', 'follow_up']
+
+export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  urgent: 'Urgent',
+}
+
+export const TASK_TYPE_LABELS: Record<TaskType, string> = {
+  to_do: 'To Do',
+  call: 'Call',
+  email: 'Email',
+  meeting: 'Meeting',
+  follow_up: 'Follow Up',
+}
+
+export const TASK_PRIORITY_COLORS: Record<TaskPriority, string> = {
+  low: 'bg-gray-100 text-gray-800',
+  medium: 'bg-blue-100 text-blue-800',
+  high: 'bg-orange-100 text-orange-800',
+  urgent: 'bg-red-100 text-red-800',
+}
+
+export const TASK_TYPE_COLORS: Record<TaskType, string> = {
+  to_do: 'bg-gray-100 text-gray-800',
+  call: 'bg-green-100 text-green-800',
+  email: 'bg-blue-100 text-blue-800',
+  meeting: 'bg-purple-100 text-purple-800',
+  follow_up: 'bg-yellow-100 text-yellow-800',
+}
+
+export interface Task {
+  id: string
+  contact_id: string | null
+  deal_id: string | null
+  company_id: string | null
+  assigned_to: string | null
+  created_by: string | null
+  title: string
+  description: string | null
+  priority: TaskPriority
+  task_type: TaskType
+  due_date: string | null
+  due_time: string | null
+  reminder_at: string | null
+  completed: boolean
+  completed_at: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface TaskWithRelations extends Task {
+  contact?: Contact | null
+  deal?: Deal | null
+  company?: Company | null
+  assigned_user?: User | null
+  created_user?: User | null
+}
+
+// Note types
+export interface Note {
+  id: string
+  contact_id: string | null
+  deal_id: string | null
+  company_id: string | null
+  task_id: string | null
+  content: string
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface NoteWithAuthor extends Note {
+  author?: {
+    id: string
+    name: string
+  } | null
+}
+
 export interface DealValueHistory {
   id: string
   deal_id: string

@@ -1,0 +1,460 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import type { User, Contact, Deal, Company, TaskPriority, TaskType } from '@/lib/types'
+import {
+  TASK_PRIORITIES,
+  TASK_TYPES,
+  TASK_PRIORITY_LABELS,
+  TASK_TYPE_LABELS,
+} from '@/lib/types'
+import type { TaskWithRelations } from './page'
+
+interface TaskSlideOverProps {
+  open: boolean
+  onClose: () => void
+  task: TaskWithRelations | null
+  users: User[]
+  contacts: Pick<Contact, 'id' | 'first_name' | 'last_name'>[]
+  deals: Pick<Deal, 'id' | 'title'>[]
+  companies: Pick<Company, 'id' | 'name'>[]
+  onSave: (task: TaskWithRelations) => void
+  onDelete: (taskId: string) => void
+}
+
+interface FormData {
+  title: string
+  description: string
+  priority: TaskPriority
+  task_type: TaskType
+  due_date: string
+  due_time: string
+  assigned_to: string
+  contact_id: string
+  deal_id: string
+  company_id: string
+}
+
+export function TaskSlideOver({
+  open,
+  onClose,
+  task,
+  users,
+  contacts,
+  deals,
+  companies,
+  onSave,
+  onDelete,
+}: TaskSlideOverProps) {
+  const [formData, setFormData] = useState<FormData>({
+    title: '',
+    description: '',
+    priority: 'medium',
+    task_type: 'to_do',
+    due_date: '',
+    due_time: '',
+    assigned_to: '',
+    contact_id: '',
+    deal_id: '',
+    company_id: '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (task) {
+      setFormData({
+        title: task.title,
+        description: task.description ?? '',
+        priority: task.priority,
+        task_type: task.task_type,
+        due_date: task.due_date ?? '',
+        due_time: task.due_time ?? '',
+        assigned_to: task.assigned_to ?? '',
+        contact_id: task.contact_id ?? '',
+        deal_id: task.deal_id ?? '',
+        company_id: task.company_id ?? '',
+      })
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        priority: 'medium',
+        task_type: 'to_do',
+        due_date: '',
+        due_time: '',
+        assigned_to: '',
+        contact_id: '',
+        deal_id: '',
+        company_id: '',
+      })
+    }
+    setError(null)
+  }, [task, open])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSaving(true)
+
+    try {
+      const payload = {
+        title: formData.title,
+        description: formData.description || null,
+        priority: formData.priority,
+        task_type: formData.task_type,
+        due_date: formData.due_date || null,
+        due_time: formData.due_time || null,
+        assigned_to: formData.assigned_to || null,
+        contact_id: formData.contact_id || null,
+        deal_id: formData.deal_id || null,
+        company_id: formData.company_id || null,
+      }
+
+      if (task) {
+        // Update existing task
+        const { error: updateError } = await (supabase.from('tasks') as any)
+          .update(payload)
+          .eq('id', task.id)
+
+        if (updateError) throw updateError
+
+        // Get relationship names for the saved task
+        const contactName = formData.contact_id
+          ? contacts.find((c) => c.id === formData.contact_id)
+          : null
+        const dealTitle = formData.deal_id
+          ? deals.find((d) => d.id === formData.deal_id)?.title
+          : null
+        const companyName = formData.company_id
+          ? companies.find((c) => c.id === formData.company_id)?.name
+          : null
+        const assignedUserName = formData.assigned_to
+          ? users.find((u) => u.id === formData.assigned_to)?.name
+          : null
+
+        onSave({
+          ...task,
+          ...payload,
+          contact_name: contactName
+            ? `${contactName.first_name} ${contactName.last_name}`
+            : null,
+          deal_title: dealTitle ?? null,
+          company_name: companyName ?? null,
+          assigned_user_name: assignedUserName ?? null,
+        })
+      } else {
+        // Create new task
+        const { data, error: insertError } = await (supabase.from('tasks') as any)
+          .insert(payload)
+          .select()
+          .single()
+
+        if (insertError) throw insertError
+
+        // Get relationship names for the saved task
+        const contactName = formData.contact_id
+          ? contacts.find((c) => c.id === formData.contact_id)
+          : null
+        const dealTitle = formData.deal_id
+          ? deals.find((d) => d.id === formData.deal_id)?.title
+          : null
+        const companyName = formData.company_id
+          ? companies.find((c) => c.id === formData.company_id)?.name
+          : null
+        const assignedUserName = formData.assigned_to
+          ? users.find((u) => u.id === formData.assigned_to)?.name
+          : null
+
+        onSave({
+          ...data,
+          contact_name: contactName
+            ? `${contactName.first_name} ${contactName.last_name}`
+            : null,
+          deal_title: dealTitle ?? null,
+          company_name: companyName ?? null,
+          assigned_user_name: assignedUserName ?? null,
+        })
+      }
+    } catch (err) {
+      console.error('Failed to save task:', err)
+      setError('Failed to save task. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!task) return
+    if (!confirm('Are you sure you want to delete this task?')) return
+
+    setDeleting(true)
+    try {
+      const { error: deleteError } = await (supabase.from('tasks') as any)
+        .delete()
+        .eq('id', task.id)
+
+      if (deleteError) throw deleteError
+
+      onDelete(task.id)
+    } catch (err) {
+      console.error('Failed to delete task:', err)
+      setError('Failed to delete task. Please try again.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  if (!open) return null
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
+
+      {/* Slide-over panel */}
+      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl z-50 flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {task ? 'Edit Task' : 'Create Task'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Task Title *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g., Follow up with client"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                placeholder="Add any additional details..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+              />
+            </div>
+
+            {/* Priority and Type Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Priority
+                </label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) =>
+                    setFormData({ ...formData, priority: e.target.value as TaskPriority })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                >
+                  {TASK_PRIORITIES.map((priority) => (
+                    <option key={priority} value={priority}>
+                      {TASK_PRIORITY_LABELS[priority]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type
+                </label>
+                <select
+                  value={formData.task_type}
+                  onChange={(e) =>
+                    setFormData({ ...formData, task_type: e.target.value as TaskType })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                >
+                  {TASK_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {TASK_TYPE_LABELS[type]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Due Date and Time Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.due_date}
+                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Due Time
+                </label>
+                <input
+                  type="time"
+                  value={formData.due_time}
+                  onChange={(e) => setFormData({ ...formData, due_time: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Assigned To */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assigned To
+              </label>
+              <select
+                value={formData.assigned_to}
+                onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="">Unassigned</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Associations Section */}
+            <div className="pt-4 border-t border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Link to Record</h3>
+
+              {/* Contact */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Contact
+                </label>
+                <select
+                  value={formData.contact_id}
+                  onChange={(e) => setFormData({ ...formData, contact_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                >
+                  <option value="">No contact</option>
+                  {contacts.map((contact) => (
+                    <option key={contact.id} value={contact.id}>
+                      {contact.first_name} {contact.last_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Deal */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Deal
+                </label>
+                <select
+                  value={formData.deal_id}
+                  onChange={(e) => setFormData({ ...formData, deal_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                >
+                  <option value="">No deal</option>
+                  {deals.map((deal) => (
+                    <option key={deal.id} value={deal.id}>
+                      {deal.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Company */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Company
+                </label>
+                <select
+                  value={formData.company_id}
+                  onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                >
+                  <option value="">No company</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+          {task ? (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </button>
+          ) : (
+            <div />
+          )}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {saving ? 'Saving...' : task ? 'Update' : 'Create'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

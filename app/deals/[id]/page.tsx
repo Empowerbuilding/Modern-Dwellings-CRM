@@ -1,12 +1,13 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase, getDealValueHistory, getLinkedDeals } from '@/lib/supabase'
-import type { Deal, Company, Contact, DealValueHistory, DealType, User, Activity } from '@/lib/types'
+import type { Deal, Company, Contact, DealValueHistory, DealType, User, Activity, NoteWithAuthor } from '@/lib/types'
 import { STAGE_LABELS, STAGE_COLORS, getStagesForSalesType } from '@/lib/types'
 import { DealValueEditor } from './deal-value-editor'
 import { LinkedDealsSection } from './linked-deals-section'
 import { DealActions } from './deal-actions'
 import { ActivitiesSection } from './activities-section'
+import { NotesSection } from '@/components/notes-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -134,6 +135,20 @@ interface ActivityWithUser extends Activity {
   user?: User | null
 }
 
+async function getDealNotes(dealId: string): Promise<NoteWithAuthor[]> {
+  const { data, error } = await (supabase.from('notes') as any)
+    .select('*, author:users!notes_created_by_fkey(id, name)')
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching deal notes:', error)
+    return []
+  }
+
+  return (data as NoteWithAuthor[]) ?? []
+}
+
 async function getDealAndContactActivities(dealId: string, contactId: string | null): Promise<Activity[]> {
   // Fetch activities for this deal
   const { data: dealActivities, error: dealError } = await (supabase.from('activities') as any)
@@ -180,7 +195,7 @@ export default async function DealDetailPage({
     notFound()
   }
 
-  const [company, contact, valueHistory, linkedDeals, allCompanies, allContacts, allUsers, activities] = await Promise.all([
+  const [company, contact, valueHistory, linkedDeals, allCompanies, allContacts, allUsers, activities, notes] = await Promise.all([
     deal.company_id ? getCompany(deal.company_id) : null,
     deal.contact_id ? getContact(deal.contact_id) : null,
     getDealValueHistory(deal.id),
@@ -189,6 +204,7 @@ export default async function DealDetailPage({
     getAllContacts(),
     getAllUsers(),
     getDealAndContactActivities(deal.id, deal.contact_id),
+    getDealNotes(deal.id),
   ])
 
   const stages = getStagesForSalesType(deal.sales_type)
@@ -413,8 +429,14 @@ export default async function DealDetailPage({
             <LinkedDealsSection dealId={deal.id} linkedDeals={linkedDeals} />
           </div>
 
-          {/* Right Column - Value History & Activities */}
+          {/* Right Column - Notes, Activities & Value History */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Notes */}
+            <NotesSection
+              dealId={deal.id}
+              notes={notes}
+            />
+
             {/* Activities */}
             <ActivitiesSection dealId={deal.id} activities={activities} />
 

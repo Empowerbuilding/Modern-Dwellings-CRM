@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Contact, Company, LeadSource, ClientType } from '@/lib/types'
 import { CreateDealModal } from './create-deal-modal'
+import { CreateTaskModal } from '@/components/create-task-modal'
 
 const LEAD_SOURCES: LeadSource[] = [
   'facebook',
@@ -80,6 +81,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
   const router = useRouter()
   const [slideOverOpen, setSlideOverOpen] = useState(false)
   const [dealModalOpen, setDealModalOpen] = useState(false)
+  const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     first_name: contact.first_name,
     last_name: contact.last_name,
@@ -156,6 +158,12 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
     <>
       <div className="flex gap-2">
         <button
+          onClick={() => setTaskModalOpen(true)}
+          className="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+        >
+          Create Task
+        </button>
+        <button
           onClick={() => setDealModalOpen(true)}
           className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
         >
@@ -168,6 +176,12 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
           Edit Contact
         </button>
       </div>
+
+      <CreateTaskModal
+        isOpen={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        contact={contact}
+      />
 
       <CreateDealModal
         contact={contact}

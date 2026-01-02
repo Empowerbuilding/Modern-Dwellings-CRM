@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import type { Company, Contact, Deal, Activity, ClientType, DealType, ActivityType } from '@/lib/types'
+import type { Company, Contact, Deal, Activity, ClientType, DealType, ActivityType, NoteWithAuthor } from '@/lib/types'
 import { STAGE_COLORS, STAGE_LABELS } from '@/lib/types'
 import { CompanyActions } from './company-actions'
+import { NotesSection } from '@/components/notes-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -118,16 +119,31 @@ async function getActivities(companyId: string): Promise<ActivityWithRelations[]
   return (data as ActivityWithRelations[]) ?? []
 }
 
+async function getCompanyNotes(companyId: string): Promise<NoteWithAuthor[]> {
+  const { data, error } = await (supabase.from('notes') as any)
+    .select('*, author:users!notes_created_by_fkey(id, name)')
+    .eq('company_id', companyId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching company notes:', error)
+    return []
+  }
+
+  return (data as NoteWithAuthor[]) ?? []
+}
+
 export default async function CompanyDetailPage({
   params,
 }: {
   params: { id: string }
 }) {
-  const [company, contacts, deals, activities] = await Promise.all([
+  const [company, contacts, deals, activities, notes] = await Promise.all([
     getCompany(params.id),
     getContacts(params.id),
     getDeals(params.id),
     getActivities(params.id),
+    getCompanyNotes(params.id),
   ])
 
   if (!company) {
@@ -268,8 +284,14 @@ export default async function CompanyDetailPage({
             </div>
           </div>
 
-          {/* Right Column - Deals & Activities */}
+          {/* Right Column - Notes, Deals & Activities */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Notes */}
+            <NotesSection
+              companyId={company.id}
+              notes={notes}
+            />
+
             {/* Deals */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <h2 className="font-medium text-gray-900 mb-3">
