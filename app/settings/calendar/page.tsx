@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
-import { createClient } from '@/lib/supabase-browser'
 import { MeetingTypeForm } from '@/components/calendar/MeetingTypeForm'
 import { UpcomingMeetings, ScheduledMeetingDisplay } from '@/components/calendar/UpcomingMeetings'
 
@@ -57,7 +56,6 @@ export default function CalendarSettingsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { crmUser } = useAuth()
-  const supabase = createClient()
   const isAdmin = crmUser?.role === 'admin'
 
   // Calendar connection state
@@ -121,65 +119,44 @@ export default function CalendarSettingsPage() {
     loadStatus()
   }, [])
 
-  // Load meeting types
+  // Load meeting types via API (uses service role to bypass RLS)
   const loadMeetingTypes = useCallback(async () => {
     if (!crmUser) return
 
     try {
-      const { data, error } = await (supabase.from('meeting_types') as any)
-        .select('*')
-        .eq('user_id', crmUser.id)
-        .order('created_at', { ascending: false })
+      const res = await fetch('/api/meeting-types')
+      const data = await res.json()
 
-      if (error) throw error
-      setMeetingTypes(data || [])
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to load meeting types')
+      }
+
+      setMeetingTypes(data.meetingTypes || [])
     } catch (err) {
       console.error('Failed to load meeting types:', err)
     } finally {
       setLoadingMeetingTypes(false)
     }
-  }, [crmUser, supabase])
+  }, [crmUser])
 
   useEffect(() => {
     loadMeetingTypes()
   }, [loadMeetingTypes])
 
-  // Load upcoming meetings
+  // Load upcoming meetings via API (uses service role to bypass RLS)
   useEffect(() => {
     async function loadUpcomingMeetings() {
       if (!crmUser) return
 
       try {
-        const now = new Date().toISOString()
-        const { data, error } = await (supabase.from('scheduled_meetings') as any)
-          .select(`
-            id, guest_first_name, guest_last_name, guest_email,
-            start_time, end_time, timezone, status, contact_id, google_meet_link,
-            meeting_types(title, duration_minutes, location_type)
-          `)
-          .eq('host_user_id', crmUser.id)
-          .eq('status', 'scheduled')
-          .gte('start_time', now)
-          .order('start_time', { ascending: true })
-          .limit(5)
+        const res = await fetch('/api/meetings?upcoming=true&status=scheduled&limit=5')
+        const data = await res.json()
 
-        if (error) throw error
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to load meetings')
+        }
 
-        // Transform data to match ScheduledMeetingDisplay interface
-        const transformed: ScheduledMeetingDisplay[] = (data || []).map((m: any) => ({
-          id: m.id,
-          guest_first_name: m.guest_first_name,
-          guest_last_name: m.guest_last_name,
-          guest_email: m.guest_email,
-          start_time: m.start_time,
-          end_time: m.end_time,
-          timezone: m.timezone || 'America/New_York',
-          status: m.status,
-          google_meet_link: m.google_meet_link,
-          contact_id: m.contact_id,
-          meeting_type: m.meeting_types,
-        }))
-        setUpcomingMeetings(transformed)
+        setUpcomingMeetings(data.meetings || [])
       } catch (err) {
         console.error('Failed to load upcoming meetings:', err)
       } finally {
@@ -187,7 +164,7 @@ export default function CalendarSettingsPage() {
       }
     }
     loadUpcomingMeetings()
-  }, [crmUser, supabase])
+  }, [crmUser])
 
   async function handleDisconnect() {
     setDisconnecting(true)
@@ -240,27 +217,34 @@ export default function CalendarSettingsPage() {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return
 
     try {
-      const { error } = await (supabase.from('meeting_types') as any)
-        .delete()
-        .eq('id', id)
+      const res = await fetch(`/api/meeting-types/${id}`, { method: 'DELETE' })
+      const data = await res.json()
 
-      if (error) throw error
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete meeting type')
+      }
 
       setMeetingTypes((prev) => prev.filter((mt) => mt.id !== id))
       setToast({ message: 'Meeting type deleted', type: 'success' })
     } catch (err) {
       console.error('Failed to delete meeting type:', err)
-      setToast({ message: 'Failed to delete meeting type', type: 'error' })
+      const message = err instanceof Error ? err.message : 'Failed to delete meeting type'
+      setToast({ message, type: 'error' })
     }
   }
 
   async function handleToggleActive(id: string, currentStatus: boolean) {
     try {
-      const { error } = await (supabase.from('meeting_types') as any)
-        .update({ is_active: !currentStatus })
-        .eq('id', id)
+      const res = await fetch(`/api/meeting-types/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !currentStatus }),
+      })
+      const data = await res.json()
 
-      if (error) throw error
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update status')
+      }
 
       setMeetingTypes((prev) =>
         prev.map((mt) => (mt.id === id ? { ...mt, is_active: !currentStatus } : mt))
