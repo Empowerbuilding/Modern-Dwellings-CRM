@@ -160,6 +160,12 @@ export async function getCalendarFreeBusy(params: {
 }): Promise<BusyPeriod[]> {
   const { accessToken, calendarId, timeMin, timeMax } = params
 
+  console.log('[google-calendar] FreeBusy request:', {
+    calendarId,
+    timeMin: timeMin.toISOString(),
+    timeMax: timeMax.toISOString(),
+  })
+
   const response = await fetch('https://www.googleapis.com/calendar/v3/freeBusy', {
     method: 'POST',
     headers: {
@@ -175,11 +181,20 @@ export async function getCalendarFreeBusy(params: {
 
   if (!response.ok) {
     const error = await response.text()
+    console.error('[google-calendar] FreeBusy error:', error)
     throw new Error(`Failed to fetch free/busy data: ${error}`)
   }
 
   const data: FreeBusyResponse = await response.json()
+
+  console.log('[google-calendar] FreeBusy raw response:', JSON.stringify(data, null, 2))
+
   const busyPeriods = data.calendars[calendarId]?.busy || []
+
+  console.log('[google-calendar] Parsed busy periods:', busyPeriods.length, 'periods')
+  busyPeriods.forEach((period, i) => {
+    console.log(`[google-calendar]   [${i}] ${period.start} - ${period.end}`)
+  })
 
   return busyPeriods.map((period) => ({
     start: new Date(period.start),

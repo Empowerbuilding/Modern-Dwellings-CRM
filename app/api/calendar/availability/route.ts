@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCalendarFreeBusy, refreshAccessToken } from '@/lib/google-calendar'
-import { getAvailableSlots, type MeetingTypeConfig } from '@/lib/availability'
+import { getAllSlotsWithStatus, type MeetingTypeConfig } from '@/lib/availability'
 
 // Service role client for public access
 const supabase = createClient(
@@ -160,10 +160,52 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Parse the date and calculate time range for the day
-    const date = new Date(dateStr + 'T00:00:00Z')
-    const dayStart = new Date(dateStr + 'T00:00:00Z')
-    const dayEnd = new Date(dateStr + 'T23:59:59Z')
+    // Parse the date and calculate time range for the day in the meeting type's timezone
+    const timezone = meetingType.timezone
+
+    // Create date at noon UTC to avoid timezone boundary issues for day-of-week calculations
+    const date = new Date(dateStr + 'T12:00:00Z')
+
+    // Helper to convert a time in a timezone to UTC
+    const getTimeInTimezoneAsUTC = (dateString: string, timeString: string, tz: string): Date => {
+      // Create a formatter to get the offset for this timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        timeZoneName: 'shortOffset',
+      })
+
+      // Use a reference date to get the timezone offset
+      const refDate = new Date(`${dateString}T12:00:00Z`)
+      const parts = formatter.formatToParts(refDate)
+      const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT'
+
+      // Parse offset like "GMT-6" or "GMT+5:30"
+      let offsetMinutes = 0
+      const offsetMatch = offsetPart.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/)
+      if (offsetMatch) {
+        const sign = offsetMatch[1] === '+' ? 1 : -1
+        const hourOffset = parseInt(offsetMatch[2], 10)
+        const minOffset = parseInt(offsetMatch[3] || '0', 10)
+        offsetMinutes = sign * (hourOffset * 60 + minOffset)
+      }
+
+      // Create the date as if it were UTC, then adjust for the timezone offset
+      const utcDate = new Date(`${dateString}T${timeString}Z`)
+      // Subtract the offset to convert from local to UTC
+      // If timezone is GMT-6, local noon is 18:00 UTC, so we ADD 6 hours (subtract negative offset)
+      return new Date(utcDate.getTime() - offsetMinutes * 60 * 1000)
+    }
+
+    // Calculate day boundaries in the meeting type's timezone, converted to UTC
+    const dayStart = getTimeInTimezoneAsUTC(dateStr, '00:00:00', timezone)
+    const dayEnd = getTimeInTimezoneAsUTC(dateStr, '23:59:59', timezone)
+
+    console.log('[availability-api] Date range calculation:', {
+      dateStr,
+      timezone,
+      dayStartUTC: dayStart.toISOString(),
+      dayEndUTC: dayEnd.toISOString(),
+    })
 
     // Get busy times from Google Calendar
     let busyTimes: { start: Date; end: Date }[] = []
@@ -173,6 +215,11 @@ export async function GET(request: NextRequest) {
         calendarId: calendarIntegration.calendar_id || 'primary',
         timeMin: dayStart,
         timeMax: dayEnd,
+      })
+
+      console.log('[availability-api] Busy times received:', busyTimes.length, 'periods')
+      busyTimes.forEach((bt, i) => {
+        console.log(`[availability-api]   [${i}] ${bt.start.toISOString()} - ${bt.end.toISOString()}`)
       })
     } catch (calendarError) {
       console.error('Failed to fetch calendar busy times:', calendarError)
@@ -201,8 +248,8 @@ export async function GET(request: NextRequest) {
       min_notice_hours: meetingType.min_notice_hours,
     }
 
-    // Get available slots
-    const slots = getAvailableSlots({
+    // Get all slots with availability status
+    const allSlots = getAllSlotsWithStatus({
       meetingType: meetingTypeConfig,
       date,
       busyTimes,
@@ -220,12 +267,17 @@ export async function GET(request: NextRequest) {
       hour12: true,
     })
 
-    const formattedSlots = slots.map((slot) => ({
+    const formattedSlots = allSlots.map((slot) => ({
       start: slot.start.toISOString(),
       end: slot.end.toISOString(),
       startFormatted: timeFormatter.format(slot.start),
       endFormatted: timeFormatter.format(slot.end),
+      available: slot.available,
+      blockedReason: slot.blockedReason,
     }))
+
+    // Also provide just available slots for backwards compatibility
+    const availableSlots = formattedSlots.filter(s => s.available)
 
     return NextResponse.json({
       meetingType: {
@@ -240,7 +292,8 @@ export async function GET(request: NextRequest) {
       host: { name: hostUser?.name || 'Host' },
       date: dateStr,
       timezone: responseTimezone,
-      slots: formattedSlots,
+      slots: availableSlots, // Just available slots for backwards compatibility
+      allSlots: formattedSlots, // All slots with availability status
       calendarConnected: true,
     })
   } catch (error) {

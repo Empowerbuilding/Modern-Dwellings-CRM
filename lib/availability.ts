@@ -206,8 +206,9 @@ export function getAvailableSlots(params: {
   date: Date
   busyTimes: BusyPeriod[]
   existingMeetings: ExistingMeeting[]
+  debug?: boolean
 }): TimeSlot[] {
-  const { meetingType, date, busyTimes, existingMeetings } = params
+  const { meetingType, date, busyTimes, existingMeetings, debug = false } = params
   const {
     duration_minutes,
     buffer_before,
@@ -222,10 +223,23 @@ export function getAvailableSlots(params: {
   const slots: TimeSlot[] = []
   const now = new Date()
 
+  if (debug) {
+    console.log('[getAvailableSlots] Input:', {
+      date: date.toISOString(),
+      timezone,
+      busyTimesCount: busyTimes.length,
+      existingMeetingsCount: existingMeetings.length,
+    })
+    busyTimes.forEach((bt, i) => {
+      console.log(`[getAvailableSlots] BusyTime[${i}]: ${bt.start.toISOString()} - ${bt.end.toISOString()}`)
+    })
+  }
+
   // Check if day of week is available
   const dayOfWeek = getDayOfWeekInTimezone(date, timezone)
 
   if (!available_days.includes(dayOfWeek)) {
+    if (debug) console.log('[getAvailableSlots] Day not available:', dayOfWeek)
     return []
   }
 
@@ -233,12 +247,20 @@ export function getAvailableSlots(params: {
   const windowStart = parseTimeInTimezone(date, availability_start, timezone)
   const windowEnd = parseTimeInTimezone(date, availability_end, timezone)
 
+  if (debug) {
+    console.log('[getAvailableSlots] Availability window:', {
+      windowStart: windowStart.toISOString(),
+      windowEnd: windowEnd.toISOString(),
+    })
+  }
+
   // Calculate minimum allowed start time based on notice hours
   const minNoticeTime = new Date(now.getTime() + min_notice_hours * 60 * 60 * 1000)
 
   // Generate slots every 30 minutes
   const slotInterval = 30 * 60 * 1000 // 30 minutes in ms
   let currentSlotStart = new Date(windowStart)
+  let slotIndex = 0
 
   while (currentSlotStart < windowEnd) {
     const slotEnd = new Date(currentSlotStart.getTime() + duration_minutes * 60 * 1000)
@@ -266,12 +288,23 @@ export function getAvailableSlots(params: {
     const bufferWindow = { start: bufferStart, end: bufferEnd }
 
     // Check if buffer window overlaps with any busy times
-    const overlapsWithBusy = busyTimes.some((busy) =>
-      isOverlapping(bufferWindow, { start: busy.start, end: busy.end })
-    )
+    let overlappingBusy: BusyPeriod | undefined
+    const overlapsWithBusy = busyTimes.some((busy) => {
+      const overlaps = isOverlapping(bufferWindow, { start: busy.start, end: busy.end })
+      if (overlaps) overlappingBusy = busy
+      return overlaps
+    })
 
     if (overlapsWithBusy) {
+      if (debug) {
+        console.log(`[getAvailableSlots] Slot ${slotIndex} BLOCKED by busy time:`, {
+          slot: `${currentSlotStart.toISOString()} - ${slotEnd.toISOString()}`,
+          buffer: `${bufferStart.toISOString()} - ${bufferEnd.toISOString()}`,
+          busyTime: overlappingBusy ? `${overlappingBusy.start.toISOString()} - ${overlappingBusy.end.toISOString()}` : 'unknown',
+        })
+      }
       currentSlotStart = new Date(currentSlotStart.getTime() + slotInterval)
+      slotIndex++
       continue
     }
 
@@ -284,8 +317,16 @@ export function getAvailableSlots(params: {
     )
 
     if (overlapsWithMeetings) {
+      if (debug) {
+        console.log(`[getAvailableSlots] Slot ${slotIndex} BLOCKED by meeting`)
+      }
       currentSlotStart = new Date(currentSlotStart.getTime() + slotInterval)
+      slotIndex++
       continue
+    }
+
+    if (debug && slotIndex < 5) {
+      console.log(`[getAvailableSlots] Slot ${slotIndex} AVAILABLE: ${currentSlotStart.toISOString()} - ${slotEnd.toISOString()}`)
     }
 
     // Slot is available
@@ -295,9 +336,129 @@ export function getAvailableSlots(params: {
     })
 
     currentSlotStart = new Date(currentSlotStart.getTime() + slotInterval)
+    slotIndex++
+  }
+
+  if (debug) {
+    console.log(`[getAvailableSlots] Result: ${slots.length} available slots`)
   }
 
   return slots
+}
+
+export interface SlotWithStatus {
+  start: Date
+  end: Date
+  available: boolean
+  blockedReason?: 'busy' | 'meeting' | 'past' | 'notice'
+}
+
+/**
+ * Get all time slots for a specific date with availability status
+ */
+export function getAllSlotsWithStatus(params: {
+  meetingType: MeetingTypeConfig
+  date: Date
+  busyTimes: BusyPeriod[]
+  existingMeetings: ExistingMeeting[]
+}): SlotWithStatus[] {
+  const { meetingType, date, busyTimes, existingMeetings } = params
+  const {
+    duration_minutes,
+    buffer_before,
+    buffer_after,
+    availability_start,
+    availability_end,
+    available_days,
+    timezone,
+    min_notice_hours,
+  } = meetingType
+
+  const allSlots: SlotWithStatus[] = []
+  const now = new Date()
+
+  // Check if day of week is available
+  const dayOfWeek = getDayOfWeekInTimezone(date, timezone)
+  if (!available_days.includes(dayOfWeek)) {
+    return []
+  }
+
+  // Parse availability window for this date in the meeting type's timezone
+  const windowStart = parseTimeInTimezone(date, availability_start, timezone)
+  const windowEnd = parseTimeInTimezone(date, availability_end, timezone)
+
+  // Calculate minimum allowed start time based on notice hours
+  const minNoticeTime = new Date(now.getTime() + min_notice_hours * 60 * 60 * 1000)
+
+  // Generate slots every 30 minutes
+  const slotInterval = 30 * 60 * 1000 // 30 minutes in ms
+  let currentSlotStart = new Date(windowStart)
+
+  while (currentSlotStart < windowEnd) {
+    const slotEnd = new Date(currentSlotStart.getTime() + duration_minutes * 60 * 1000)
+
+    // Skip if slot extends beyond availability window
+    if (slotEnd > windowEnd) {
+      break
+    }
+
+    // Check various blocking conditions
+    let available = true
+    let blockedReason: SlotWithStatus['blockedReason'] = undefined
+
+    // Check if slot start is in the past
+    if (currentSlotStart < now) {
+      available = false
+      blockedReason = 'past'
+    }
+
+    // Check if slot start is within min_notice_hours from now
+    if (available && currentSlotStart < minNoticeTime) {
+      available = false
+      blockedReason = 'notice'
+    }
+
+    // Calculate buffer window
+    const bufferStart = new Date(currentSlotStart.getTime() - buffer_before * 60 * 1000)
+    const bufferEnd = new Date(slotEnd.getTime() + buffer_after * 60 * 1000)
+    const bufferWindow = { start: bufferStart, end: bufferEnd }
+
+    // Check if buffer window overlaps with any busy times
+    if (available) {
+      const overlapsWithBusy = busyTimes.some((busy) =>
+        isOverlapping(bufferWindow, { start: busy.start, end: busy.end })
+      )
+      if (overlapsWithBusy) {
+        available = false
+        blockedReason = 'busy'
+      }
+    }
+
+    // Check if buffer window overlaps with any existing meetings
+    if (available) {
+      const overlapsWithMeetings = existingMeetings.some((meeting) =>
+        isOverlapping(bufferWindow, {
+          start: new Date(meeting.start_time),
+          end: new Date(meeting.end_time),
+        })
+      )
+      if (overlapsWithMeetings) {
+        available = false
+        blockedReason = 'meeting'
+      }
+    }
+
+    allSlots.push({
+      start: new Date(currentSlotStart),
+      end: new Date(slotEnd),
+      available,
+      blockedReason,
+    })
+
+    currentSlotStart = new Date(currentSlotStart.getTime() + slotInterval)
+  }
+
+  return allSlots
 }
 
 /**

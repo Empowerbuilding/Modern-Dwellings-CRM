@@ -27,6 +27,8 @@ interface TimeSlot {
   end: string
   startFormatted: string
   endFormatted: string
+  available?: boolean
+  blockedReason?: 'busy' | 'meeting' | 'past' | 'notice'
 }
 
 interface AvailabilityResponse {
@@ -35,6 +37,7 @@ interface AvailabilityResponse {
   date: string
   timezone: string
   slots: TimeSlot[]
+  allSlots?: TimeSlot[]
   calendarConnected: boolean
 }
 
@@ -287,7 +290,8 @@ export default function BookingPage() {
           setHostName(data.host?.name || 'Host')
         }
 
-        setSlots(data.slots || [])
+        // Use allSlots if available (includes blocked slots), otherwise fall back to slots
+        setSlots(data.allSlots || data.slots || [])
       } catch (err) {
         console.error('Failed to fetch slots:', err)
         setSlots([])
@@ -840,17 +844,46 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <div className="space-y-2 max-h-80 overflow-y-auto">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot.start}
-                      onClick={() => selectSlot(slot)}
-                      className="w-full py-3 px-4 text-left border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group"
-                    >
-                      <span className="font-medium text-gray-900 group-hover:text-blue-600">
-                        {slot.startFormatted}
-                      </span>
-                    </button>
-                  ))}
+                  {slots.map((slot) => {
+                    const isAvailable = slot.available !== false
+                    const isBlocked = slot.blockedReason === 'busy' || slot.blockedReason === 'meeting'
+
+                    if (!isAvailable && !isBlocked) {
+                      // Don't show past/notice slots
+                      return null
+                    }
+
+                    return (
+                      <button
+                        key={slot.start}
+                        onClick={() => isAvailable && selectSlot(slot)}
+                        disabled={!isAvailable}
+                        className={`w-full py-3 px-4 text-left border rounded-lg transition-colors ${
+                          isAvailable
+                            ? 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 group cursor-pointer'
+                            : 'border-gray-100 bg-gray-50 cursor-not-allowed'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={`font-medium ${
+                            isAvailable
+                              ? 'text-gray-900 group-hover:text-blue-600'
+                              : 'text-gray-400 line-through'
+                          }`}>
+                            {slot.startFormatted}
+                          </span>
+                          {!isAvailable && (
+                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                              Busy
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
