@@ -35,13 +35,23 @@ export async function middleware(request: NextRequest) {
   // Public routes that don't require authentication
   const isAuthPage = request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup'
 
-  // Public API routes that use their own authentication (e.g., API key)
+  // Public booking pages (for guests to book meetings)
+  const isBookingPage = request.nextUrl.pathname.startsWith('/book/')
+
+  // Public API routes that use their own authentication (e.g., API key) or are public
   const isPublicApiRoute =
     request.nextUrl.pathname === '/api/leads/webhook' ||
-    request.nextUrl.pathname === '/api/activities/track'
+    request.nextUrl.pathname === '/api/activities/track' ||
+    // Calendar booking APIs (public for guests)
+    request.nextUrl.pathname === '/api/calendar/availability' ||
+    request.nextUrl.pathname === '/api/calendar/available-dates' ||
+    request.nextUrl.pathname === '/api/calendar/book' ||
+    request.nextUrl.pathname.startsWith('/api/calendar/meetings/') ||
+    // Meeting types API (public for booking page to fetch meeting type info)
+    request.nextUrl.pathname.startsWith('/api/meeting-types/')
 
   // If user is not logged in and trying to access protected route, redirect to login
-  if (!user && !isAuthPage && !isPublicApiRoute) {
+  if (!user && !isAuthPage && !isPublicApiRoute && !isBookingPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -65,8 +75,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - tracking.js (public tracking script)
+     * - booking-widget.js (public booking widget script)
      * - public folder assets
      */
-    '/((?!_next/static|_next/image|favicon.ico|tracking\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|tracking\\.js|booking-widget\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

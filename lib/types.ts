@@ -48,7 +48,7 @@ export function getStagesForSalesType(salesType: SalesType): PipelineStage[] {
   return salesType === 'b2c' ? B2C_STAGES : B2B_STAGES
 }
 
-export type LeadSource = 'facebook' | 'facebook_ad' | 'google' | 'referral' | 'website' | 'contact_form' | 'cost_calc' | 'cold' | 'repeat' | 'guide_download' | 'empower_website' | 'barnhaus_contact' | 'barnhaus_store_contact' | 'shopify_order' | 'other'
+export type LeadSource = 'facebook' | 'facebook_ad' | 'google' | 'referral' | 'website' | 'contact_form' | 'cost_calc' | 'cold' | 'repeat' | 'guide_download' | 'empower_website' | 'barnhaus_contact' | 'barnhaus_store_contact' | 'shopify_order' | 'calendar_booking' | 'other'
 
 export type ActivityType =
   | 'page_view'
@@ -60,6 +60,8 @@ export type ActivityType =
   | 'stage_change'
   | 'deal_created'
   | 'contact_created'
+  | 'meeting_scheduled'
+  | 'meeting_cancelled'
 
 export type UserRole = 'admin' | 'sales'
 
@@ -376,4 +378,155 @@ export interface PipelineSummary {
   stage: PipelineStage
   count: number
   total_value: number
+}
+
+// ============================================
+// Calendar / Meeting Scheduler Types
+// ============================================
+
+// Calendar Integration (Google OAuth connection)
+export interface CalendarIntegration {
+  id: string
+  user_id: string
+  provider: string
+  email_address: string
+  access_token: string
+  refresh_token: string | null
+  token_expires_at: string | null
+  calendar_id: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Custom field definition for meeting types
+export interface MeetingTypeCustomField {
+  label: string
+  type: 'text' | 'textarea' | 'select' | 'number'
+  required: boolean
+  options?: string[] // for select type
+}
+
+// Meeting Type location options
+export type MeetingLocationType = 'google_meet' | 'phone' | 'in_person' | 'custom'
+
+// Meeting Type (bookable meeting link)
+export interface MeetingType {
+  id: string
+  user_id: string
+  slug: string
+  title: string
+  description: string | null
+  duration_minutes: number
+  buffer_before: number
+  buffer_after: number
+  availability_start: string // "HH:MM" format
+  availability_end: string
+  available_days: number[] // 0=Sun, 1=Mon, etc.
+  timezone: string
+  max_days_ahead: number
+  min_notice_hours: number
+  is_active: boolean
+  location_type: MeetingLocationType
+  custom_location: string | null
+  custom_fields: MeetingTypeCustomField[]
+  confirmation_message: string | null
+  brand_color: string
+  created_at: string
+  updated_at: string
+}
+
+// Scheduled Meeting status
+export type MeetingStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled'
+
+// Scheduled Meeting (booked appointment)
+export interface ScheduledMeeting {
+  id: string
+  meeting_type_id: string | null
+  host_user_id: string
+  contact_id: string | null
+  guest_first_name: string
+  guest_last_name: string
+  guest_email: string
+  guest_phone: string | null
+  guest_notes: string | null
+  custom_field_responses: Record<string, unknown>
+  start_time: string
+  end_time: string
+  timezone: string
+  google_event_id: string | null
+  google_meet_link: string | null
+  status: MeetingStatus
+  cancelled_at: string | null
+  cancellation_reason: string | null
+  rescheduled_from: string | null
+  anonymous_id: string | null
+  source: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  reminder_sent_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+// Scheduled Meeting with relations
+export interface ScheduledMeetingWithRelations extends ScheduledMeeting {
+  meeting_type?: MeetingType | null
+  host_user?: User | null
+  contact?: Contact | null
+}
+
+// Time slot for availability
+export interface TimeSlot {
+  start: Date
+  end: Date
+}
+
+// Formatted time slot (for API responses)
+export interface FormattedTimeSlot {
+  start: string
+  end: string
+  startFormatted: string
+  endFormatted: string
+}
+
+// API response types for calendar/booking
+export interface AvailabilityResponse {
+  meetingType: {
+    title: string
+    description: string | null
+    duration_minutes: number
+    location_type: MeetingLocationType
+    custom_fields: MeetingTypeCustomField[]
+    brand_color: string
+    timezone: string
+  }
+  host: { name: string }
+  date: string
+  timezone: string
+  slots: FormattedTimeSlot[]
+}
+
+export interface AvailableDatesResponse {
+  dates: string[]
+}
+
+export interface BookingResponse {
+  success: boolean
+  meeting: {
+    id: string
+    startTime: string
+    endTime: string
+    title: string
+    hostName: string
+    googleMeetLink?: string
+    timezone: string
+  }
+  contact: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }
 }

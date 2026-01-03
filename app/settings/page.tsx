@@ -15,9 +15,11 @@ export default function SettingsPage() {
   const searchParams = useSearchParams()
   const { crmUser, supabaseUser } = useAuth()
   const tabFromUrl = searchParams.get('tab')
-  const [activeTab, setActiveTab] = useState<'profile' | 'team'>(
-    tabFromUrl === 'team' ? 'team' : 'profile'
-  )
+  const [activeTab, setActiveTab] = useState<'profile' | 'calendar' | 'team'>(() => {
+    if (tabFromUrl === 'team') return 'team'
+    if (tabFromUrl === 'calendar') return 'calendar'
+    return 'profile'
+  })
   const supabase = createClient()
 
   // Profile state
@@ -45,6 +47,8 @@ export default function SettingsPage() {
     const tab = searchParams.get('tab')
     if (tab === 'team' && isAdmin) {
       setActiveTab('team')
+    } else if (tab === 'calendar') {
+      setActiveTab('calendar')
     } else if (tab === 'profile' || !tab) {
       setActiveTab('profile')
     }
@@ -200,6 +204,12 @@ export default function SettingsPage() {
             >
               Profile
             </button>
+            <button
+              onClick={() => router.push('/settings/calendar')}
+              className="pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Calendar
+            </button>
             {isAdmin && (
               <button
                 onClick={() => setActiveTab('team')}
@@ -217,6 +227,7 @@ export default function SettingsPage() {
 
         {/* Profile Tab */}
         {activeTab === 'profile' && (
+          <>
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Profile Settings</h2>
 
@@ -280,6 +291,32 @@ export default function SettingsPage() {
               </button>
             </form>
           </div>
+
+          {/* Calendar Settings Link */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Calendar & Meeting Scheduler</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Connect your Google Calendar and create booking links
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push('/settings/calendar')}
+                className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                Manage →
+              </button>
+            </div>
+          </div>
+          </>
         )}
 
         {/* Team Tab */}

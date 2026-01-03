@@ -6,6 +6,7 @@ import { STAGE_LABELS, STAGE_COLORS } from '@/lib/types'
 import { ContactActivitiesSection } from './contact-activities-section'
 import { ContactActions } from './contact-actions'
 import { NotesSection } from '@/components/notes-section'
+import { ContactMeetingsSection } from './contact-meetings-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -282,6 +283,9 @@ export default async function ContactDetailPage({
                 </div>
               )}
             </div>
+
+            {/* Meetings */}
+            <ContactMeetingsSection contactId={contact.id} />
           </div>
 
           {/* Right Column - Notes & Activities */}

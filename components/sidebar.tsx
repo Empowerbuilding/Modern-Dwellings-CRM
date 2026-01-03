@@ -50,6 +50,15 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    href: '/meetings',
+    label: 'Meetings',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
 ]
 
 export function Sidebar() {
@@ -154,6 +163,25 @@ export function Sidebar() {
                 </li>
               )
             })}
+            {/* Calendar */}
+            <li>
+              <button
+                onClick={() => router.push('/settings/calendar')}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors md:justify-center lg:justify-start ${
+                  pathname === '/settings/calendar'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+                title="Calendar"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-sm font-medium md:hidden lg:block">
+                  Calendar
+                </span>
+              </button>
+            </li>
             {/* Team - Admin only */}
             {crmUser?.role === 'admin' && (
               <li>

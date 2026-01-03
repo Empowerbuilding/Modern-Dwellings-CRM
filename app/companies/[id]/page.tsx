@@ -43,6 +43,8 @@ const ACTIVITY_ICONS: Record<ActivityType, string> = {
   stage_change: '🔄',
   deal_created: '🤝',
   contact_created: '👤',
+  meeting_scheduled: '📅',
+  meeting_cancelled: '❌',
 }
 
 function formatCurrency(value: number): string {
