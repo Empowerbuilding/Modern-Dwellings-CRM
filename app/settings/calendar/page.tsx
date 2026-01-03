@@ -299,6 +299,12 @@ export default function CalendarSettingsPage() {
             >
               Calendar
             </button>
+            <button
+              onClick={() => router.push('/settings/integrations')}
+              className="pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Integrations
+            </button>
             {isAdmin && (
               <button
                 onClick={() => router.push('/settings?tab=team')}
