@@ -27,10 +27,27 @@ function createSupabaseClient(): SupabaseClient<Database> {
 
 export const supabase = createSupabaseClient()
 
-// Update deal stage
-export async function updateDealStage(dealId: string, stage: PipelineStage) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (supabase.from('deals') as any).update({ stage }).eq('id', dealId)
+// Update deal stage (calls API to handle Facebook events on "won" stage)
+export async function updateDealStage(
+  dealId: string,
+  stage: PipelineStage
+): Promise<{ error: Error | null }> {
+  try {
+    const response = await fetch(`/api/deals/${dealId}/stage`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage }),
+    })
+
+    if (!response.ok) {
+      const data = await response.json()
+      return { error: new Error(data.error || 'Failed to update deal stage') }
+    }
+
+    return { error: null }
+  } catch (error) {
+    return { error: error instanceof Error ? error : new Error('Failed to update deal stage') }
+  }
 }
 
 // Log a value change to the deal_value_history table

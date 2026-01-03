@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import type { LeadSource } from '@/lib/types'
+import type { LeadSource, LifecycleStage } from '@/lib/types'
 
 // Use service role key for server-side operations (bypasses RLS)
 const supabase = createClient(
@@ -15,8 +15,22 @@ interface LeadWebhookPayload {
   phone?: string
   source: LeadSource
   fbclid?: string
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
   metadata?: Record<string, unknown>
   anonymous_id?: string  // For linking anonymous page views to the new contact
+}
+
+// Determine lifecycle stage based on lead source
+function getLifecycleStageForSource(source: LeadSource): LifecycleStage {
+  // Calendar bookings are more engaged - they're leads
+  if (source === 'calendar_booking') {
+    return 'lead'
+  }
+  // All other sources start as subscribers
+  // They become 'lead' when they book a meeting or take a more engaged action
+  return 'subscriber'
 }
 
 export async function POST(request: NextRequest) {
@@ -83,7 +97,16 @@ export async function POST(request: NextRequest) {
       // Determine client_type for cost_calc source
       const clientType = payload.source === 'cost_calc' ? 'consumer' : null
 
-      // Create new contact
+      // Determine lifecycle stage based on source
+      const lifecycleStage = getLifecycleStageForSource(payload.source)
+
+      console.log(`[${timestamp}] Creating ${lifecycleStage} contact:`, {
+        email: payload.email,
+        source: payload.source,
+        fbclid: !!payload.fbclid,
+      })
+
+      // Create new contact with lifecycle_stage and empty fb_events_sent
       const { data: newContact, error: contactError } = await supabase
         .from('contacts')
         .insert({
@@ -93,6 +116,8 @@ export async function POST(request: NextRequest) {
           phone: payload.phone || null,
           lead_source: payload.source,
           client_type: clientType,
+          lifecycle_stage: lifecycleStage,
+          fb_events_sent: {},  // Initialize as empty - no FB events sent for subscribers
           fbclid: payload.fbclid || null,
           anonymous_id: payload.anonymous_id || null,
           notes: contactNotes || null,
@@ -110,7 +135,7 @@ export async function POST(request: NextRequest) {
       }
 
       contactId = newContact.id
-      console.log(`[${timestamp}] Created new contact: ${contactId}`)
+      console.log(`[${timestamp}] Created new ${lifecycleStage} contact: ${contactId}`)
 
       // Also create in the notes table for the Notes Section
       if (contactNotes) {
@@ -153,7 +178,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Log form_submit activity
+    // Log form_submit activity with UTM parameters
     await supabase.from('activities').insert({
       contact_id: contactId,
       activity_type: 'form_submit',
@@ -161,6 +186,10 @@ export async function POST(request: NextRequest) {
       metadata: {
         source: payload.source,
         form_data: payload.metadata || null,
+        utm_source: payload.utm_source || null,
+        utm_medium: payload.utm_medium || null,
+        utm_campaign: payload.utm_campaign || null,
+        fbclid: payload.fbclid || null,
       },
       anonymous_id: payload.anonymous_id || null,
     })
@@ -285,6 +314,7 @@ function formatSource(source: string): string {
     barnhaus_contact: 'Barnhaus Contact',
     barnhaus_store_contact: 'Barnhaus Store',
     shopify_order: 'Shopify Order',
+    calendar_booking: 'Calendar Booking',
     other: 'Other',
   }
   return sourceMap[source] || source

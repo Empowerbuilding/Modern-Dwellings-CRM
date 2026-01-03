@@ -50,6 +50,24 @@ export function getStagesForSalesType(salesType: SalesType): PipelineStage[] {
 
 export type LeadSource = 'facebook' | 'facebook_ad' | 'google' | 'referral' | 'website' | 'contact_form' | 'cost_calc' | 'cold' | 'repeat' | 'guide_download' | 'empower_website' | 'barnhaus_contact' | 'barnhaus_store_contact' | 'shopify_order' | 'calendar_booking' | 'other'
 
+export type LifecycleStage = 'subscriber' | 'lead' | 'mql' | 'sql' | 'customer'
+
+export const LIFECYCLE_STAGE_LABELS: Record<LifecycleStage, string> = {
+  subscriber: 'Subscriber',
+  lead: 'Lead',
+  mql: 'Marketing Qualified',
+  sql: 'Sales Qualified',
+  customer: 'Customer',
+}
+
+export const LIFECYCLE_STAGE_COLORS: Record<LifecycleStage, string> = {
+  subscriber: 'bg-gray-100 text-gray-800',
+  lead: 'bg-blue-100 text-blue-800',
+  mql: 'bg-purple-100 text-purple-800',
+  sql: 'bg-orange-100 text-orange-800',
+  customer: 'bg-green-100 text-green-800',
+}
+
 export type ActivityType =
   | 'page_view'
   | 'form_submit'
@@ -100,6 +118,8 @@ export interface Contact {
   is_primary: boolean
   lead_source: LeadSource | null
   client_type: ClientType | null
+  lifecycle_stage: LifecycleStage | null
+  fb_events_sent: Record<string, string> | null
   fbclid: string | null
   anonymous_id: string | null
   notes: string | null

@@ -2,11 +2,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { Contact, Company, Deal, Activity, User, NoteWithAuthor } from '@/lib/types'
-import { STAGE_LABELS, STAGE_COLORS } from '@/lib/types'
+import { STAGE_LABELS, STAGE_COLORS, LIFECYCLE_STAGE_LABELS, LIFECYCLE_STAGE_COLORS, type LifecycleStage } from '@/lib/types'
 import { ContactActivitiesSection } from './contact-activities-section'
 import { ContactActions } from './contact-actions'
 import { NotesSection } from '@/components/notes-section'
 import { ContactMeetingsSection } from './contact-meetings-section'
+import { LifecycleStageSelect } from './lifecycle-stage-select'
 
 export const dynamic = 'force-dynamic'
 
@@ -176,6 +177,12 @@ export default async function ContactDetailPage({
                     Primary Contact
                   </span>
                 )}
+              </div>
+              <div className="mt-3">
+                <LifecycleStageSelect
+                  contactId={contact.id}
+                  currentStage={contact.lifecycle_stage as LifecycleStage | null}
+                />
               </div>
             </div>
             <div className="sm:text-right">

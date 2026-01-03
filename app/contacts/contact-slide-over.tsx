@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { LeadSource, Company, ClientType } from '@/lib/types'
+import type { LeadSource, Company, ClientType, LifecycleStage } from '@/lib/types'
+import { LIFECYCLE_STAGE_LABELS } from '@/lib/types'
 import type { ContactWithCompany } from './page'
 
 const LEAD_SOURCES: LeadSource[] = [
@@ -58,6 +59,14 @@ const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   architect: 'Architect',
 }
 
+const LIFECYCLE_STAGES: LifecycleStage[] = [
+  'subscriber',
+  'lead',
+  'mql',
+  'sql',
+  'customer',
+]
+
 interface ContactSlideOverProps {
   open: boolean
   onClose: () => void
@@ -76,6 +85,7 @@ interface FormData {
   company_id: string
   lead_source: LeadSource | ''
   client_type: ClientType | ''
+  lifecycle_stage: LifecycleStage | ''
   is_primary: boolean
 }
 
@@ -96,6 +106,7 @@ export function ContactSlideOver({
     company_id: '',
     lead_source: '',
     client_type: '',
+    lifecycle_stage: '',
     is_primary: false,
   })
   const [saving, setSaving] = useState(false)
@@ -118,6 +129,7 @@ export function ContactSlideOver({
         company_id: contact.company_id ?? '',
         lead_source: contact.lead_source ?? '',
         client_type: contact.client_type ?? '',
+        lifecycle_stage: contact.lifecycle_stage ?? '',
         is_primary: contact.is_primary,
       })
     } else {
@@ -130,6 +142,7 @@ export function ContactSlideOver({
         company_id: '',
         lead_source: '',
         client_type: '',
+        lifecycle_stage: 'subscriber',
         is_primary: false,
       })
     }
@@ -156,6 +169,7 @@ export function ContactSlideOver({
         company_id: formData.company_id || null,
         lead_source: formData.lead_source || null,
         client_type: effectiveClientType,
+        lifecycle_stage: formData.lifecycle_stage || 'subscriber',
         is_primary: formData.is_primary,
       }
 
@@ -369,6 +383,23 @@ export function ContactSlideOver({
                 {LEAD_SOURCES.map((source) => (
                   <option key={source} value={source}>
                     {LEAD_SOURCE_LABELS[source]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lifecycle Stage
+              </label>
+              <select
+                value={formData.lifecycle_stage}
+                onChange={(e) => setFormData({ ...formData, lifecycle_stage: e.target.value as LifecycleStage | '' })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                {LIFECYCLE_STAGES.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {LIFECYCLE_STAGE_LABELS[stage]}
                   </option>
                 ))}
               </select>

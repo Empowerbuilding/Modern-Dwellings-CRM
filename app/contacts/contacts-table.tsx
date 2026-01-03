@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import type { LeadSource, Company, ClientType } from '@/lib/types'
+import type { LeadSource, Company, ClientType, LifecycleStage } from '@/lib/types'
+import { LIFECYCLE_STAGE_LABELS, LIFECYCLE_STAGE_COLORS } from '@/lib/types'
 import type { ContactWithCompany } from './page'
 import { ContactSlideOver } from './contact-slide-over'
 
@@ -282,6 +283,11 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                   Lead Source <SortIcon field="lead_source" />
                 </th>
                 <th
+                  className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Stage
+                </th>
+                <th
                   onClick={() => handleSort('created_at')}
                   className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
@@ -292,7 +298,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
             <tbody className="divide-y divide-gray-200">
               {filteredAndSortedContacts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                     {contacts.length === 0
                       ? 'No contacts yet. Add your first contact to get started.'
                       : 'No contacts match your search criteria.'}
@@ -348,6 +354,15 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                       {contact.lead_source ? (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                           {LEAD_SOURCE_LABELS[contact.lead_source]}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="hidden xl:table-cell px-4 py-3">
+                      {contact.lifecycle_stage ? (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${LIFECYCLE_STAGE_COLORS[contact.lifecycle_stage as LifecycleStage] || 'bg-gray-100 text-gray-800'}`}>
+                          {LIFECYCLE_STAGE_LABELS[contact.lifecycle_stage as LifecycleStage] || contact.lifecycle_stage}
                         </span>
                       ) : (
                         <span className="text-sm text-gray-400">-</span>

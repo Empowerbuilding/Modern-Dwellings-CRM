@@ -6,6 +6,8 @@ import {
   createCalendarEvent,
 } from '@/lib/google-calendar'
 import { isOverlapping } from '@/lib/availability'
+import { sendFacebookEvent } from '@/lib/facebook-conversions'
+import type { LifecycleStage } from '@/lib/types'
 
 // Service role client for database operations
 const supabase = createClient(
@@ -66,6 +68,9 @@ interface ContactRow {
   email: string
   phone: string | null
   anonymous_id: string | null
+  fbclid: string | null
+  lifecycle_stage: LifecycleStage | null
+  fb_events_sent: Record<string, string> | null
 }
 
 interface ScheduledMeetingRow {
@@ -287,7 +292,7 @@ export async function POST(request: NextRequest) {
 
     const { data: existingContact, error: existingContactError } = await supabase
       .from('contacts')
-      .select('id, first_name, last_name, email, phone, anonymous_id')
+      .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, lifecycle_stage, fb_events_sent')
       .eq('email', email.toLowerCase())
       .single<ContactRow>()
 
@@ -342,10 +347,11 @@ export async function POST(request: NextRequest) {
           phone: body.phone || null,
           lead_source: 'calendar_booking',
           client_type: 'consumer',
+          lifecycle_stage: 'lead',
           anonymous_id: body.anonymousId || null,
           is_primary: true,
         })
-        .select('id, first_name, last_name, email, phone, anonymous_id')
+        .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, lifecycle_stage, fb_events_sent')
         .single<ContactRow>()
 
       if (contactError) {
@@ -457,7 +463,81 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 13. Trigger n8n webhook if configured
+    // 13. Update lifecycle stage and send Facebook event
+    if (contact) {
+      try {
+        // Higher lifecycle stages that shouldn't be downgraded
+        const higherStages: LifecycleStage[] = ['mql', 'sql', 'customer']
+        const currentStage = contact.lifecycle_stage
+        const shouldUpdateStage = !currentStage || !higherStages.includes(currentStage)
+
+        // Check if lead event was already sent
+        const fbEventsSent = contact.fb_events_sent || {}
+        const leadEventAlreadySent = !!fbEventsSent['lead']
+
+        // Prepare updates for contact
+        const contactUpdates: Record<string, unknown> = {}
+
+        if (shouldUpdateStage) {
+          contactUpdates.lifecycle_stage = 'lead'
+        }
+
+        // Send Facebook lead event if not already sent
+        if (!leadEventAlreadySent) {
+          console.log(`[${timestamp}] Sending lead event to Facebook for contact:`, contact.id)
+
+          const bookingPageUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.empowerbuilding.ai'}/book/${slug}`
+
+          const fbResult = await sendFacebookEvent({
+            eventName: 'lead',
+            eventId: `${contact.id}-lead`,
+            userData: {
+              email: contact.email,
+              phone: contact.phone,
+              firstName: contact.first_name,
+              lastName: contact.last_name,
+              fbclid: contact.fbclid,
+              externalId: contact.id,
+            },
+            eventSourceUrl: bookingPageUrl,
+            customData: {
+              leadEventSource: 'calendar_booking',
+            },
+          })
+
+          console.log(`[${timestamp}] Facebook lead event result:`, fbResult)
+
+          if (fbResult.success) {
+            // Record that lead event was sent
+            contactUpdates.fb_events_sent = {
+              ...fbEventsSent,
+              lead: new Date().toISOString(),
+            }
+          }
+        } else {
+          console.log(`[${timestamp}] Lead event already sent for contact:`, contact.id)
+        }
+
+        // Apply updates if any
+        if (Object.keys(contactUpdates).length > 0) {
+          const { error: updateError } = await supabase
+            .from('contacts')
+            .update(contactUpdates)
+            .eq('id', contact.id)
+
+          if (updateError) {
+            console.error(`[${timestamp}] Failed to update contact lifecycle/fb_events:`, updateError)
+          } else {
+            console.log(`[${timestamp}] Updated contact:`, contactUpdates)
+          }
+        }
+      } catch (fbError) {
+        // Don't fail the booking if Facebook event fails
+        console.error(`[${timestamp}] Facebook event error (non-fatal):`, fbError)
+      }
+    }
+
+    // 14. Trigger n8n webhook if configured
     const n8nWebhook = process.env.N8N_MEETING_BOOKED_WEBHOOK
     if (n8nWebhook) {
       try {
@@ -488,7 +568,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 14. Return success response
+    // 15. Return success response
     return NextResponse.json({
       success: true,
       meeting: {
