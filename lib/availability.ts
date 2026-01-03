@@ -37,6 +37,13 @@ export function isOverlapping(
 }
 
 /**
+ * Validate that a Date object is valid
+ */
+function isValidDate(date: Date): boolean {
+  return date instanceof Date && !isNaN(date.getTime())
+}
+
+/**
  * Parse a time string (e.g., "08:00") and combine with a date in a specific timezone
  * Returns the Date in UTC
  */
@@ -45,46 +52,90 @@ function parseTimeInTimezone(
   timeStr: string,
   timezone: string
 ): Date {
-  const [hours, minutes] = timeStr.split(':').map(Number)
-
-  // Format the date as YYYY-MM-DD in the target timezone
-  const dateFormatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-  const dateStr = dateFormatter.format(date)
-
-  // Create an ISO string with the time in the target timezone
-  const timeString = `${dateStr}T${timeStr.padStart(5, '0')}:00`
-
-  // Get the offset for this timezone at this date/time
-  const tempDate = new Date(timeString + 'Z')
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    timeZoneName: 'shortOffset',
-  })
-
-  // Parse the offset from the formatted string
-  const parts = formatter.formatToParts(tempDate)
-  const offsetPart = parts.find((p) => p.type === 'timeZoneName')?.value || ''
-
-  // Parse offset like "GMT-6" or "GMT+5:30"
-  let offsetMinutes = 0
-  const offsetMatch = offsetPart.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/)
-  if (offsetMatch) {
-    const sign = offsetMatch[1] === '+' ? 1 : -1
-    const hourOffset = parseInt(offsetMatch[2], 10)
-    const minOffset = parseInt(offsetMatch[3] || '0', 10)
-    offsetMinutes = sign * (hourOffset * 60 + minOffset)
+  // Validate input date
+  if (!isValidDate(date)) {
+    console.error('[availability] Invalid date passed to parseTimeInTimezone:', date)
+    throw new Error(`Invalid date: ${date}`)
   }
 
-  // Create the final date by adjusting for the timezone offset
-  const localDate = new Date(timeString)
-  localDate.setMinutes(localDate.getMinutes() - offsetMinutes)
+  // Validate time string format
+  if (!timeStr || !/^\d{1,2}:\d{2}$/.test(timeStr)) {
+    console.error('[availability] Invalid time string:', timeStr)
+    throw new Error(`Invalid time string: ${timeStr}`)
+  }
 
-  return localDate
+  // Parse hours and minutes
+  const [hoursStr, minutesStr] = timeStr.split(':')
+  const hours = parseInt(hoursStr, 10)
+  const minutes = parseInt(minutesStr, 10)
+
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    console.error('[availability] Time out of range:', { hours, minutes })
+    throw new Error(`Time out of range: ${timeStr}`)
+  }
+
+  // Format time with leading zeros
+  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+
+  try {
+    // Format the date as YYYY-MM-DD in the target timezone
+    const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+    const dateStr = dateFormatter.format(date)
+
+    // Create an ISO string with the time in the target timezone
+    const timeString = `${dateStr}T${formattedTime}:00`
+
+    // Get the offset for this timezone at this date/time
+    // Use a known valid date for offset calculation to avoid issues
+    const tempDate = new Date(timeString + 'Z')
+    if (!isValidDate(tempDate)) {
+      console.error('[availability] Failed to create temp date from:', timeString + 'Z')
+      throw new Error(`Failed to create date from: ${timeString}`)
+    }
+
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'shortOffset',
+    })
+
+    // Parse the offset from the formatted string
+    const parts = formatter.formatToParts(tempDate)
+    const offsetPart = parts.find((p) => p.type === 'timeZoneName')?.value || ''
+
+    // Parse offset like "GMT-6" or "GMT+5:30"
+    let offsetMinutes = 0
+    const offsetMatch = offsetPart.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/)
+    if (offsetMatch) {
+      const sign = offsetMatch[1] === '+' ? 1 : -1
+      const hourOffset = parseInt(offsetMatch[2], 10)
+      const minOffset = parseInt(offsetMatch[3] || '0', 10)
+      offsetMinutes = sign * (hourOffset * 60 + minOffset)
+    }
+
+    // Create the final date by adjusting for the timezone offset
+    const localDate = new Date(timeString)
+    if (!isValidDate(localDate)) {
+      console.error('[availability] Failed to create local date from:', timeString)
+      throw new Error(`Failed to create date from: ${timeString}`)
+    }
+
+    localDate.setMinutes(localDate.getMinutes() - offsetMinutes)
+
+    return localDate
+  } catch (error) {
+    console.error('[availability] parseTimeInTimezone error:', {
+      date: date.toISOString(),
+      timeStr,
+      timezone,
+      error,
+    })
+    throw error
+  }
 }
 
 /**
@@ -92,13 +143,23 @@ function parseTimeInTimezone(
  * Returns 0=Sun, 1=Mon, ..., 6=Sat
  */
 function getDayOfWeekInTimezone(date: Date, timezone: string): number {
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    weekday: 'short',
-  })
-  const dayName = formatter.format(date)
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  return days.indexOf(dayName)
+  if (!isValidDate(date)) {
+    console.error('[availability] Invalid date in getDayOfWeekInTimezone:', date)
+    return -1
+  }
+
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      weekday: 'short',
+    })
+    const dayName = formatter.format(date)
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    return days.indexOf(dayName)
+  } catch (error) {
+    console.error('[availability] getDayOfWeekInTimezone error:', { date, timezone, error })
+    return -1
+  }
 }
 
 /**

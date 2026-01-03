@@ -226,19 +226,72 @@ export async function GET(request: NextRequest) {
       .in('status', ['scheduled', 'rescheduled'])
       .returns<ScheduledMeetingRow[]>()
 
-    // Prepare meeting type config
-    const meetingTypeConfig: MeetingTypeConfig = {
-      duration_minutes: meetingType.duration_minutes,
-      buffer_before: meetingType.buffer_before,
-      buffer_after: meetingType.buffer_after,
+    // Validate meeting type data before using
+    const timeRegex = /^\d{1,2}:\d{2}$/
+    if (!meetingType.availability_start || !timeRegex.test(meetingType.availability_start)) {
+      console.error('[available-dates] Invalid availability_start:', meetingType.availability_start)
+      return NextResponse.json(
+        { error: 'Invalid meeting type configuration: availability_start', details: meetingType.availability_start },
+        { status: 500 }
+      )
+    }
+    if (!meetingType.availability_end || !timeRegex.test(meetingType.availability_end)) {
+      console.error('[available-dates] Invalid availability_end:', meetingType.availability_end)
+      return NextResponse.json(
+        { error: 'Invalid meeting type configuration: availability_end', details: meetingType.availability_end },
+        { status: 500 }
+      )
+    }
+    if (!Array.isArray(meetingType.available_days) || meetingType.available_days.length === 0) {
+      console.error('[available-dates] Invalid available_days:', meetingType.available_days)
+      return NextResponse.json(
+        { error: 'Invalid meeting type configuration: available_days', details: String(meetingType.available_days) },
+        { status: 500 }
+      )
+    }
+
+    // Use meeting type's timezone, fallback to America/Chicago if invalid
+    const effectiveTimezone = guestTimezone || meetingType.timezone || 'America/Chicago'
+
+    // Validate timezone by trying to use it
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: effectiveTimezone }).format(new Date())
+    } catch {
+      console.error('[available-dates] Invalid timezone:', effectiveTimezone)
+      return NextResponse.json(
+        { error: 'Invalid timezone', details: effectiveTimezone },
+        { status: 400 }
+      )
+    }
+
+    console.log('[available-dates] Meeting type config:', {
       availability_start: meetingType.availability_start,
       availability_end: meetingType.availability_end,
       available_days: meetingType.available_days,
-      timezone: guestTimezone || meetingType.timezone,
-      min_notice_hours: meetingType.min_notice_hours,
+      timezone: effectiveTimezone,
+      duration_minutes: meetingType.duration_minutes,
+    })
+
+    // Prepare meeting type config
+    const meetingTypeConfig: MeetingTypeConfig = {
+      duration_minutes: meetingType.duration_minutes || 30,
+      buffer_before: meetingType.buffer_before || 0,
+      buffer_after: meetingType.buffer_after || 0,
+      availability_start: meetingType.availability_start,
+      availability_end: meetingType.availability_end,
+      available_days: meetingType.available_days,
+      timezone: effectiveTimezone,
+      min_notice_hours: meetingType.min_notice_hours || 0,
     }
 
     // Get available dates
+    console.log('[available-dates] Calculating available dates for range:', {
+      startDate: rangeStart.toISOString(),
+      endDate: rangeEnd.toISOString(),
+      busyTimesCount: busyTimes.length,
+      existingMeetingsCount: existingMeetings?.length || 0,
+    })
+
     const availableDates = getAvailableDates({
       meetingType: meetingTypeConfig,
       startDate: rangeStart,
