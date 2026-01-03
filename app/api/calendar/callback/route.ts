@@ -16,8 +16,11 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state')
   const error = searchParams.get('error')
 
-  // Use the request origin for redirects (works in both dev and production)
-  const baseUrl = request.nextUrl.origin
+  // Use explicit app URL for redirects (nextUrl.origin is unreliable on Vercel/serverless)
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+    request.headers.get('x-forwarded-host')
+      ? `https://${request.headers.get('x-forwarded-host')}`
+      : request.nextUrl.origin
 
   // Handle OAuth errors from Google
   if (error) {
