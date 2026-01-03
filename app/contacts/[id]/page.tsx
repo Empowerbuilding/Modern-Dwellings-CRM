@@ -97,7 +97,7 @@ async function getContactActivities(contactId: string): Promise<Activity[]> {
 
 async function getContactNotes(contactId: string): Promise<NoteWithAuthor[]> {
   const { data, error } = await (supabase.from('notes') as any)
-    .select('*, author:users!notes_created_by_fkey(id, name)')
+    .select('*, author:users(id, name)')
     .eq('contact_id', contactId)
     .order('created_at', { ascending: false })
 
@@ -106,6 +106,7 @@ async function getContactNotes(contactId: string): Promise<NoteWithAuthor[]> {
     return []
   }
 
+  console.log(`Fetched ${data?.length ?? 0} notes for contact ${contactId}`)
   return (data as NoteWithAuthor[]) ?? []
 }
 

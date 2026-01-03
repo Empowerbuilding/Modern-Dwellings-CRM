@@ -121,7 +121,7 @@ async function getActivities(companyId: string): Promise<ActivityWithRelations[]
 
 async function getCompanyNotes(companyId: string): Promise<NoteWithAuthor[]> {
   const { data, error } = await (supabase.from('notes') as any)
-    .select('*, author:users!notes_created_by_fkey(id, name)')
+    .select('*, author:users(id, name)')
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
 
@@ -130,6 +130,7 @@ async function getCompanyNotes(companyId: string): Promise<NoteWithAuthor[]> {
     return []
   }
 
+  console.log(`Fetched ${data?.length ?? 0} notes for company ${companyId}`)
   return (data as NoteWithAuthor[]) ?? []
 }
 
