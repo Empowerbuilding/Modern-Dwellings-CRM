@@ -45,6 +45,8 @@ export async function GET(request: NextRequest) {
   const monthStr = searchParams.get('month')
   const guestTimezone = searchParams.get('timezone')
 
+  console.log('[available-dates] Request params:', { slug, monthStr, guestTimezone })
+
   if (!slug) {
     return NextResponse.json(
       { error: 'Missing required parameter: slug' },
@@ -68,7 +70,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Verify Supabase client is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('[available-dates] Missing Supabase environment variables')
+      return NextResponse.json(
+        { error: 'Server configuration error', details: 'Missing database configuration' },
+        { status: 500 }
+      )
+    }
+
     // Look up meeting type by slug
+    console.log('[available-dates] Looking up meeting type with slug:', slug)
     const { data: meetingType, error: mtError } = await supabase
       .from('meeting_types')
       .select('*')
@@ -76,12 +88,28 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true)
       .single<MeetingTypeRow>()
 
-    if (mtError || !meetingType) {
+    if (mtError) {
+      console.error('[available-dates] Meeting type query error:', mtError)
+      return NextResponse.json(
+        { error: 'Meeting type not found', details: mtError.message },
+        { status: 404 }
+      )
+    }
+
+    if (!meetingType) {
+      console.log('[available-dates] No meeting type found for slug:', slug)
       return NextResponse.json(
         { error: 'Meeting type not found' },
         { status: 404 }
       )
     }
+
+    console.log('[available-dates] Found meeting type:', {
+      id: meetingType.id,
+      user_id: meetingType.user_id,
+      duration: meetingType.duration_minutes,
+      timezone: meetingType.timezone,
+    })
 
     // Calculate date range
     const now = new Date()
@@ -108,7 +136,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Look up calendar integration
-    const { data: calendarIntegration } = await supabase
+    console.log('[available-dates] Looking up calendar integration for user:', meetingType.user_id)
+    const { data: calendarIntegration, error: calError } = await supabase
       .from('calendar_integrations')
       .select('*')
       .eq('user_id', meetingType.user_id)
@@ -116,21 +145,41 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true)
       .single<CalendarIntegrationRow>()
 
+    if (calError && calError.code !== 'PGRST116') {
+      // PGRST116 = no rows found, which is okay
+      console.error('[available-dates] Calendar integration query error:', calError)
+    }
+
     // If no calendar connected, calculate dates without busy times
     let busyTimes: { start: Date; end: Date }[] = []
 
     if (calendarIntegration) {
+      console.log('[available-dates] Found calendar integration:', {
+        id: calendarIntegration.id,
+        calendar_id: calendarIntegration.calendar_id,
+        has_refresh_token: !!calendarIntegration.refresh_token,
+        token_expires_at: calendarIntegration.token_expires_at,
+      })
+
       // Check if access token is expired and refresh if needed
       let accessToken = calendarIntegration.access_token
       if (calendarIntegration.token_expires_at) {
         const expiresAt = new Date(calendarIntegration.token_expires_at)
+        const needsRefresh = expiresAt.getTime() - now.getTime() < 5 * 60 * 1000
+        console.log('[available-dates] Token status:', {
+          expiresAt: expiresAt.toISOString(),
+          needsRefresh,
+        })
+
         // Refresh if expires within 5 minutes
-        if (expiresAt.getTime() - now.getTime() < 5 * 60 * 1000) {
+        if (needsRefresh) {
           if (calendarIntegration.refresh_token) {
             try {
+              console.log('[available-dates] Refreshing access token...')
               const refreshed = await refreshAccessToken(calendarIntegration.refresh_token)
               accessToken = refreshed.access_token
               const newExpiresAt = new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
+              console.log('[available-dates] Token refreshed, new expiry:', newExpiresAt)
 
               // Update token in database
               await supabase
@@ -141,23 +190,30 @@ export async function GET(request: NextRequest) {
                 })
                 .eq('id', calendarIntegration.id)
             } catch (refreshError) {
-              console.error('Failed to refresh token:', refreshError)
+              console.error('[available-dates] Failed to refresh token:', refreshError)
             }
+          } else {
+            console.warn('[available-dates] Token expired but no refresh token available')
           }
         }
       }
 
       // Get busy times from Google Calendar for the entire range
       try {
+        console.log('[available-dates] Fetching Google Calendar busy times...')
         busyTimes = await getCalendarFreeBusy({
           accessToken,
           calendarId: calendarIntegration.calendar_id || 'primary',
           timeMin: rangeStart,
           timeMax: new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000), // Include full last day
         })
+        console.log('[available-dates] Got', busyTimes.length, 'busy periods from Google Calendar')
       } catch (calendarError) {
-        console.error('Failed to fetch calendar busy times:', calendarError)
+        console.error('[available-dates] Failed to fetch calendar busy times:', calendarError)
+        // Continue without Google Calendar data
       }
+    } else {
+      console.log('[available-dates] No calendar integration found, proceeding without busy times')
     }
 
     // Get existing scheduled meetings for the range
@@ -207,15 +263,28 @@ export async function GET(request: NextRequest) {
     // Remove duplicates (in case timezone conversion causes issues)
     const uniqueDates = Array.from(new Set(formattedDates)).sort()
 
+    console.log('[available-dates] Returning', uniqueDates.length, 'available dates')
     return NextResponse.json({
       dates: uniqueDates,
       timezone: meetingType.timezone,
       maxDaysAhead: meetingType.max_days_ahead,
     })
   } catch (error) {
-    console.error('Available dates API error:', error)
+    console.error('[available-dates] Unhandled error:', error)
+
+    // Return detailed error in development
+    const isDev = process.env.NODE_ENV === 'development'
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+
     return NextResponse.json(
-      { error: 'Failed to fetch available dates' },
+      {
+        error: 'Failed to fetch available dates',
+        ...(isDev && {
+          details: errorMessage,
+          stack: errorStack,
+        }),
+      },
       { status: 500 }
     )
   }

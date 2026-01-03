@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { headers } from 'next/headers'
 import './globals.css'
 import { createClient } from '@/lib/supabase-server'
 import { supabase } from '@/lib/supabase'
@@ -20,6 +21,12 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || headersList.get('x-invoke-path') || ''
+
+  // Check if this is a public booking page (no sidebar needed)
+  const isBookingPage = pathname.startsWith('/book')
+
   const serverSupabase = await createClient()
   const { data: { user: supabaseUser } } = await serverSupabase.auth.getUser()
 
@@ -34,13 +41,14 @@ export default async function RootLayout({
     crmUser = data as User | null
   }
 
-  const isLoginPage = false // This will be handled by login page's own layout
+  // Show sidebar for authenticated users, except on booking pages
+  const showSidebar = supabaseUser && !isBookingPage
 
   return (
     <html lang="en">
       <body className={inter.className}>
         <AppProviders initialUser={supabaseUser} initialCrmUser={crmUser}>
-          {supabaseUser ? (
+          {showSidebar ? (
             <QuickAddDealWrapper>
               <Sidebar />
               <div className="md:ml-16 lg:ml-56 min-h-screen">
