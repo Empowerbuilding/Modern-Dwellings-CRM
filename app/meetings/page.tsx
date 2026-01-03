@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { UpcomingMeetings, ScheduledMeetingDisplay } from '@/components/calendar/UpcomingMeetings'
 
@@ -12,6 +12,7 @@ export default function MeetingsPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('upcoming')
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
     async function loadMeetings() {
@@ -46,8 +47,120 @@ export default function MeetingsPage() {
     loadMeetings()
   }, [statusFilter, timeFilter])
 
+  // Auto-hide toast
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [toast])
+
+  const loadMeetings = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      params.set('limit', '50')
+
+      if (statusFilter !== 'all') {
+        params.set('status', statusFilter)
+      }
+
+      if (timeFilter === 'upcoming') {
+        params.set('upcoming', 'true')
+      } else if (timeFilter === 'past') {
+        params.set('past', 'true')
+      }
+
+      const res = await fetch(`/api/meetings?${params.toString()}`)
+      const data = await res.json()
+
+      if (res.ok) {
+        setMeetings(data.meetings || [])
+      }
+    } catch (err) {
+      console.error('Failed to load meetings:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [statusFilter, timeFilter])
+
+  async function handleCancel(meetingId: string) {
+    if (!confirm('Are you sure you want to cancel this meeting?')) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/calendar/meetings/${meetingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to cancel meeting')
+      }
+
+      setToast({ message: 'Meeting cancelled', type: 'success' })
+
+      // Update the meeting in state
+      setMeetings((prev) =>
+        prev.map((m) => (m.id === meetingId ? { ...m, status: 'cancelled' } : m))
+      )
+    } catch (err) {
+      console.error('Failed to cancel meeting:', err)
+      const message = err instanceof Error ? err.message : 'Failed to cancel meeting'
+      setToast({ message, type: 'error' })
+    }
+  }
+
+  async function handleStatusChange(meetingId: string, status: string) {
+    try {
+      const res = await fetch(`/api/calendar/meetings/${meetingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update meeting')
+      }
+
+      setToast({ message: `Meeting marked as ${status}`, type: 'success' })
+
+      // Update the meeting in state
+      setMeetings((prev) =>
+        prev.map((m) =>
+          m.id === meetingId ? { ...m, status: status as typeof m.status } : m
+        )
+      )
+    } catch (err) {
+      console.error('Failed to update meeting:', err)
+      const message = err instanceof Error ? err.message : 'Failed to update meeting'
+      setToast({ message, type: 'error' })
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50">
+          <div
+            className={`px-4 py-3 rounded-lg shadow-lg ${
+              toast.type === 'success'
+                ? 'bg-green-600 text-white'
+                : 'bg-red-600 text-white'
+            }`}
+          >
+            {toast.message}
+          </div>
+        </div>
+      )}
+
       <div className="p-4 sm:p-6 max-w-5xl mx-auto pt-14 md:pt-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -126,6 +239,8 @@ export default function MeetingsPage() {
             <UpcomingMeetings
               meetings={meetings}
               showContact={true}
+              onCancel={handleCancel}
+              onStatusChange={handleStatusChange}
               emptyMessage={
                 timeFilter === 'upcoming'
                   ? 'No upcoming meetings'

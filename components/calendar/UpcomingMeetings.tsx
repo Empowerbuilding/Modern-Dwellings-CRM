@@ -29,6 +29,8 @@ interface UpcomingMeetingsProps {
   showContact?: boolean
   compact?: boolean
   emptyMessage?: string
+  onCancel?: (meetingId: string) => void
+  onStatusChange?: (meetingId: string, status: string) => void
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -112,6 +114,8 @@ export function UpcomingMeetings({
   showContact = false,
   compact = false,
   emptyMessage = 'No meetings scheduled',
+  onCancel,
+  onStatusChange,
 }: UpcomingMeetingsProps) {
   if (meetings.length === 0) {
     return (
@@ -252,6 +256,28 @@ export function UpcomingMeetings({
                     </svg>
                     Join
                   </a>
+                )}
+                {meeting.status === 'scheduled' && onCancel && (
+                  <button
+                    onClick={() => onCancel(meeting.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cancel
+                  </button>
+                )}
+                {meeting.status === 'scheduled' && onStatusChange && (
+                  <button
+                    onClick={() => onStatusChange(meeting.id, 'completed')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Complete
+                  </button>
                 )}
               </div>
             </div>

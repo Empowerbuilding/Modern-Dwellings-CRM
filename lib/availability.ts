@@ -216,6 +216,16 @@ export function getAvailableSlots(params: {
 
   // Check if day of week is available
   const dayOfWeek = getDayOfWeekInTimezone(date, timezone)
+
+  console.log('[availability] Day of week check:', {
+    date: date.toISOString(),
+    dayOfWeek,
+    dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek] || 'Invalid',
+    availableDays: available_days,
+    isAvailable: available_days.includes(dayOfWeek),
+    timezone,
+  })
+
   if (!available_days.includes(dayOfWeek)) {
     return []
   }
@@ -304,16 +314,44 @@ export function getAvailableDates(params: {
   const { meetingType, startDate, endDate, busyTimes, existingMeetings } = params
   const { timezone } = meetingType
 
+  console.log('[availability] getAvailableDates called:', {
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+    timezone,
+    availableDays: meetingType.available_days,
+  })
+
   const availableDates: Date[] = []
 
   // Normalize start date to beginning of day in the timezone
   let currentDate = getStartOfDayInTimezone(startDate, timezone)
   const end = getStartOfDayInTimezone(endDate, timezone)
 
+  console.log('[availability] Normalized date range:', {
+    currentDate: currentDate.toISOString(),
+    end: end.toISOString(),
+  })
+
   // Add one day to end to include it
   const endPlusOne = new Date(end.getTime() + 24 * 60 * 60 * 1000)
 
+  let iterationCount = 0
   while (currentDate < endPlusOne) {
+    iterationCount++
+    if (iterationCount > 100) {
+      console.error('[availability] Too many iterations, breaking loop')
+      break
+    }
+
+    const dayOfWeek = getDayOfWeekInTimezone(currentDate, timezone)
+    console.log('[availability] Checking date:', {
+      iteration: iterationCount,
+      date: currentDate.toISOString(),
+      dayOfWeek,
+      dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek] || 'Invalid',
+      isInAvailableDays: meetingType.available_days.includes(dayOfWeek),
+    })
+
     // Filter busy times and meetings to only those that could affect this date
     const dayStart = getStartOfDayInTimezone(currentDate, timezone)
     const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
@@ -336,13 +374,17 @@ export function getAvailableDates(params: {
     })
 
     if (slots.length > 0) {
+      console.log('[availability] Found', slots.length, 'slots for', currentDate.toISOString())
       availableDates.push(new Date(currentDate))
+    } else {
+      console.log('[availability] No slots for', currentDate.toISOString())
     }
 
     // Move to next day
     currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000)
   }
 
+  console.log('[availability] Final result:', availableDates.length, 'available dates')
   return availableDates
 }
 

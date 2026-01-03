@@ -5,7 +5,10 @@
       "Bash(npm install:*)",
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx supabase:*)",
+      "Bash(curl:*)"
     ]
   }
 }

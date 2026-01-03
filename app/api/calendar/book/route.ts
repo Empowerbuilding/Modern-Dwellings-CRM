@@ -282,13 +282,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 9. Find or create contact
+    console.log(`[${timestamp}] Looking for existing contact with email: ${email.toLowerCase()}`)
     let contact: ContactRow | null = null
 
-    const { data: existingContact } = await supabase
+    const { data: existingContact, error: existingContactError } = await supabase
       .from('contacts')
       .select('id, first_name, last_name, email, phone, anonymous_id')
       .eq('email', email.toLowerCase())
       .single<ContactRow>()
+
+    console.log(`[${timestamp}] Existing contact query result:`, {
+      found: !!existingContact,
+      error: existingContactError?.message || null,
+      errorCode: existingContactError?.code || null,
+    })
 
     if (existingContact) {
       contact = existingContact
@@ -303,20 +310,27 @@ export async function POST(request: NextRequest) {
       }
 
       if (Object.keys(updates).length > 0) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('contacts')
           .update(updates)
           .eq('id', existingContact.id)
+
+        if (updateError) {
+          console.error(`[${timestamp}] Failed to update existing contact:`, updateError)
+        } else {
+          console.log(`[${timestamp}] Updated existing contact with:`, updates)
+        }
       }
 
       console.log(`[${timestamp}] Using existing contact: ${contact.id}`)
     } else {
       // Create new contact
-      const dateFormatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: timezone,
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
+      console.log(`[${timestamp}] Creating new contact:`, {
+        first_name: firstName,
+        last_name: lastName,
+        email: email.toLowerCase(),
+        phone: body.phone || null,
+        lead_source: 'calendar_booking',
       })
 
       const { data: newContact, error: contactError } = await supabase
@@ -334,15 +348,22 @@ export async function POST(request: NextRequest) {
         .select('id, first_name, last_name, email, phone, anonymous_id')
         .single<ContactRow>()
 
-      if (contactError || !newContact) {
-        console.error(`[${timestamp}] Failed to create contact:`, contactError)
+      if (contactError) {
+        console.error(`[${timestamp}] Failed to create contact:`, {
+          error: contactError.message,
+          code: contactError.code,
+          details: contactError.details,
+          hint: contactError.hint,
+        })
         // Continue without contact - meeting can still be created
+      } else if (!newContact) {
+        console.error(`[${timestamp}] Contact insert returned null without error`)
       } else {
         contact = newContact
         console.log(`[${timestamp}] Created new contact: ${contact.id}`)
 
         // Log contact_created activity
-        await supabase.from('activities').insert({
+        const { error: activityError } = await supabase.from('activities').insert({
           contact_id: contact.id,
           activity_type: 'contact_created',
           title: `Contact created: ${firstName} ${lastName}`,
@@ -353,8 +374,19 @@ export async function POST(request: NextRequest) {
           },
           anonymous_id: body.anonymousId || null,
         })
+
+        if (activityError) {
+          console.error(`[${timestamp}] Failed to log contact_created activity:`, activityError)
+        } else {
+          console.log(`[${timestamp}] Logged contact_created activity`)
+        }
       }
     }
+
+    console.log(`[${timestamp}] Contact resolution complete:`, {
+      hasContact: !!contact,
+      contactId: contact?.id || null,
+    })
 
     // 10. Link anonymous activities
     if (body.anonymousId && contact) {
