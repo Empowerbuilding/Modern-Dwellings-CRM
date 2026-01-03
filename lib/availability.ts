@@ -58,14 +58,18 @@ function parseTimeInTimezone(
     throw new Error(`Invalid date: ${date}`)
   }
 
-  // Validate time string format
-  if (!timeStr || !/^\d{1,2}:\d{2}$/.test(timeStr)) {
+  // Validate time string format (accept HH:MM or HH:MM:SS from PostgreSQL)
+  if (!timeStr || !/^\d{1,2}:\d{2}(:\d{2})?$/.test(timeStr)) {
     console.error('[availability] Invalid time string:', timeStr)
     throw new Error(`Invalid time string: ${timeStr}`)
   }
 
+  // Strip seconds if present (e.g., "08:00:00" -> "08:00")
+  const timeParts = timeStr.split(':')
+  const normalizedTimeStr = timeParts.slice(0, 2).join(':')
+
   // Parse hours and minutes
-  const [hoursStr, minutesStr] = timeStr.split(':')
+  const [hoursStr, minutesStr] = normalizedTimeStr.split(':')
   const hours = parseInt(hoursStr, 10)
   const minutes = parseInt(minutesStr, 10)
 

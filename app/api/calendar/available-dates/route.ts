@@ -227,7 +227,8 @@ export async function GET(request: NextRequest) {
       .returns<ScheduledMeetingRow[]>()
 
     // Validate meeting type data before using
-    const timeRegex = /^\d{1,2}:\d{2}$/
+    // Accept both HH:MM and HH:MM:SS formats (PostgreSQL TIME includes seconds)
+    const timeRegex = /^\d{1,2}:\d{2}(:\d{2})?$/
     if (!meetingType.availability_start || !timeRegex.test(meetingType.availability_start)) {
       console.error('[available-dates] Invalid availability_start:', meetingType.availability_start)
       return NextResponse.json(
