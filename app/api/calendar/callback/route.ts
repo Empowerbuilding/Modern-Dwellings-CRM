@@ -10,25 +10,26 @@ const supabaseAdmin = createSupabaseClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get('code')
   const state = searchParams.get('state')
   const error = searchParams.get('error')
 
+  // Use the request origin for redirects (works in both dev and production)
+  const baseUrl = request.nextUrl.origin
+
   // Handle OAuth errors from Google
   if (error) {
     console.error('Google OAuth error:', error)
     return NextResponse.redirect(
-      new URL(`/settings?tab=calendar&error=${encodeURIComponent(error)}`, BASE_URL)
+      new URL(`/settings/calendar?error=${encodeURIComponent(error)}`, baseUrl)
     )
   }
 
   if (!code || !state) {
     return NextResponse.redirect(
-      new URL('/settings?tab=calendar&error=Missing code or state', BASE_URL)
+      new URL('/settings/calendar?error=Missing code or state', baseUrl)
     )
   }
 
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     if (!storedState || storedState !== state) {
       return NextResponse.redirect(
-        new URL('/settings?tab=calendar&error=Invalid state token', BASE_URL)
+        new URL('/settings/calendar?error=Invalid state token', baseUrl)
       )
     }
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.redirect(
-        new URL('/login', BASE_URL)
+        new URL('/login', baseUrl)
       )
     }
 
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     if (userError || !crmUser) {
       console.error('Failed to find CRM user:', userError)
       return NextResponse.redirect(
-        new URL('/settings?tab=calendar&error=User not found in CRM', BASE_URL)
+        new URL('/settings/calendar?error=User not found in CRM', baseUrl)
       )
     }
 
@@ -94,18 +95,18 @@ export async function GET(request: NextRequest) {
     if (upsertError) {
       console.error('Failed to save calendar integration:', upsertError)
       return NextResponse.redirect(
-        new URL('/settings?tab=calendar&error=Failed to save integration', BASE_URL)
+        new URL('/settings/calendar?error=Failed to save integration', baseUrl)
       )
     }
 
     return NextResponse.redirect(
-      new URL('/settings?tab=calendar&connected=true', BASE_URL)
+      new URL('/settings/calendar?connected=true', baseUrl)
     )
   } catch (err) {
     console.error('Calendar callback error:', err)
     const message = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.redirect(
-      new URL(`/settings?tab=calendar&error=${encodeURIComponent(message)}`, BASE_URL)
+      new URL(`/settings/calendar?error=${encodeURIComponent(message)}`, baseUrl)
     )
   }
 }
