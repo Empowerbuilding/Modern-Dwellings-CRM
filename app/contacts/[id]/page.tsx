@@ -244,12 +244,6 @@ export default async function ContactDetailPage({
                   <dt className="text-gray-500">Created</dt>
                   <dd className="text-gray-900">{formatDate(contact.created_at)}</dd>
                 </div>
-                {contact.notes && (
-                  <div>
-                    <dt className="text-gray-500">Notes</dt>
-                    <dd className="text-gray-900 whitespace-pre-wrap">{contact.notes}</dd>
-                  </div>
-                )}
               </dl>
             </div>
 

@@ -112,6 +112,18 @@ export async function POST(request: NextRequest) {
       contactId = newContact.id
       console.log(`[${timestamp}] Created new contact: ${contactId}`)
 
+      // Also create in the notes table for the Notes Section
+      if (contactNotes) {
+        const { error: noteError } = await supabase.from('notes').insert({
+          contact_id: contactId,
+          content: contactNotes,
+        })
+        if (noteError) {
+          console.error(`[${timestamp}] Failed to create note:`, noteError)
+          // Don't fail the webhook, contact was created successfully
+        }
+      }
+
       // Log contact_created activity
       await supabase.from('activities').insert({
         contact_id: contactId,
