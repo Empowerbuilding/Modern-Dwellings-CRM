@@ -9,6 +9,7 @@ export interface FacebookUserData {
   firstName?: string | null
   lastName?: string | null
   fbclid?: string | null
+  leadId?: string | null  // Facebook Lead Ads lead ID (leadgen_id)
   clientIpAddress?: string | null
   clientUserAgent?: string | null
   externalId?: string | null  // Contact ID from CRM
@@ -122,6 +123,10 @@ export async function sendFacebookEvent(params: SendFacebookEventParams): Promis
   if (userData.fbclid) {
     // fbclid is NOT hashed - it's the Facebook click ID
     userDataPayload.fbc = userData.fbclid
+  }
+  if (userData.leadId) {
+    // lead_id is NOT hashed - it's the Facebook Lead Ads lead ID
+    userDataPayload.lead_id = userData.leadId
   }
   if (userData.externalId) {
     userDataPayload.external_id = [hashUserData(userData.externalId)]

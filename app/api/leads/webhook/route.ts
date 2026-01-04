@@ -15,6 +15,7 @@ interface LeadWebhookPayload {
   phone?: string
   source: LeadSource
   fbclid?: string
+  fb_lead_id?: string  // Facebook Lead Ads lead ID for CAPI attribution
   utm_source?: string
   utm_medium?: string
   utm_campaign?: string
@@ -95,10 +96,11 @@ export async function POST(request: NextRequest) {
     let contactId: string
 
     if (existingContact) {
-      // Update existing contact with fbclid and anonymous_id if provided
+      // Update existing contact with fbclid, fb_lead_id, and anonymous_id if provided
       contactId = existingContact.id
       const updateData: Record<string, string> = {}
       if (payload.fbclid) updateData.fbclid = payload.fbclid
+      if (payload.fb_lead_id) updateData.fb_lead_id = payload.fb_lead_id
       if (payload.anonymous_id) updateData.anonymous_id = payload.anonymous_id
 
       if (Object.keys(updateData).length > 0) {
@@ -134,6 +136,7 @@ export async function POST(request: NextRequest) {
           lifecycle_stage: lifecycleStage,
           fb_events_sent: {},  // Initialize as empty - no FB events sent for subscribers
           fbclid: payload.fbclid || null,
+          fb_lead_id: payload.fb_lead_id || null,
           anonymous_id: payload.anonymous_id || null,
           notes: contactNotes || null,
           is_primary: true,

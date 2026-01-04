@@ -121,6 +121,7 @@ export interface Contact {
   lifecycle_stage: LifecycleStage | null
   fb_events_sent: Record<string, string> | null
   fbclid: string | null
+  fb_lead_id: string | null
   anonymous_id: string | null
   notes: string | null
   unsubscribed: boolean
