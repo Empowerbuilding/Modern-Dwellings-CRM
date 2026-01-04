@@ -302,6 +302,7 @@ function formatSource(source: string): string {
   const sourceMap: Record<string, string> = {
     facebook: 'Facebook',
     facebook_ad: 'Facebook Ad',
+    facebook_lead_ad: 'Facebook Lead Ad',
     google: 'Google',
     referral: 'Referral',
     website: 'Website',

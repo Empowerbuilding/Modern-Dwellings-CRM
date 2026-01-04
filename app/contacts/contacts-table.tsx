@@ -10,6 +10,7 @@ import { ContactSlideOver } from './contact-slide-over'
 const LEAD_SOURCES: LeadSource[] = [
   'facebook',
   'facebook_ad',
+  'facebook_lead_ad',
   'google',
   'referral',
   'website',
@@ -28,6 +29,7 @@ const LEAD_SOURCES: LeadSource[] = [
 const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   facebook: 'Facebook',
   facebook_ad: 'Facebook Ad',
+  facebook_lead_ad: 'Facebook Lead Ad',
   google: 'Google',
   referral: 'Referral',
   website: 'Website',

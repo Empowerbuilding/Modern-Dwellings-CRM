@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
 const LEAD_SOURCE_LABELS: Record<string, string> = {
   facebook: 'Facebook',
   facebook_ad: 'Facebook Ad',
+  facebook_lead_ad: 'Facebook Lead Ad',
   google: 'Google',
   referral: 'Referral',
   website: 'Website',
@@ -26,6 +27,7 @@ const LEAD_SOURCE_LABELS: Record<string, string> = {
   barnhaus_contact: 'Barnhaus Contact',
   barnhaus_store_contact: 'Barnhaus Store',
   shopify_order: 'Shopify Order',
+  calendar_booking: 'Calendar Booking',
   other: 'Other',
 }
 
