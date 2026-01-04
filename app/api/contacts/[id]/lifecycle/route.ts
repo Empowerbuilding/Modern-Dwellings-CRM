@@ -10,14 +10,25 @@ const supabaseAdmin = createSupabaseClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const VALID_STAGES: LifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'customer']
+// Lifecycle stages in funnel order (lowest to highest)
+const LIFECYCLE_FUNNEL_ORDER: LifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'customer']
+
+const VALID_STAGES: LifecycleStage[] = LIFECYCLE_FUNNEL_ORDER
 
 // Map lifecycle stages to Facebook event names
-const STAGE_TO_FB_EVENT: Partial<Record<LifecycleStage, FacebookEventName>> = {
+const STAGE_TO_FB_EVENT: Record<LifecycleStage, FacebookEventName> = {
+  subscriber: 'initial_lead',
   lead: 'lead',
   mql: 'marketingqualifiedlead',
   sql: 'salesqualifiedlead',
   customer: 'customer',
+}
+
+// Get all stages up to and including the target stage (in funnel order)
+function getStagesUpTo(targetStage: LifecycleStage): LifecycleStage[] {
+  const targetIndex = LIFECYCLE_FUNNEL_ORDER.indexOf(targetStage)
+  if (targetIndex === -1) return []
+  return LIFECYCLE_FUNNEL_ORDER.slice(0, targetIndex + 1)
 }
 
 interface ContactRow {
@@ -89,55 +100,66 @@ export async function PUT(
       lifecycle_stage,
     }
 
-    let fbEventSent = false
-    let fbEventName: FacebookEventName | null = null
+    // 5. Cascade Facebook events - fire all events up to the target stage that haven't been sent
+    const stagesToFire = getStagesUpTo(lifecycle_stage)
+    const fbEventsSent = contact.fb_events_sent || {}
+    const eventsSentThisRequest: { stage: LifecycleStage; eventName: FacebookEventName }[] = []
+    const updatedFbEventsSent = { ...fbEventsSent }
 
-    // 5. Check if we should send a Facebook event
-    const fbEventForStage = STAGE_TO_FB_EVENT[lifecycle_stage]
-    if (fbEventForStage) {
-      const fbEventsSent = contact.fb_events_sent || {}
-      const eventAlreadySent = !!fbEventsSent[lifecycle_stage]
+    console.log(`[${timestamp}] Cascading FB events for contact ${contactId}:`, {
+      targetStage: lifecycle_stage,
+      stagesToCheck: stagesToFire,
+      alreadySent: Object.keys(fbEventsSent),
+    })
 
-      if (!eventAlreadySent) {
-        console.log(`[${timestamp}] Sending ${fbEventForStage} event to Facebook for contact:`, contactId)
+    // Loop through stages in order and fire any missing events
+    for (const stage of stagesToFire) {
+      const fbEventName = STAGE_TO_FB_EVENT[stage]
+      const eventAlreadySent = !!fbEventsSent[stage]
 
-        try {
-          const fbResult = await sendFacebookEvent({
-            eventName: fbEventForStage,
-            eventId: `${contact.id}-${lifecycle_stage}`,
-            userData: {
-              email: contact.email,
-              phone: contact.phone,
-              firstName: contact.first_name,
-              lastName: contact.last_name,
-              fbclid: contact.fbclid,
-              leadId: contact.fb_lead_id,
-              externalId: contact.id,
-            },
-            customData: {
-              leadEventSource: 'crm_lifecycle_update',
-            },
-          })
+      if (eventAlreadySent) {
+        console.log(`[${timestamp}] ${fbEventName} (${stage}) already sent, skipping`)
+        continue
+      }
 
-          console.log(`[${timestamp}] Facebook ${fbEventForStage} event result:`, fbResult)
+      console.log(`[${timestamp}] Sending ${fbEventName} event (${stage}) to Facebook for contact:`, contactId)
 
-          if (fbResult.success) {
-            fbEventSent = true
-            fbEventName = fbEventForStage
-            // Record that this event was sent
-            updates.fb_events_sent = {
-              ...fbEventsSent,
-              [lifecycle_stage]: new Date().toISOString(),
-            }
-          }
-        } catch (fbError) {
-          console.error(`[${timestamp}] Facebook event error (non-fatal):`, fbError)
-          // Continue with lifecycle update even if FB fails
+      try {
+        const fbResult = await sendFacebookEvent({
+          eventName: fbEventName,
+          eventId: `${contact.id}-${stage}`,
+          userData: {
+            email: contact.email,
+            phone: contact.phone,
+            firstName: contact.first_name,
+            lastName: contact.last_name,
+            fbclid: contact.fbclid,
+            leadId: contact.fb_lead_id,
+            externalId: contact.id,
+          },
+          customData: {
+            leadEventSource: 'crm_lifecycle_update',
+          },
+        })
+
+        console.log(`[${timestamp}] Facebook ${fbEventName} (${stage}) event result:`, fbResult)
+
+        if (fbResult.success) {
+          eventsSentThisRequest.push({ stage, eventName: fbEventName })
+          updatedFbEventsSent[stage] = new Date().toISOString()
         }
-      } else {
-        console.log(`[${timestamp}] ${fbEventForStage} event already sent for contact:`, contactId)
+      } catch (fbError) {
+        console.error(`[${timestamp}] Facebook ${fbEventName} event error (non-fatal):`, fbError)
+        // Continue with other events even if one fails
       }
     }
+
+    // Update fb_events_sent if any events were fired
+    if (eventsSentThisRequest.length > 0) {
+      updates.fb_events_sent = updatedFbEventsSent
+    }
+
+    console.log(`[${timestamp}] FB events sent this request:`, eventsSentThisRequest.map(e => e.eventName))
 
     // 6. Update the contact in database
     const { error: updateError } = await supabaseAdmin
@@ -155,14 +177,18 @@ export async function PUT(
 
     console.log(`[${timestamp}] Contact ${contactId} updated successfully`)
 
-    // 7. Return success response
+    // 7. Return success response with info about all events sent
+    const eventNames = eventsSentThisRequest.map(e => e.eventName)
+    const eventCount = eventsSentThisRequest.length
+
     return NextResponse.json({
       success: true,
       lifecycle_stage,
-      fb_event_sent: fbEventSent,
-      fb_event_name: fbEventName,
-      message: fbEventSent
-        ? `Status updated & sent to Facebook (${fbEventName})`
+      fb_events_sent_count: eventCount,
+      fb_events_sent: eventNames,
+      fb_events_details: eventsSentThisRequest,
+      message: eventCount > 0
+        ? `Status updated & sent ${eventCount} event${eventCount > 1 ? 's' : ''} to Facebook (${eventNames.join(', ')})`
         : 'Status updated',
     })
   } catch (error) {
