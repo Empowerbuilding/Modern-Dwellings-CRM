@@ -32,6 +32,7 @@ interface CreateMeetingTypeRequest {
   custom_fields?: unknown[]
   confirmation_message?: string
   brand_color?: string
+  logo_url?: string | null
 }
 
 /**
@@ -210,6 +211,7 @@ export async function POST(request: NextRequest) {
         custom_fields: body.custom_fields || [],
         confirmation_message: body.confirmation_message || null,
         brand_color: body.brand_color || '#2d3748',
+        logo_url: body.logo_url || null,
         is_active: true,
       })
       .select()

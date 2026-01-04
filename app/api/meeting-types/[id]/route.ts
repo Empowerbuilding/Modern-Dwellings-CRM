@@ -32,6 +32,7 @@ interface UpdateMeetingTypeRequest {
   custom_fields?: unknown[]
   confirmation_message?: string | null
   brand_color?: string
+  logo_url?: string | null
   is_active?: boolean
 }
 
@@ -234,6 +235,7 @@ export async function PUT(
     if (body.custom_fields !== undefined) updateData.custom_fields = body.custom_fields
     if (body.confirmation_message !== undefined) updateData.confirmation_message = body.confirmation_message
     if (body.brand_color !== undefined) updateData.brand_color = body.brand_color
+    if (body.logo_url !== undefined) updateData.logo_url = body.logo_url
     if (body.is_active !== undefined) updateData.is_active = body.is_active
 
     // Update meeting type
