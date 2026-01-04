@@ -140,28 +140,22 @@ export default function SettingsPage() {
     setInviteSuccess(false)
 
     try {
-      // First create the user in our users table
-      const { error: userError } = await (supabase.from('users') as any)
-        .insert({
-          email: inviteEmail.toLowerCase().trim(),
+      const response = await fetch('/api/users/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
           name: inviteName.trim(),
           role: inviteRole,
-        })
+        }),
+      })
 
-      if (userError) {
-        if (userError.code === '23505') {
-          throw new Error('A user with this email already exists')
-        }
-        throw userError
-      }
+      const data = await response.json()
 
-      // Send invite via Supabase Auth
-      const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(inviteEmail.toLowerCase().trim())
-
-      if (inviteError) {
-        // If invite fails, we still have the user in our table
-        // They can be invited again later or sign up themselves
-        console.warn('Failed to send invite email:', inviteError)
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to invite user')
       }
 
       setInviteSuccess(true)
@@ -209,6 +203,12 @@ export default function SettingsPage() {
               className="pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors"
             >
               Calendar
+            </button>
+            <button
+              onClick={() => router.push('/settings/integrations')}
+              className="pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Integrations
             </button>
             {isAdmin && (
               <button
