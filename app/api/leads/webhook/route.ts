@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import type { LeadSource, LifecycleStage } from '@/lib/types'
+import { sendFacebookEvent } from '@/lib/facebook-conversions'
 
 // Use service role key for server-side operations (bypasses RLS)
 const supabase = createClient(
@@ -179,6 +180,45 @@ export async function POST(request: NextRequest) {
         },
         anonymous_id: payload.anonymous_id || null,
       })
+
+      // Fire initial_lead Facebook event for new contacts
+      try {
+        console.log(`[${timestamp}] Sending initial_lead event to Facebook for new contact: ${contactId}`)
+
+        const fbResult = await sendFacebookEvent({
+          eventName: 'initial_lead',
+          eventId: `${contactId}-subscriber`,
+          userData: {
+            email: payload.email,
+            phone: payload.phone || null,
+            firstName: payload.first_name,
+            lastName: payload.last_name,
+            fbclid: payload.fbclid || null,
+            leadId: payload.fb_lead_id || null,
+            externalId: contactId,
+          },
+          customData: {
+            leadEventSource: payload.source,
+          },
+        })
+
+        console.log(`[${timestamp}] Facebook initial_lead event result:`, fbResult)
+
+        if (fbResult.success) {
+          // Update fb_events_sent to prevent duplicate from lifecycle cascade
+          await supabase
+            .from('contacts')
+            .update({
+              fb_events_sent: { subscriber: new Date().toISOString() },
+            })
+            .eq('id', contactId)
+
+          console.log(`[${timestamp}] Updated fb_events_sent for contact: ${contactId}`)
+        }
+      } catch (fbError) {
+        console.error(`[${timestamp}] Facebook initial_lead event error (non-fatal):`, fbError)
+        // Don't fail the webhook if FB event fails
+      }
     }
 
     // Link any anonymous activities to this contact
