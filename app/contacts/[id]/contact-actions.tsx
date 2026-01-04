@@ -23,6 +23,7 @@ const LEAD_SOURCES: LeadSource[] = [
   'barnhaus_contact',
   'barnhaus_store_contact',
   'shopify_order',
+  'calendar_booking',
   'other',
 ]
 

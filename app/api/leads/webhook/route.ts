@@ -33,6 +33,20 @@ function getLifecycleStageForSource(source: LeadSource): LifecycleStage {
   return 'subscriber'
 }
 
+// Determine client type based on lead source
+// These sources are typically consumer/homeowner leads
+function getClientTypeForSource(source: LeadSource): 'consumer' | null {
+  const consumerSources: LeadSource[] = [
+    'cost_calc',
+    'facebook_lead_ad',
+    'shopify_order',
+    'barnhaus_store_contact',
+    'guide_download',
+    'barnhaus_contact',
+  ]
+  return consumerSources.includes(source) ? 'consumer' : null
+}
+
 export async function POST(request: NextRequest) {
   const timestamp = new Date().toISOString()
 
@@ -94,8 +108,8 @@ export async function POST(request: NextRequest) {
       }
       console.log(`[${timestamp}] Using existing contact: ${contactId}`)
     } else {
-      // Determine client_type for cost_calc source
-      const clientType = payload.source === 'cost_calc' ? 'consumer' : null
+      // Determine client_type based on source
+      const clientType = getClientTypeForSource(payload.source)
 
       // Determine lifecycle stage based on source
       const lifecycleStage = getLifecycleStageForSource(payload.source)
