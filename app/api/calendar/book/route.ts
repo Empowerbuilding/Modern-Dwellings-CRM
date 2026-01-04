@@ -78,6 +78,14 @@ interface ScheduledMeetingRow {
   end_time: string
 }
 
+// Normalize phone number to last 10 digits for comparison
+function normalizePhone(phone: string | null | undefined): string | null {
+  if (!phone) return null
+  const digits = phone.replace(/\D/g, '')
+  // Return last 10 digits (handles country codes like +1)
+  return digits.length >= 10 ? digits.slice(-10) : digits
+}
+
 export async function POST(request: NextRequest) {
   const timestamp = new Date().toISOString()
 
@@ -289,28 +297,69 @@ export async function POST(request: NextRequest) {
     // 9. Find or create contact
     console.log(`[${timestamp}] Looking for existing contact with email: ${email.toLowerCase()}`)
     let contact: ContactRow | null = null
+    let contactFoundBy: 'email' | 'phone' | 'new' = 'new'
 
-    const { data: existingContact, error: existingContactError } = await supabase
+    // First, try to find by email
+    const { data: existingContactByEmail, error: emailLookupError } = await supabase
       .from('contacts')
       .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, lifecycle_stage, fb_events_sent')
       .eq('email', email.toLowerCase())
       .single<ContactRow>()
 
-    console.log(`[${timestamp}] Existing contact query result:`, {
-      found: !!existingContact,
-      error: existingContactError?.message || null,
-      errorCode: existingContactError?.code || null,
+    console.log(`[${timestamp}] Email lookup result:`, {
+      found: !!existingContactByEmail,
+      error: emailLookupError?.message || null,
+      errorCode: emailLookupError?.code || null,
     })
 
-    if (existingContact) {
-      contact = existingContact
+    if (existingContactByEmail) {
+      contact = existingContactByEmail
+      contactFoundBy = 'email'
+    } else if (body.phone) {
+      // No email match - try phone lookup as fallback
+      const normalizedInputPhone = normalizePhone(body.phone)
+      console.log(`[${timestamp}] No email match, trying phone lookup: ${body.phone} (normalized: ${normalizedInputPhone})`)
+
+      if (normalizedInputPhone && normalizedInputPhone.length >= 10) {
+        // Fetch contacts with phone numbers and compare normalized versions
+        const { data: contactsWithPhone } = await supabase
+          .from('contacts')
+          .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, lifecycle_stage, fb_events_sent')
+          .not('phone', 'is', null)
+          .returns<ContactRow[]>()
+
+        if (contactsWithPhone && contactsWithPhone.length > 0) {
+          // Find a contact whose normalized phone matches
+          const matchingContact = contactsWithPhone.find(c => {
+            const normalizedContactPhone = normalizePhone(c.phone)
+            return normalizedContactPhone === normalizedInputPhone
+          })
+
+          if (matchingContact) {
+            contact = matchingContact
+            contactFoundBy = 'phone'
+            console.log(`[${timestamp}] Found existing contact by phone: ${contact.id}`)
+          }
+        }
+      }
+    }
+
+    if (contact) {
+      console.log(`[${timestamp}] Using existing contact (found by ${contactFoundBy}): ${contact.id}`)
 
       // Update if needed
       const updates: Record<string, unknown> = {}
-      if (!existingContact.phone && body.phone) {
+
+      // If found by phone and contact doesn't have email, add it
+      if (contactFoundBy === 'phone' && !contact.email) {
+        updates.email = email.toLowerCase()
+        console.log(`[${timestamp}] Adding email to contact found by phone`)
+      }
+
+      if (!contact.phone && body.phone) {
         updates.phone = body.phone
       }
-      if (!existingContact.anonymous_id && body.anonymousId) {
+      if (!contact.anonymous_id && body.anonymousId) {
         updates.anonymous_id = body.anonymousId
       }
 
@@ -318,16 +367,18 @@ export async function POST(request: NextRequest) {
         const { error: updateError } = await supabase
           .from('contacts')
           .update(updates)
-          .eq('id', existingContact.id)
+          .eq('id', contact.id)
 
         if (updateError) {
           console.error(`[${timestamp}] Failed to update existing contact:`, updateError)
         } else {
           console.log(`[${timestamp}] Updated existing contact with:`, updates)
+          // Update local contact object with new email if added
+          if (updates.email) {
+            contact.email = updates.email as string
+          }
         }
       }
-
-      console.log(`[${timestamp}] Using existing contact: ${contact.id}`)
     } else {
       // Create new contact
       console.log(`[${timestamp}] Creating new contact:`, {
