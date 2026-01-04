@@ -469,11 +469,23 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies }: T
                         </button>
                       </td>
                       <td className="px-4 py-3">
-                        <p
-                          className={`font-medium text-gray-900 ${task.completed ? 'line-through' : ''}`}
-                        >
-                          {task.title}
-                        </p>
+                        {task.contact_id ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/contacts/${task.contact_id}`)
+                            }}
+                            className={`font-medium text-blue-600 hover:text-blue-800 hover:underline text-left ${task.completed ? 'line-through' : ''}`}
+                          >
+                            {task.title}
+                          </button>
+                        ) : (
+                          <p
+                            className={`font-medium text-gray-900 ${task.completed ? 'line-through' : ''}`}
+                          >
+                            {task.title}
+                          </p>
+                        )}
                         {task.description && (
                           <p className="text-sm text-gray-500 truncate max-w-xs">
                             {task.description}
