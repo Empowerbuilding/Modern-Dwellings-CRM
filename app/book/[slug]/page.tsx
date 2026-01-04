@@ -142,6 +142,9 @@ export default function BookingPage() {
   // Selected slot
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
 
+  // Mobile step: 'calendar' or 'times' (only used on mobile)
+  const [mobileStep, setMobileStep] = useState<'calendar' | 'times'>('calendar')
+
   // Booking form
   const [formData, setFormData] = useState<BookingFormData>({
     firstName: '',
@@ -326,6 +329,13 @@ export default function BookingPage() {
   function selectDate(date: string) {
     setSelectedDate(date)
     setSelectedSlot(null)
+    setMobileStep('times') // Switch to time slots on mobile
+  }
+
+  function goBackToMobileCalendar() {
+    setMobileStep('calendar')
+    setSelectedDate(null)
+    setSlots([])
   }
 
   function selectSlot(slot: TimeSlot) {
@@ -691,9 +701,9 @@ export default function BookingPage() {
       <div className={`max-w-4xl mx-auto ${isEmbed ? 'p-2' : 'p-4 md:p-8'}`}>
         <div className={`bg-white rounded-xl overflow-hidden ${isEmbed ? '' : 'shadow-lg'}`}>
           <div className="flex flex-col md:flex-row">
-            {/* Left Panel - Calendar */}
+            {/* Left Panel - Calendar (hidden on mobile when viewing times) */}
             <div
-              className="p-6 md:p-8 md:w-1/2"
+              className={`p-6 md:p-8 md:w-1/2 ${mobileStep === 'times' ? 'hidden md:block' : ''}`}
               style={{ backgroundColor: brandColor }}
             >
               {/* Logo */}
@@ -784,8 +794,19 @@ export default function BookingPage() {
               )}
             </div>
 
-            {/* Right Panel - Time Slots */}
-            <div className="p-6 md:p-8 md:w-1/2 bg-white">
+            {/* Right Panel - Time Slots (hidden on mobile when viewing calendar) */}
+            <div className={`p-6 md:p-8 md:w-1/2 bg-white ${mobileStep === 'calendar' ? 'hidden md:block' : ''}`}>
+              {/* Mobile back button */}
+              <button
+                onClick={goBackToMobileCalendar}
+                className="md:hidden flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 -mt-1"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-sm font-medium">Back to calendar</span>
+              </button>
+
               {meetingType && (
                 <div className="mb-4">
                   <span className="text-xs text-gray-500 uppercase tracking-wide">Meeting duration</span>
@@ -800,16 +821,25 @@ export default function BookingPage() {
                 </div>
               )}
 
+              {/* Mobile: Show selected date prominently */}
+              {selectedDate && (
+                <div className="md:hidden mb-4 pb-4 border-b border-gray-100">
+                  <p className="text-sm text-gray-500">Selected date</p>
+                  <p className="text-lg font-semibold text-gray-900">{formatSelectedDate(selectedDate)}</p>
+                </div>
+              )}
+
               <h2 className="text-lg font-semibold text-gray-900 mb-1">
                 What time works best?
               </h2>
 
+              {/* Desktop: Show date context */}
               {selectedDate ? (
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="hidden md:block text-sm text-gray-500 mb-4">
                   Showing times for {formatSelectedDate(selectedDate)}
                 </p>
               ) : (
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="hidden md:block text-sm text-gray-500 mb-4">
                   Select a date to see available times
                 </p>
               )}
@@ -840,7 +870,7 @@ export default function BookingPage() {
                   <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                 </div>
               ) : !selectedDate ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="hidden md:block text-center py-8 text-gray-500">
                   <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
