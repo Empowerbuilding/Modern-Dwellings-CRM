@@ -228,6 +228,62 @@
     return getVisitorId();
   }
 
+  // Get a cookie by name
+  function getCookie(name) {
+    var cookies = document.cookie.split(';');
+    for (var i = 0; i < cookies.length; i++) {
+      var cookie = cookies[i].trim();
+      if (cookie.indexOf(name + '=') === 0) {
+        return cookie.substring(name.length + 1);
+      }
+    }
+    return null;
+  }
+
+  // Get Facebook cookies for Conversions API
+  // fbp: Facebook browser pixel ID (format: fb.1.{timestamp}.{random})
+  // fbc: Facebook click ID from ad click (format: fb.1.{timestamp}.{fbclid})
+  function getFacebookCookies() {
+    var fbp = getCookie('_fbp');
+    var fbc = getCookie('_fbc');
+
+    // If no fbc cookie but fbclid in URL, construct fbc value
+    if (!fbc) {
+      var urlParams = new URLSearchParams(window.location.search);
+      var fbclid = urlParams.get('fbclid');
+      if (fbclid) {
+        // Format: fb.1.{timestamp}.{fbclid}
+        fbc = 'fb.1.' + Date.now() + '.' + fbclid;
+      }
+    }
+
+    log('Facebook cookies:', { fbp: fbp, fbc: fbc });
+
+    return {
+      fbp: fbp,
+      fbc: fbc
+    };
+  }
+
+  // Get fbclid from URL or cookie
+  function getFbclid() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var fbclid = urlParams.get('fbclid');
+    if (fbclid) {
+      return fbclid;
+    }
+    // Try to extract from fbc cookie
+    var fbc = getCookie('_fbc');
+    if (fbc) {
+      // fbc format: fb.1.{timestamp}.{fbclid}
+      var parts = fbc.split('.');
+      if (parts.length >= 4) {
+        return parts.slice(3).join('.');
+      }
+    }
+    return null;
+  }
+
   // Initialize tracking
   function init() {
     log('Initializing with config:', config);
@@ -265,6 +321,8 @@
     trackEvent: trackEvent,
     trackPageView: trackPageView,
     getVisitorId: getPublicVisitorId,
+    getFacebookCookies: getFacebookCookies,
+    getFbclid: getFbclid,
     config: config
   };
 

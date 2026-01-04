@@ -69,6 +69,10 @@ interface ContactRow {
   phone: string | null
   anonymous_id: string | null
   fbclid: string | null
+  fb_lead_id: string | null
+  fbp: string | null
+  client_ip_address: string | null
+  client_user_agent: string | null
   lifecycle_stage: LifecycleStage | null
   fb_events_sent: Record<string, string> | null
 }
@@ -88,6 +92,12 @@ function normalizePhone(phone: string | null | undefined): string | null {
 
 export async function POST(request: NextRequest) {
   const timestamp = new Date().toISOString()
+
+  // Capture IP and User Agent from request headers for CAPI
+  const clientIpAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || null
+  const clientUserAgent = request.headers.get('user-agent') || null
 
   try {
     const body: BookingRequest = await request.json()
@@ -302,7 +312,7 @@ export async function POST(request: NextRequest) {
     // First, try to find by email
     const { data: existingContactByEmail, error: emailLookupError } = await supabase
       .from('contacts')
-      .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, lifecycle_stage, fb_events_sent')
+      .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, fb_lead_id, fbp, client_ip_address, client_user_agent, lifecycle_stage, fb_events_sent')
       .eq('email', email.toLowerCase())
       .single<ContactRow>()
 
@@ -324,7 +334,7 @@ export async function POST(request: NextRequest) {
         // Fetch contacts with phone numbers and compare normalized versions
         const { data: contactsWithPhone } = await supabase
           .from('contacts')
-          .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, lifecycle_stage, fb_events_sent')
+          .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, fb_lead_id, fbp, client_ip_address, client_user_agent, lifecycle_stage, fb_events_sent')
           .not('phone', 'is', null)
           .returns<ContactRow[]>()
 
@@ -361,6 +371,13 @@ export async function POST(request: NextRequest) {
       }
       if (!contact.anonymous_id && body.anonymousId) {
         updates.anonymous_id = body.anonymousId
+      }
+      // Update IP/UA if not already set (first-party data for CAPI)
+      if (!contact.client_ip_address && clientIpAddress) {
+        updates.client_ip_address = clientIpAddress
+      }
+      if (!contact.client_user_agent && clientUserAgent) {
+        updates.client_user_agent = clientUserAgent
       }
 
       if (Object.keys(updates).length > 0) {
@@ -400,9 +417,11 @@ export async function POST(request: NextRequest) {
           client_type: 'consumer',
           lifecycle_stage: 'lead',
           anonymous_id: body.anonymousId || null,
+          client_ip_address: clientIpAddress || null,
+          client_user_agent: clientUserAgent || null,
           is_primary: true,
         })
-        .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, lifecycle_stage, fb_events_sent')
+        .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, fb_lead_id, fbp, client_ip_address, client_user_agent, lifecycle_stage, fb_events_sent')
         .single<ContactRow>()
 
       if (contactError) {
@@ -548,6 +567,10 @@ export async function POST(request: NextRequest) {
               firstName: contact.first_name,
               lastName: contact.last_name,
               fbclid: contact.fbclid,
+              fbp: contact.fbp,
+              leadId: contact.fb_lead_id,
+              clientIpAddress: contact.client_ip_address || clientIpAddress,
+              clientUserAgent: contact.client_user_agent || clientUserAgent,
               externalId: contact.id,
             },
             eventSourceUrl: bookingPageUrl,

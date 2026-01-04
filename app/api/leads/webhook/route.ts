@@ -17,6 +17,9 @@ interface LeadWebhookPayload {
   source: LeadSource
   fbclid?: string
   fb_lead_id?: string  // Facebook Lead Ads lead ID for CAPI attribution
+  fbp?: string  // Facebook browser pixel ID for CAPI match quality
+  client_ip_address?: string  // Client IP for CAPI (if passed from frontend)
+  client_user_agent?: string  // Client UA for CAPI (if passed from frontend)
   utm_source?: string
   utm_medium?: string
   utm_campaign?: string
@@ -63,8 +66,18 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Capture IP and User Agent from request headers
+  const clientIpFromHeader = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || null
+  const clientUserAgentFromHeader = request.headers.get('user-agent') || null
+
   try {
     const payload: LeadWebhookPayload = await request.json()
+
+    // Use IP/UA from payload if provided, otherwise use headers
+    const clientIpAddress = payload.client_ip_address || clientIpFromHeader
+    const clientUserAgent = payload.client_user_agent || clientUserAgentFromHeader
 
     // Log incoming request
     console.log(`[${timestamp}] Lead webhook received:`, {
@@ -97,11 +110,14 @@ export async function POST(request: NextRequest) {
     let contactId: string
 
     if (existingContact) {
-      // Update existing contact with fbclid, fb_lead_id, and anonymous_id if provided
+      // Update existing contact with Facebook data and tracking fields if provided
       contactId = existingContact.id
       const updateData: Record<string, string> = {}
       if (payload.fbclid) updateData.fbclid = payload.fbclid
       if (payload.fb_lead_id) updateData.fb_lead_id = payload.fb_lead_id
+      if (payload.fbp) updateData.fbp = payload.fbp
+      if (clientIpAddress) updateData.client_ip_address = clientIpAddress
+      if (clientUserAgent) updateData.client_user_agent = clientUserAgent
       if (payload.anonymous_id) updateData.anonymous_id = payload.anonymous_id
 
       if (Object.keys(updateData).length > 0) {
@@ -138,6 +154,9 @@ export async function POST(request: NextRequest) {
           fb_events_sent: {},  // Initialize as empty - no FB events sent for subscribers
           fbclid: payload.fbclid || null,
           fb_lead_id: payload.fb_lead_id || null,
+          fbp: payload.fbp || null,
+          client_ip_address: clientIpAddress || null,
+          client_user_agent: clientUserAgent || null,
           anonymous_id: payload.anonymous_id || null,
           notes: contactNotes || null,
           is_primary: true,
@@ -194,7 +213,10 @@ export async function POST(request: NextRequest) {
             firstName: payload.first_name,
             lastName: payload.last_name,
             fbclid: payload.fbclid || null,
+            fbp: payload.fbp || null,
             leadId: payload.fb_lead_id || null,
+            clientIpAddress: clientIpAddress || null,
+            clientUserAgent: clientUserAgent || null,
             externalId: contactId,
           },
           customData: {

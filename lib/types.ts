@@ -122,6 +122,9 @@ export interface Contact {
   fb_events_sent: Record<string, string> | null
   fbclid: string | null
   fb_lead_id: string | null
+  fbp: string | null
+  client_ip_address: string | null
+  client_user_agent: string | null
   anonymous_id: string | null
   notes: string | null
   unsubscribed: boolean

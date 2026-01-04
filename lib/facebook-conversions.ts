@@ -8,7 +8,8 @@ export interface FacebookUserData {
   phone?: string | null
   firstName?: string | null
   lastName?: string | null
-  fbclid?: string | null
+  fbclid?: string | null  // Raw fbclid or full fbc cookie value
+  fbp?: string | null  // Facebook browser pixel ID (_fbp cookie)
   leadId?: string | null  // Facebook Lead Ads lead ID (leadgen_id)
   clientIpAddress?: string | null
   clientUserAgent?: string | null
@@ -72,6 +73,23 @@ function maskEmail(email: string | null | undefined): string {
 }
 
 /**
+ * Format fbclid as proper fbc cookie format
+ * If already in fbc format (fb.1.{timestamp}.{fbclid}), return as is
+ * Otherwise, format as fb.1.{timestamp}.{fbclid}
+ */
+function formatFbc(fbclid: string | null | undefined): string | null {
+  if (!fbclid) return null
+
+  // Already in fbc format
+  if (fbclid.startsWith('fb.')) {
+    return fbclid
+  }
+
+  // Raw fbclid - format it
+  return `fb.1.${Date.now()}.${fbclid}`
+}
+
+/**
  * Send an event to Facebook Conversions API
  *
  * @see https://developers.facebook.com/docs/marketing-api/conversions-api
@@ -121,8 +139,15 @@ export async function sendFacebookEvent(params: SendFacebookEventParams): Promis
     userDataPayload.ln = [hashUserData(userData.lastName)]
   }
   if (userData.fbclid) {
-    // fbclid is NOT hashed - it's the Facebook click ID
-    userDataPayload.fbc = userData.fbclid
+    // Format fbclid as proper fbc cookie format if needed
+    const fbc = formatFbc(userData.fbclid)
+    if (fbc) {
+      userDataPayload.fbc = fbc
+    }
+  }
+  if (userData.fbp) {
+    // fbp is the Facebook browser pixel ID - NOT hashed
+    userDataPayload.fbp = userData.fbp
   }
   if (userData.leadId) {
     // lead_id is NOT hashed - it's the Facebook Lead Ads lead ID

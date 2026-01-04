@@ -39,6 +39,9 @@ interface ContactRow {
   phone: string | null
   fbclid: string | null
   fb_lead_id: string | null
+  fbp: string | null
+  client_ip_address: string | null
+  client_user_agent: string | null
   lifecycle_stage: LifecycleStage | null
   fb_events_sent: Record<string, string> | null
 }
@@ -81,7 +84,7 @@ export async function PUT(
     // 3. Get current contact from database
     const { data: contact, error: contactError } = await supabaseAdmin
       .from('contacts')
-      .select('id, first_name, last_name, email, phone, fbclid, fb_lead_id, lifecycle_stage, fb_events_sent')
+      .select('id, first_name, last_name, email, phone, fbclid, fb_lead_id, fbp, client_ip_address, client_user_agent, lifecycle_stage, fb_events_sent')
       .eq('id', contactId)
       .single<ContactRow>()
 
@@ -134,7 +137,10 @@ export async function PUT(
             firstName: contact.first_name,
             lastName: contact.last_name,
             fbclid: contact.fbclid,
+            fbp: contact.fbp,
             leadId: contact.fb_lead_id,
+            clientIpAddress: contact.client_ip_address,
+            clientUserAgent: contact.client_user_agent,
             externalId: contact.id,
           },
           customData: {
