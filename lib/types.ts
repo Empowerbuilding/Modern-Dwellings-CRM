@@ -452,6 +452,7 @@ export interface MeetingType {
   custom_fields: MeetingTypeCustomField[]
   confirmation_message: string | null
   brand_color: string
+  logo_url: string | null
   created_at: string
   updated_at: string
 }

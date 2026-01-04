@@ -10,6 +10,7 @@ interface MeetingTypeInfo {
   location_type: string
   custom_fields: CustomField[]
   brand_color: string
+  logo_url: string | null
   timezone: string
 }
 
@@ -695,13 +696,21 @@ export default function BookingPage() {
               className="p-6 md:p-8 md:w-1/2"
               style={{ backgroundColor: brandColor }}
             >
-              {/* Logo placeholder */}
+              {/* Logo */}
               <div className="mb-6">
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
+                {meetingType?.logo_url ? (
+                  <img
+                    src={meetingType.logo_url}
+                    alt="Logo"
+                    className="w-12 h-12 rounded-lg object-contain bg-white/10"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
               </div>
 
               <h1 className="text-xl font-semibold text-white mb-1">

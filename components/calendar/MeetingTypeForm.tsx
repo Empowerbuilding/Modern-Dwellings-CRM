@@ -30,6 +30,7 @@ interface MeetingType {
   custom_fields: CustomField[]
   confirmation_message: string | null
   brand_color: string
+  logo_url: string | null
   is_active: boolean
 }
 
@@ -57,6 +58,7 @@ interface FormData {
   max_days_ahead: number
   custom_fields: CustomField[]
   brand_color: string
+  logo_url: string
   confirmation_message: string
 }
 
@@ -133,6 +135,7 @@ const defaultFormData: FormData = {
   max_days_ahead: 60,
   custom_fields: [],
   brand_color: '#2d3748',
+  logo_url: '',
   confirmation_message: '',
 }
 
@@ -171,6 +174,7 @@ export function MeetingTypeForm({
           max_days_ahead: meetingType.max_days_ahead,
           custom_fields: meetingType.custom_fields || [],
           brand_color: meetingType.brand_color,
+          logo_url: meetingType.logo_url || '',
           confirmation_message: meetingType.confirmation_message || '',
         })
         setSlugManuallyEdited(true)
@@ -284,6 +288,7 @@ export function MeetingTypeForm({
         max_days_ahead: formData.max_days_ahead,
         custom_fields: formData.custom_fields.filter((f) => f.label.trim()),
         brand_color: formData.brand_color,
+        logo_url: formData.logo_url.trim() || null,
         confirmation_message: formData.confirmation_message.trim() || null,
       }
 
@@ -749,6 +754,33 @@ export function MeetingTypeForm({
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">Used for buttons and accents on the booking page</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Logo URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.logo_url}
+                  onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                  placeholder="https://example.com/logo.png"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+                <p className="mt-1 text-xs text-gray-500">Logo displayed on the booking page (recommended: square image, at least 48x48px)</p>
+                {formData.logo_url && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <img
+                      src={formData.logo_url}
+                      alt="Logo preview"
+                      className="w-12 h-12 rounded-lg object-contain bg-gray-100"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                    <span className="text-xs text-gray-500">Preview</span>
+                  </div>
+                )}
               </div>
 
               <div>

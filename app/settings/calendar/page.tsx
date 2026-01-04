@@ -33,6 +33,7 @@ interface MeetingType {
   custom_fields: any[]
   confirmation_message: string | null
   brand_color: string
+  logo_url: string | null
   is_active: boolean
   created_at: string
 }

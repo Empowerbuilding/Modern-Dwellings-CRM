@@ -31,6 +31,7 @@ interface UpcomingMeetingsProps {
   emptyMessage?: string
   onCancel?: (meetingId: string) => void
   onStatusChange?: (meetingId: string, status: string) => void
+  onDelete?: (meetingId: string) => void
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -116,6 +117,7 @@ export function UpcomingMeetings({
   emptyMessage = 'No meetings scheduled',
   onCancel,
   onStatusChange,
+  onDelete,
 }: UpcomingMeetingsProps) {
   if (meetings.length === 0) {
     return (
@@ -277,6 +279,17 @@ export function UpcomingMeetings({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Complete
+                  </button>
+                )}
+                {meeting.status === 'cancelled' && onDelete && (
+                  <button
+                    onClick={() => onDelete(meeting.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
                   </button>
                 )}
               </div>

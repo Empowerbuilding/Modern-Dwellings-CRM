@@ -236,3 +236,90 @@ export async function PATCH(
     )
   }
 }
+
+/**
+ * DELETE - Delete a cancelled meeting
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+
+  try {
+    // Check authentication
+    const authClient = await createServerClient()
+    const { data: { user: authUser } } = await authClient.auth.getUser()
+
+    if (!authUser?.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Get CRM user
+    const crmUser = await getCurrentCrmUser(authUser.email)
+    if (!crmUser) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Get the meeting and verify ownership
+    const { data: meeting, error: fetchError } = await supabase
+      .from('scheduled_meetings')
+      .select('id, host_user_id, status')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !meeting) {
+      return NextResponse.json(
+        { error: 'Meeting not found' },
+        { status: 404 }
+      )
+    }
+
+    // Verify the user is the host
+    if (meeting.host_user_id !== crmUser.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to delete this meeting' },
+        { status: 403 }
+      )
+    }
+
+    // Only allow deleting cancelled meetings
+    if (meeting.status !== 'cancelled') {
+      return NextResponse.json(
+        { error: 'Only cancelled meetings can be deleted' },
+        { status: 400 }
+      )
+    }
+
+    // Delete the meeting
+    const { error: deleteError } = await supabase
+      .from('scheduled_meetings')
+      .delete()
+      .eq('id', id)
+
+    if (deleteError) {
+      console.error('Failed to delete meeting:', deleteError)
+      return NextResponse.json(
+        { error: 'Failed to delete meeting' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Meeting deleted',
+    })
+  } catch (error) {
+    console.error('Delete meeting error:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete meeting' },
+      { status: 500 }
+    )
+  }
+}

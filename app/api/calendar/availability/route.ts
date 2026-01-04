@@ -26,6 +26,7 @@ interface MeetingTypeRow {
   location_type: string
   custom_fields: unknown
   brand_color: string
+  logo_url: string | null
   is_active: boolean
 }
 
@@ -121,6 +122,7 @@ export async function GET(request: NextRequest) {
           location_type: meetingType.location_type,
           custom_fields: meetingType.custom_fields,
           brand_color: meetingType.brand_color,
+          logo_url: meetingType.logo_url,
           timezone: meetingType.timezone,
         },
         host: { name: hostUser?.name || 'Host' },
@@ -287,6 +289,7 @@ export async function GET(request: NextRequest) {
         location_type: meetingType.location_type,
         custom_fields: meetingType.custom_fields,
         brand_color: meetingType.brand_color,
+        logo_url: meetingType.logo_url,
         timezone: meetingType.timezone,
       },
       host: { name: hostUser?.name || 'Host' },

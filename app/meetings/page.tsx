@@ -144,6 +144,33 @@ export default function MeetingsPage() {
     }
   }
 
+  async function handleDelete(meetingId: string) {
+    if (!confirm('Are you sure you want to delete this cancelled meeting? This cannot be undone.')) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/calendar/meetings/${meetingId}`, {
+        method: 'DELETE',
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete meeting')
+      }
+
+      setToast({ message: 'Meeting deleted', type: 'success' })
+
+      // Remove the meeting from state
+      setMeetings((prev) => prev.filter((m) => m.id !== meetingId))
+    } catch (err) {
+      console.error('Failed to delete meeting:', err)
+      const message = err instanceof Error ? err.message : 'Failed to delete meeting'
+      setToast({ message, type: 'error' })
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Toast */}
@@ -241,6 +268,7 @@ export default function MeetingsPage() {
               showContact={true}
               onCancel={handleCancel}
               onStatusChange={handleStatusChange}
+              onDelete={handleDelete}
               emptyMessage={
                 timeFilter === 'upcoming'
                   ? 'No upcoming meetings'
