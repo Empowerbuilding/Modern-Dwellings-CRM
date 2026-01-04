@@ -12,16 +12,9 @@ import { LifecycleStageSelect } from './lifecycle-stage-select'
 export const dynamic = 'force-dynamic'
 
 const LEAD_SOURCE_LABELS: Record<string, string> = {
-  facebook: 'Facebook',
-  facebook_ad: 'Facebook Ad',
   facebook_lead_ad: 'Facebook Lead Ad',
-  google: 'Google',
   referral: 'Referral',
-  website: 'Website',
-  contact_form: 'Contact Form',
   cost_calc: 'Cost Calculator',
-  cold: 'Cold',
-  repeat: 'Repeat',
   guide_download: 'Guide Download',
   empower_website: 'Empower Website',
   barnhaus_contact: 'Barnhaus Contact',

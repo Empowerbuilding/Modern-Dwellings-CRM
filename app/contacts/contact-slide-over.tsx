@@ -7,16 +7,9 @@ import { LIFECYCLE_STAGE_LABELS } from '@/lib/types'
 import type { ContactWithCompany } from './page'
 
 const LEAD_SOURCES: LeadSource[] = [
-  'facebook',
-  'facebook_ad',
   'facebook_lead_ad',
-  'google',
   'referral',
-  'website',
-  'contact_form',
   'cost_calc',
-  'cold',
-  'repeat',
   'guide_download',
   'empower_website',
   'barnhaus_contact',
@@ -27,16 +20,9 @@ const LEAD_SOURCES: LeadSource[] = [
 ]
 
 const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
-  facebook: 'Facebook',
-  facebook_ad: 'Facebook Ad',
   facebook_lead_ad: 'Facebook Lead Ad',
-  google: 'Google',
   referral: 'Referral',
-  website: 'Website',
-  contact_form: 'Contact Form',
   cost_calc: 'Cost Calculator',
-  cold: 'Cold',
-  repeat: 'Repeat',
   guide_download: 'Guide Download',
   empower_website: 'Empower Website',
   barnhaus_contact: 'Barnhaus Contact',
