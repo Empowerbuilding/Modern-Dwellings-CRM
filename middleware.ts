@@ -46,6 +46,9 @@ export async function middleware(request: NextRequest) {
   // Public booking pages (for guests to book meetings)
   const isBookingPage = request.nextUrl.pathname.startsWith('/book/')
 
+  // Public unsubscribe page (for email recipients)
+  const isUnsubscribePage = request.nextUrl.pathname === '/unsubscribe'
+
   // Public API routes that use their own authentication (e.g., API key) or are public
   const isPublicApiRoute =
     request.nextUrl.pathname === '/api/leads/webhook' ||
@@ -56,10 +59,13 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname === '/api/calendar/book' ||
     request.nextUrl.pathname.startsWith('/api/calendar/meetings/') ||
     // Meeting types API (public for booking page to fetch meeting type info)
-    request.nextUrl.pathname.startsWith('/api/meeting-types/')
+    request.nextUrl.pathname.startsWith('/api/meeting-types/') ||
+    // Unsubscribe API (public for email recipients)
+    request.nextUrl.pathname === '/api/unsubscribe' ||
+    request.nextUrl.pathname === '/api/unsubscribe/status'
 
   // If user is not logged in and trying to access protected route, redirect to login
-  if (!user && !isAuthPage && !isPublicApiRoute && !isBookingPage) {
+  if (!user && !isAuthPage && !isPublicApiRoute && !isBookingPage && !isUnsubscribePage) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

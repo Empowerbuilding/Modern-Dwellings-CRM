@@ -123,6 +123,8 @@ export interface Contact {
   fbclid: string | null
   anonymous_id: string | null
   notes: string | null
+  unsubscribed: boolean
+  unsubscribed_at: string | null
   created_at?: string
   updated_at?: string
 }
