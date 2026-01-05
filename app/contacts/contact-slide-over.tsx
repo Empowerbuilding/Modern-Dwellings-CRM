@@ -163,7 +163,7 @@ export function ContactSlideOver({
       }
 
       if (contact) {
-        // Update existing
+        // Update existing contact via Supabase
         const { error: updateError } = await (supabase.from('contacts') as any)
           .update(payload)
           .eq('id', contact.id)
@@ -177,16 +177,21 @@ export function ContactSlideOver({
           company_type: selectedCompany?.type ?? null,
         } as ContactWithCompany)
       } else {
-        // Create new
-        const { data, error: insertError } = await (supabase.from('contacts') as any)
-          .insert(payload)
-          .select()
-          .single()
+        // Create new contact via API (to trigger Facebook events)
+        const response = await fetch('/api/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
 
-        if (insertError) throw insertError
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to create contact')
+        }
 
         onSave({
-          ...data,
+          ...result.contact,
           company_name: selectedCompany?.name ?? null,
           company_type: selectedCompany?.type ?? null,
         } as ContactWithCompany)
