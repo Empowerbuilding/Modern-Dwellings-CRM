@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import type { LeadSource, Company, ClientType, LifecycleStage } from '@/lib/types'
 import { LIFECYCLE_STAGE_LABELS, LIFECYCLE_STAGE_COLORS } from '@/lib/types'
@@ -33,6 +33,8 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   other: 'Other',
 }
 
+const CLIENT_TYPES: ClientType[] = ['consumer', 'builder', 'subcontractor', 'engineer', 'architect']
+
 const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   builder: 'Builder',
   consumer: 'Consumer',
@@ -49,8 +51,71 @@ const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
   architect: 'bg-pink-100 text-pink-800',
 }
 
-type SortField = 'name' | 'company' | 'email' | 'phone' | 'lead_source' | 'created_at'
+const LIFECYCLE_STAGES: LifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'customer']
+
+type SortField = 'name' | 'company' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'created_at' | 'updated_at' | 'role'
 type SortDirection = 'asc' | 'desc'
+type UnsubscribedFilter = 'all' | 'subscribed' | 'unsubscribed'
+
+type ColumnKey = 'name' | 'company' | 'type' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'role' | 'created_at' | 'created_time' | 'updated_at' | 'unsubscribed'
+
+interface ColumnConfig {
+  key: ColumnKey
+  label: string
+  alwaysVisible?: boolean
+  defaultVisible: boolean
+  sortable?: boolean
+  sortField?: SortField
+  hideOnMobile?: boolean
+  hideOnTablet?: boolean
+}
+
+const COLUMNS: ColumnConfig[] = [
+  { key: 'name', label: 'Name', alwaysVisible: true, defaultVisible: true, sortable: true, sortField: 'name' },
+  { key: 'company', label: 'Company', defaultVisible: true, sortable: true, sortField: 'company', hideOnMobile: true },
+  { key: 'type', label: 'Type', defaultVisible: true, hideOnMobile: true },
+  { key: 'email', label: 'Email', defaultVisible: true, sortable: true, sortField: 'email', hideOnMobile: true, hideOnTablet: true },
+  { key: 'phone', label: 'Phone', defaultVisible: true, sortable: true, sortField: 'phone', hideOnMobile: true, hideOnTablet: true },
+  { key: 'lead_source', label: 'Lead Source', defaultVisible: true, sortable: true, sortField: 'lead_source', hideOnMobile: true, hideOnTablet: true },
+  { key: 'lifecycle_stage', label: 'Lifecycle Stage', defaultVisible: true, sortable: true, sortField: 'lifecycle_stage', hideOnMobile: true, hideOnTablet: true },
+  { key: 'role', label: 'Role', defaultVisible: false, sortable: true, sortField: 'role', hideOnMobile: true, hideOnTablet: true },
+  { key: 'created_at', label: 'Created Date', defaultVisible: true, sortable: true, sortField: 'created_at', hideOnMobile: true, hideOnTablet: true },
+  { key: 'created_time', label: 'Created Time', defaultVisible: false, hideOnMobile: true, hideOnTablet: true },
+  { key: 'updated_at', label: 'Updated At', defaultVisible: false, sortable: true, sortField: 'updated_at', hideOnMobile: true, hideOnTablet: true },
+  { key: 'unsubscribed', label: 'Unsubscribed', defaultVisible: false, hideOnMobile: true, hideOnTablet: true },
+]
+
+const STORAGE_KEY = 'contacts-visible-columns'
+
+function getDefaultVisibleColumns(): Set<ColumnKey> {
+  return new Set(COLUMNS.filter(c => c.defaultVisible).map(c => c.key))
+}
+
+function loadVisibleColumns(): Set<ColumnKey> {
+  if (typeof window === 'undefined') return getDefaultVisibleColumns()
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored) as ColumnKey[]
+      // Always include 'name' as it's required
+      const set = new Set(parsed)
+      set.add('name')
+      return set
+    }
+  } catch {
+    // Ignore errors
+  }
+  return getDefaultVisibleColumns()
+}
+
+function saveVisibleColumns(columns: Set<ColumnKey>) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(columns)))
+  } catch {
+    // Ignore errors
+  }
+}
 
 function formatDate(dateString?: string): string {
   if (!dateString) return '-'
@@ -61,12 +126,50 @@ function formatDate(dateString?: string): string {
   })
 }
 
+function formatDateTime(dateString?: string): string {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
+
+function formatTime(dateString?: string): string {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
+
+interface Filters {
+  leadSource: LeadSource | ''
+  lifecycleStage: LifecycleStage | ''
+  clientType: ClientType | ''
+  dateFrom: string
+  dateTo: string
+  unsubscribed: UnsubscribedFilter
+}
+
+const defaultFilters: Filters = {
+  leadSource: '',
+  lifecycleStage: '',
+  clientType: '',
+  dateFrom: '',
+  dateTo: '',
+  unsubscribed: 'all',
+}
+
 interface ContactsTableProps {
   initialContacts: ContactWithCompany[]
   companies: Pick<Company, 'id' | 'name' | 'type'>[]
 }
 
-// Helper to get effective client type (company type takes precedence)
 function getEffectiveClientType(contact: ContactWithCompany): ClientType | null {
   return contact.company_type ?? contact.client_type ?? null
 }
@@ -75,11 +178,47 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
   const router = useRouter()
   const [contacts, setContacts] = useState(initialContacts)
   const [search, setSearch] = useState('')
-  const [leadSourceFilter, setLeadSourceFilter] = useState<LeadSource | ''>('')
+  const [filters, setFilters] = useState<Filters>(defaultFilters)
+  const [showFilters, setShowFilters] = useState(false)
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [slideOverOpen, setSlideOverOpen] = useState(false)
   const [editingContact, setEditingContact] = useState<ContactWithCompany | null>(null)
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(getDefaultVisibleColumns)
+  const [showColumnPicker, setShowColumnPicker] = useState(false)
+  const columnPickerRef = useRef<HTMLDivElement>(null)
+
+  // Load visible columns from localStorage on mount
+  useEffect(() => {
+    setVisibleColumns(loadVisibleColumns())
+  }, [])
+
+  // Save visible columns when they change
+  useEffect(() => {
+    saveVisibleColumns(visibleColumns)
+  }, [visibleColumns])
+
+  // Close column picker when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (columnPickerRef.current && !columnPickerRef.current.contains(event.target as Node)) {
+        setShowColumnPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (filters.leadSource) count++
+    if (filters.lifecycleStage) count++
+    if (filters.clientType) count++
+    if (filters.dateFrom) count++
+    if (filters.dateTo) count++
+    if (filters.unsubscribed !== 'all') count++
+    return count
+  }, [filters])
 
   const filteredAndSortedContacts = useMemo(() => {
     let result = [...contacts]
@@ -100,8 +239,46 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
     }
 
     // Lead source filter
-    if (leadSourceFilter) {
-      result = result.filter((contact) => contact.lead_source === leadSourceFilter)
+    if (filters.leadSource) {
+      result = result.filter((contact) => contact.lead_source === filters.leadSource)
+    }
+
+    // Lifecycle stage filter
+    if (filters.lifecycleStage) {
+      result = result.filter((contact) => contact.lifecycle_stage === filters.lifecycleStage)
+    }
+
+    // Client type filter
+    if (filters.clientType) {
+      result = result.filter((contact) => {
+        const effectiveType = getEffectiveClientType(contact)
+        return effectiveType === filters.clientType
+      })
+    }
+
+    // Date range filter
+    if (filters.dateFrom) {
+      const fromDate = new Date(filters.dateFrom)
+      fromDate.setHours(0, 0, 0, 0)
+      result = result.filter((contact) => {
+        if (!contact.created_at) return false
+        return new Date(contact.created_at) >= fromDate
+      })
+    }
+    if (filters.dateTo) {
+      const toDate = new Date(filters.dateTo)
+      toDate.setHours(23, 59, 59, 999)
+      result = result.filter((contact) => {
+        if (!contact.created_at) return false
+        return new Date(contact.created_at) <= toDate
+      })
+    }
+
+    // Unsubscribed filter
+    if (filters.unsubscribed === 'subscribed') {
+      result = result.filter((contact) => !contact.unsubscribed)
+    } else if (filters.unsubscribed === 'unsubscribed') {
+      result = result.filter((contact) => contact.unsubscribed)
     }
 
     // Sort
@@ -130,9 +307,21 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
           aVal = a.lead_source
           bVal = b.lead_source
           break
+        case 'lifecycle_stage':
+          aVal = a.lifecycle_stage
+          bVal = b.lifecycle_stage
+          break
+        case 'role':
+          aVal = a.role
+          bVal = b.role
+          break
         case 'created_at':
           aVal = a.created_at ?? ''
           bVal = b.created_at ?? ''
+          break
+        case 'updated_at':
+          aVal = a.updated_at ?? ''
+          bVal = b.updated_at ?? ''
           break
       }
 
@@ -146,7 +335,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
     })
 
     return result
-  }, [contacts, search, leadSourceFilter, sortField, sortDirection])
+  }, [contacts, search, filters, sortField, sortDirection])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -184,6 +373,25 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
     setEditingContact(null)
   }
 
+  const clearFilters = () => {
+    setFilters(defaultFilters)
+  }
+
+  const toggleColumn = (key: ColumnKey) => {
+    const column = COLUMNS.find(c => c.key === key)
+    if (column?.alwaysVisible) return
+
+    setVisibleColumns((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return <span className="text-gray-300 ml-1">↕</span>
@@ -193,6 +401,15 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
         {sortDirection === 'asc' ? '↑' : '↓'}
       </span>
     )
+  }
+
+  const isColumnVisible = (key: ColumnKey) => visibleColumns.has(key)
+
+  const getColumnClasses = (column: ColumnConfig) => {
+    const classes = ['px-4 py-3']
+    if (column.hideOnMobile) classes.push('hidden sm:table-cell')
+    if (column.hideOnTablet) classes.push('hidden md:table-cell')
+    return classes.join(' ')
   }
 
   return (
@@ -207,30 +424,189 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Search by name, email, or company..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-          />
-        </div>
-        <select
-          value={leadSourceFilter}
-          onChange={(e) => setLeadSourceFilter(e.target.value as LeadSource | '')}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-        >
-          <option value="">All Lead Sources</option>
-          {LEAD_SOURCES.map((source) => (
-            <option key={source} value={source}>
-              {LEAD_SOURCE_LABELS[source]}
-            </option>
-          ))}
-        </select>
+      {/* Search Bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by name, email, or company..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+        />
       </div>
+
+      {/* Filter and Column Controls */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {/* Filters Button */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+            showFilters || activeFilterCount > 0
+              ? 'bg-blue-50 border-blue-200 text-blue-700'
+              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-blue-600 text-white rounded-full">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+
+        {/* Clear Filters Button */}
+        {activeFilterCount > 0 && (
+          <button
+            onClick={clearFilters}
+            className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            Clear All
+          </button>
+        )}
+
+        {/* Column Picker */}
+        <div className="relative ml-auto" ref={columnPickerRef}>
+          <button
+            onClick={() => setShowColumnPicker(!showColumnPicker)}
+            className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+              showColumnPicker
+                ? 'bg-gray-100 border-gray-300 text-gray-700'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Columns
+          </button>
+
+          {showColumnPicker && (
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+              <div className="p-2">
+                <p className="px-2 py-1 text-xs font-medium text-gray-500 uppercase">Toggle Columns</p>
+                {COLUMNS.map((column) => (
+                  <label
+                    key={column.key}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer ${
+                      column.alwaysVisible ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns.has(column.key)}
+                      onChange={() => toggleColumn(column.key)}
+                      disabled={column.alwaysVisible}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{column.label}</span>
+                    {column.alwaysVisible && (
+                      <span className="text-xs text-gray-400">(required)</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Filter Panel */}
+      {showFilters && (
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {/* Lead Source */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Lead Source</label>
+              <select
+                value={filters.leadSource}
+                onChange={(e) => setFilters({ ...filters, leadSource: e.target.value as LeadSource | '' })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="">All Sources</option>
+                {LEAD_SOURCES.map((source) => (
+                  <option key={source} value={source}>
+                    {LEAD_SOURCE_LABELS[source]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Lifecycle Stage */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Lifecycle Stage</label>
+              <select
+                value={filters.lifecycleStage}
+                onChange={(e) => setFilters({ ...filters, lifecycleStage: e.target.value as LifecycleStage | '' })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="">All Stages</option>
+                {LIFECYCLE_STAGES.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {LIFECYCLE_STAGE_LABELS[stage]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Type */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+              <select
+                value={filters.clientType}
+                onChange={(e) => setFilters({ ...filters, clientType: e.target.value as ClientType | '' })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="">All Types</option>
+                {CLIENT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {CLIENT_TYPE_LABELS[type]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date From */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Created From</label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              />
+            </div>
+
+            {/* Date To */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Created To</label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              />
+            </div>
+
+            {/* Unsubscribed */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Subscription</label>
+              <select
+                value={filters.unsubscribed}
+                onChange={(e) => setFilters({ ...filters, unsubscribed: e.target.value as UnsubscribedFilter })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="all">All</option>
+                <option value="subscribed">Subscribed Only</option>
+                <option value="unsubscribed">Unsubscribed Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -238,56 +614,120 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
+                {/* Name - always visible */}
                 <th
                   onClick={() => handleSort('name')}
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
                   Name <SortIcon field="name" />
                 </th>
-                <th
-                  onClick={() => handleSort('company')}
-                  className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  Company <SortIcon field="company" />
-                </th>
-                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th
-                  onClick={() => handleSort('email')}
-                  className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  Email <SortIcon field="email" />
-                </th>
-                <th
-                  onClick={() => handleSort('phone')}
-                  className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  Phone <SortIcon field="phone" />
-                </th>
-                <th
-                  onClick={() => handleSort('lead_source')}
-                  className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  Lead Source <SortIcon field="lead_source" />
-                </th>
-                <th
-                  className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Stage
-                </th>
-                <th
-                  onClick={() => handleSort('created_at')}
-                  className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  Created <SortIcon field="created_at" />
-                </th>
+
+                {/* Company */}
+                {isColumnVisible('company') && (
+                  <th
+                    onClick={() => handleSort('company')}
+                    className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Company <SortIcon field="company" />
+                  </th>
+                )}
+
+                {/* Type */}
+                {isColumnVisible('type') && (
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </th>
+                )}
+
+                {/* Email */}
+                {isColumnVisible('email') && (
+                  <th
+                    onClick={() => handleSort('email')}
+                    className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Email <SortIcon field="email" />
+                  </th>
+                )}
+
+                {/* Phone */}
+                {isColumnVisible('phone') && (
+                  <th
+                    onClick={() => handleSort('phone')}
+                    className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Phone <SortIcon field="phone" />
+                  </th>
+                )}
+
+                {/* Lead Source */}
+                {isColumnVisible('lead_source') && (
+                  <th
+                    onClick={() => handleSort('lead_source')}
+                    className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Lead Source <SortIcon field="lead_source" />
+                  </th>
+                )}
+
+                {/* Lifecycle Stage */}
+                {isColumnVisible('lifecycle_stage') && (
+                  <th
+                    onClick={() => handleSort('lifecycle_stage')}
+                    className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Stage <SortIcon field="lifecycle_stage" />
+                  </th>
+                )}
+
+                {/* Role */}
+                {isColumnVisible('role') && (
+                  <th
+                    onClick={() => handleSort('role')}
+                    className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Role <SortIcon field="role" />
+                  </th>
+                )}
+
+                {/* Created Date */}
+                {isColumnVisible('created_at') && (
+                  <th
+                    onClick={() => handleSort('created_at')}
+                    className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Created <SortIcon field="created_at" />
+                  </th>
+                )}
+
+                {/* Created Time */}
+                {isColumnVisible('created_time') && (
+                  <th className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Time
+                  </th>
+                )}
+
+                {/* Updated At */}
+                {isColumnVisible('updated_at') && (
+                  <th
+                    onClick={() => handleSort('updated_at')}
+                    className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Updated <SortIcon field="updated_at" />
+                  </th>
+                )}
+
+                {/* Unsubscribed */}
+                {isColumnVisible('unsubscribed') && (
+                  <th className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Unsubscribed
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredAndSortedContacts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={20} className="px-4 py-8 text-center text-gray-500">
                     {contacts.length === 0
                       ? 'No contacts yet. Add your first contact to get started.'
                       : 'No contacts match your search criteria.'}
@@ -300,6 +740,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                     onClick={() => handleRowClick(contact)}
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
                   >
+                    {/* Name - always visible */}
                     <td className="px-4 py-3">
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-600 mr-3 flex-shrink-0">
@@ -309,57 +750,121 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                           <p className="font-medium text-gray-900 truncate">
                             {contact.first_name} {contact.last_name}
                           </p>
-                          {contact.role && (
+                          {contact.role && !isColumnVisible('role') && (
                             <p className="text-xs text-gray-500 truncate">{contact.role}</p>
                           )}
-                          {/* Show company on mobile */}
+                          {/* Show company on mobile if company column hidden */}
                           <p className="text-xs text-gray-500 truncate sm:hidden">
                             {contact.company_name}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-600">
-                      {contact.company_name ?? '-'}
-                    </td>
-                    <td className="hidden sm:table-cell px-4 py-3">
-                      {(() => {
-                        const clientType = getEffectiveClientType(contact)
-                        if (!clientType) return <span className="text-sm text-gray-400">-</span>
-                        return (
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${CLIENT_TYPE_COLORS[clientType]}`}>
-                            {CLIENT_TYPE_LABELS[clientType]}
+
+                    {/* Company */}
+                    {isColumnVisible('company') && (
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-600">
+                        {contact.company_name ?? '-'}
+                      </td>
+                    )}
+
+                    {/* Type */}
+                    {isColumnVisible('type') && (
+                      <td className="hidden sm:table-cell px-4 py-3">
+                        {(() => {
+                          const clientType = getEffectiveClientType(contact)
+                          if (!clientType) return <span className="text-sm text-gray-400">-</span>
+                          return (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${CLIENT_TYPE_COLORS[clientType]}`}>
+                              {CLIENT_TYPE_LABELS[clientType]}
+                            </span>
+                          )
+                        })()}
+                      </td>
+                    )}
+
+                    {/* Email */}
+                    {isColumnVisible('email') && (
+                      <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-600">
+                        {contact.email ?? '-'}
+                      </td>
+                    )}
+
+                    {/* Phone */}
+                    {isColumnVisible('phone') && (
+                      <td className="hidden lg:table-cell px-4 py-3 text-sm text-gray-600">
+                        {contact.phone ?? '-'}
+                      </td>
+                    )}
+
+                    {/* Lead Source */}
+                    {isColumnVisible('lead_source') && (
+                      <td className="hidden lg:table-cell px-4 py-3">
+                        {contact.lead_source ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                            {LEAD_SOURCE_LABELS[contact.lead_source]}
                           </span>
-                        )
-                      })()}
-                    </td>
-                    <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-600">
-                      {contact.email ?? '-'}
-                    </td>
-                    <td className="hidden lg:table-cell px-4 py-3 text-sm text-gray-600">
-                      {contact.phone ?? '-'}
-                    </td>
-                    <td className="hidden lg:table-cell px-4 py-3">
-                      {contact.lead_source ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                          {LEAD_SOURCE_LABELS[contact.lead_source]}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="hidden xl:table-cell px-4 py-3">
-                      {contact.lifecycle_stage ? (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${LIFECYCLE_STAGE_COLORS[contact.lifecycle_stage as LifecycleStage] || 'bg-gray-100 text-gray-800'}`}>
-                          {LIFECYCLE_STAGE_LABELS[contact.lifecycle_stage as LifecycleStage] || contact.lifecycle_stage}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
-                      {formatDate(contact.created_at)}
-                    </td>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
+                      </td>
+                    )}
+
+                    {/* Lifecycle Stage */}
+                    {isColumnVisible('lifecycle_stage') && (
+                      <td className="hidden xl:table-cell px-4 py-3">
+                        {contact.lifecycle_stage ? (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${LIFECYCLE_STAGE_COLORS[contact.lifecycle_stage as LifecycleStage] || 'bg-gray-100 text-gray-800'}`}>
+                            {LIFECYCLE_STAGE_LABELS[contact.lifecycle_stage as LifecycleStage] || contact.lifecycle_stage}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
+                      </td>
+                    )}
+
+                    {/* Role */}
+                    {isColumnVisible('role') && (
+                      <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
+                        {contact.role ?? '-'}
+                      </td>
+                    )}
+
+                    {/* Created Date */}
+                    {isColumnVisible('created_at') && (
+                      <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
+                        {formatDateTime(contact.created_at)}
+                      </td>
+                    )}
+
+                    {/* Created Time */}
+                    {isColumnVisible('created_time') && (
+                      <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
+                        {formatTime(contact.created_at)}
+                      </td>
+                    )}
+
+                    {/* Updated At */}
+                    {isColumnVisible('updated_at') && (
+                      <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
+                        {formatDateTime(contact.updated_at)}
+                      </td>
+                    )}
+
+                    {/* Unsubscribed */}
+                    {isColumnVisible('unsubscribed') && (
+                      <td className="hidden xl:table-cell px-4 py-3">
+                        {contact.unsubscribed ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            No
+                          </span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { NoteWithAuthor } from '@/lib/types'
+
+const NOTE_MAX_HEIGHT = 80 // pixels - roughly 4 lines
 
 interface NotesSectionProps {
   contactId?: string
@@ -33,6 +35,94 @@ function formatRelativeTime(dateString: string): string {
   })
 }
 
+interface NoteContentProps {
+  note: NoteWithAuthor
+  isExpanded: boolean
+  onToggleExpand: () => void
+  isOwner: boolean
+  isDeleting: boolean
+  onEdit: () => void
+  onDelete: () => void
+}
+
+function NoteContent({
+  note,
+  isExpanded,
+  onToggleExpand,
+  isOwner,
+  isDeleting,
+  onEdit,
+  onDelete,
+}: NoteContentProps) {
+  const contentRef = useRef<HTMLParagraphElement>(null)
+  const [needsExpand, setNeedsExpand] = useState(false)
+
+  useEffect(() => {
+    if (contentRef.current) {
+      setNeedsExpand(contentRef.current.scrollHeight > NOTE_MAX_HEIGHT)
+    }
+  }, [note.content])
+
+  return (
+    <>
+      <div className="relative">
+        <p
+          ref={contentRef}
+          className={`text-sm text-gray-900 whitespace-pre-wrap overflow-hidden transition-all ${
+            !isExpanded && needsExpand ? 'line-clamp-4' : ''
+          }`}
+          style={{
+            maxHeight: !isExpanded && needsExpand ? `${NOTE_MAX_HEIGHT}px` : 'none',
+          }}
+        >
+          {note.content}
+        </p>
+        {needsExpand && !isExpanded && (
+          <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        )}
+      </div>
+      {needsExpand && (
+        <button
+          onClick={onToggleExpand}
+          className="text-xs text-blue-600 hover:text-blue-800 font-medium mt-1"
+        >
+          {isExpanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+      <div className="flex items-center justify-between mt-2">
+        <p className="text-xs text-gray-400">
+          {note.author?.name || 'Unknown'}
+          {' · '}
+          {formatRelativeTime(note.created_at)}
+        </p>
+        {isOwner && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onEdit}
+              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Edit note"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={isDeleting}
+              className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+              title="Delete note"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
 export function NotesSection({
   contactId,
   dealId,
@@ -47,6 +137,19 @@ export function NotesSection({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
+
+  const toggleExpanded = (noteId: string) => {
+    setExpandedNotes((prev) => {
+      const next = new Set(prev)
+      if (next.has(noteId)) {
+        next.delete(noteId)
+      } else {
+        next.add(noteId)
+      }
+      return next
+    })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -217,41 +320,15 @@ export function NotesSection({
                     </div>
                   </div>
                 ) : (
-                  <>
-                    <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                      {note.content}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-gray-400">
-                        {note.author?.name || 'Unknown'}
-                        {' · '}
-                        {formatRelativeTime(note.created_at)}
-                      </p>
-                      {isOwner && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleEdit(note)}
-                            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                            title="Edit note"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(note.id)}
-                            disabled={isDeleting}
-                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                            title="Delete note"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </>
+                  <NoteContent
+                    note={note}
+                    isExpanded={expandedNotes.has(note.id)}
+                    onToggleExpand={() => toggleExpanded(note.id)}
+                    isOwner={!!isOwner}
+                    isDeleting={isDeleting}
+                    onEdit={() => handleEdit(note)}
+                    onDelete={() => handleDelete(note.id)}
+                  />
                 )}
               </div>
             )
