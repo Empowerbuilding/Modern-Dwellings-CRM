@@ -108,6 +108,17 @@ export default function BookingPage() {
     }
   }, [isEmbed, postMessageToParent, sendHeightUpdate])
 
+  // Save fbclid to localStorage if present in URL (for Facebook attribution)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const fbclid = urlParams.get('fbclid')
+      if (fbclid) {
+        localStorage.setItem('fbclid', fbclid)
+      }
+    }
+  }, [])
+
   // Page state
   const [pageState, setPageState] = useState<PageState>('loading')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -371,6 +382,20 @@ export default function BookingPage() {
 
     setSubmitting(true)
 
+    // Get Facebook tracking data for CAPI attribution
+    const getFbclid = () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const fbclid = urlParams.get('fbclid')
+      if (fbclid) return fbclid
+      // Try localStorage fallback (may have been saved on landing page)
+      return localStorage.getItem('fbclid') || undefined
+    }
+
+    const getFbp = () => {
+      const match = document.cookie.match(/_fbp=([^;]+)/)
+      return match ? match[1] : undefined
+    }
+
     try {
       const res = await fetch('/api/calendar/book', {
         method: 'POST',
@@ -386,6 +411,9 @@ export default function BookingPage() {
           customFields: formData.customFields,
           timezone,
           source: 'website',
+          fbclid: getFbclid(),
+          fbp: getFbp(),
+          client_user_agent: navigator.userAgent,
         }),
       })
 

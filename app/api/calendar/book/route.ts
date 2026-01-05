@@ -30,6 +30,10 @@ interface BookingRequest {
   utmMedium?: string
   utmCampaign?: string
   timezone: string
+  // Facebook tracking fields
+  fbclid?: string
+  fbp?: string
+  client_user_agent?: string
 }
 
 interface MeetingTypeRow {
@@ -129,13 +133,17 @@ export async function POST(request: NextRequest) {
   const timestamp = new Date().toISOString()
 
   // Capture IP and User Agent from request headers for CAPI
-  const clientIpAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const clientIpFromHeader = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || null
-  const clientUserAgent = request.headers.get('user-agent') || null
+  const clientUserAgentFromHeader = request.headers.get('user-agent') || null
 
   try {
     const body: BookingRequest = await request.json()
+
+    // Use body values if provided, otherwise fall back to headers
+    const clientIpAddress = clientIpFromHeader
+    const clientUserAgent = body.client_user_agent || clientUserAgentFromHeader
 
     // 1. Validate required fields
     const { slug, startTime, firstName, lastName, email, timezone } = body
@@ -414,6 +422,13 @@ export async function POST(request: NextRequest) {
       if (!contact.client_user_agent && clientUserAgent) {
         updates.client_user_agent = clientUserAgent
       }
+      // Update Facebook tracking fields if not already set
+      if (!contact.fbclid && body.fbclid) {
+        updates.fbclid = body.fbclid
+      }
+      if (!contact.fbp && body.fbp) {
+        updates.fbp = body.fbp
+      }
 
       if (Object.keys(updates).length > 0) {
         const { error: updateError } = await supabase
@@ -454,6 +469,8 @@ export async function POST(request: NextRequest) {
           anonymous_id: body.anonymousId || null,
           client_ip_address: clientIpAddress || null,
           client_user_agent: clientUserAgent || null,
+          fbclid: body.fbclid || null,
+          fbp: body.fbp || null,
           is_primary: true,
         })
         .select('id, first_name, last_name, email, phone, anonymous_id, fbclid, fb_lead_id, fbp, client_ip_address, client_user_agent, lifecycle_stage, fb_events_sent')
