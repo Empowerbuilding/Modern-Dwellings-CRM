@@ -91,6 +91,15 @@ const ACTIVITY_TYPE_CONFIG: Partial<Record<ActivityType, { label: string; icon: 
       </svg>
     ),
   },
+  meeting_scheduled: {
+    label: 'Meeting',
+    color: 'bg-blue-100 text-blue-600',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
 }
 
 interface ActivityWithUser extends Activity {
@@ -101,6 +110,31 @@ interface ContactActivitiesSectionProps {
   contactId: string
   activities: ActivityWithUser[]
   currentUserId?: string
+}
+
+// Format custom field key for display
+function formatFieldLabel(key: string): string {
+  return key
+    .replace(/_/g, ' ')
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/\b\w/g, c => c.toUpperCase())
+    .trim()
+}
+
+// Format custom field value for display
+function formatFieldValue(value: unknown): string {
+  if (value === null || value === undefined) return '-'
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (typeof value === 'number' && value >= 1000) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(value)
+  }
+  if (typeof value === 'number') return value.toLocaleString()
+  if (Array.isArray(value)) return value.join(', ')
+  return String(value)
 }
 
 function formatDateTime(dateString: string): string {
@@ -303,7 +337,7 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900">
                         {activity.title}
                       </p>
@@ -312,6 +346,32 @@ export function ContactActivitiesSection({ contactId, activities, currentUserId 
                           {activity.description}
                         </p>
                       )}
+                      {/* Show custom fields for meeting_scheduled activities */}
+                      {(() => {
+                        if (activity.activity_type !== 'meeting_scheduled' || !activity.metadata) return null
+                        const metadata = activity.metadata as Record<string, unknown>
+                        const customFields = metadata.custom_fields as Record<string, unknown> | undefined
+                        const guestNotes = metadata.guest_notes as string | undefined
+                        if (!customFields || Object.keys(customFields).length === 0) return null
+                        return (
+                          <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Form Responses</p>
+                            <div className="space-y-0.5">
+                              {Object.entries(customFields).map(([key, value]) => (
+                                <div key={key} className="flex text-xs">
+                                  <span className="text-gray-500 min-w-[100px]">{formatFieldLabel(key)}:</span>
+                                  <span className="text-gray-900 font-medium">{formatFieldValue(value)}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {guestNotes && (
+                              <p className="text-xs text-gray-600 mt-1.5 pt-1.5 border-t border-gray-200">
+                                <span className="text-gray-500">Notes:</span> {guestNotes}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      })()}
                       <p className="text-xs text-gray-400 mt-1">
                         {activity.user?.name || 'System'}
                         {' · '}

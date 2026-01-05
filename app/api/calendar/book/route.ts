@@ -90,6 +90,41 @@ function normalizePhone(phone: string | null | undefined): string | null {
   return digits.length >= 10 ? digits.slice(-10) : digits
 }
 
+// Format custom fields for notes display
+function formatCustomFieldsForNotes(
+  meetingTitle: string,
+  customFields?: Record<string, unknown>,
+  guestNotes?: string
+): string | null {
+  const lines: string[] = []
+
+  lines.push(`Meeting Booking: ${meetingTitle}`)
+
+  if (customFields && Object.keys(customFields).length > 0) {
+    lines.push('')
+    lines.push('Form Responses:')
+    for (const [key, value] of Object.entries(customFields)) {
+      if (value === null || value === undefined || value === '') continue
+      const formattedKey = key
+        .replace(/_/g, ' ')
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/\b\w/g, c => c.toUpperCase())
+        .trim()
+      const formattedValue = typeof value === 'number' && value >= 1000
+        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value)
+        : String(value)
+      lines.push(`• ${formattedKey}: ${formattedValue}`)
+    }
+  }
+
+  if (guestNotes) {
+    lines.push('')
+    lines.push(`Notes: ${guestNotes}`)
+  }
+
+  return lines.length > 1 ? lines.join('\n') : null
+}
+
 export async function POST(request: NextRequest) {
   const timestamp = new Date().toISOString()
 
@@ -517,8 +552,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`[${timestamp}] Created meeting: ${meeting.id}`)
 
-    // 12. Log activity
+    // 12. Log activity and create note with form responses
     if (contact) {
+      // Log meeting_scheduled activity with custom fields in metadata
       await supabase.from('activities').insert({
         contact_id: contact.id,
         activity_type: 'meeting_scheduled',
@@ -528,9 +564,25 @@ export async function POST(request: NextRequest) {
           start_time: startDate.toISOString(),
           google_meet_link: googleMeetLink || null,
           source: body.source || 'calendar_booking',
+          custom_fields: body.customFields || null,
+          guest_notes: body.notes || null,
         },
         anonymous_id: body.anonymousId || null,
       })
+
+      // Create a note with form responses if there are custom fields or notes
+      const noteContent = formatCustomFieldsForNotes(meetingType.title, body.customFields, body.notes)
+      if (noteContent) {
+        const { error: noteError } = await supabase.from('notes').insert({
+          contact_id: contact.id,
+          content: noteContent,
+        })
+        if (noteError) {
+          console.error(`[${timestamp}] Failed to create booking note:`, noteError)
+        } else {
+          console.log(`[${timestamp}] Created note with form responses for contact: ${contact.id}`)
+        }
+      }
     }
 
     // 13. Update lifecycle stage and send Facebook event
