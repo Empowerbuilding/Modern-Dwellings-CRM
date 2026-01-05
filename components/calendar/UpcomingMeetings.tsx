@@ -7,6 +7,8 @@ export interface ScheduledMeetingDisplay {
   guest_first_name: string
   guest_last_name: string
   guest_email: string
+  guest_notes?: string | null
+  custom_field_responses?: Record<string, unknown> | null
   start_time: string
   end_time: string
   timezone: string
@@ -72,6 +74,35 @@ const LOCATION_ICONS: Record<string, JSX.Element> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
   ),
+}
+
+// Format field label from snake_case or camelCase to Title Case
+function formatFieldLabel(key: string): string {
+  return key
+    .replace(/_/g, ' ')
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/\b\w/g, c => c.toUpperCase())
+    .trim()
+}
+
+// Format field value for display
+function formatFieldValue(value: unknown): string {
+  if (value === null || value === undefined) return '-'
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (typeof value === 'number') {
+    // Format as currency if it looks like a price (>= 1000)
+    if (value >= 1000) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(value)
+    }
+    return value.toLocaleString()
+  }
+  if (Array.isArray(value)) return value.join(', ')
+  return String(value)
 }
 
 function formatDateTime(isoString: string, timezone: string): { date: string; time: string; relative: string } {
@@ -242,6 +273,29 @@ export function UpcomingMeetings({
                     </span>
                   )}
                 </div>
+
+                {/* Custom field responses */}
+                {meeting.custom_field_responses && Object.keys(meeting.custom_field_responses).length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Form Responses</p>
+                    <div className="space-y-1.5">
+                      {Object.entries(meeting.custom_field_responses).map(([key, value]) => (
+                        <div key={key} className="flex text-sm">
+                          <span className="text-gray-500 min-w-[140px]">{formatFieldLabel(key)}:</span>
+                          <span className="text-gray-900 font-medium">{formatFieldValue(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Guest notes */}
+                {meeting.guest_notes && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Notes</p>
+                    <p className="text-sm text-gray-700">{meeting.guest_notes}</p>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}

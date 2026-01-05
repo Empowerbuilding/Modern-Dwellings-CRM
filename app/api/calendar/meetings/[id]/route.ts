@@ -40,6 +40,7 @@ interface ScheduledMeetingRow {
 
 interface MeetingTypeRow {
   title: string
+  slug: string
   duration_minutes: number
   location_type: string
   description: string | null
@@ -86,7 +87,7 @@ export async function GET(
     if (meeting.meeting_type_id) {
       const { data: mt } = await supabase
         .from('meeting_types')
-        .select('title, duration_minutes, location_type, description')
+        .select('title, slug, duration_minutes, location_type, description')
         .eq('id', meeting.meeting_type_id)
         .single<MeetingTypeRow>()
       meetingType = mt
@@ -100,23 +101,27 @@ export async function GET(
       .single<UserRow>()
 
     return NextResponse.json({
-      id: meeting.id,
-      status: meeting.status,
-      startTime: meeting.start_time,
-      endTime: meeting.end_time,
-      timezone: meeting.timezone,
-      googleMeetLink: meeting.google_meet_link,
-      guestName: `${meeting.guest_first_name} ${meeting.guest_last_name}`,
-      meetingType: meetingType
-        ? {
-            title: meetingType.title,
-            duration_minutes: meetingType.duration_minutes,
-            location_type: meetingType.location_type,
-            description: meetingType.description,
-          }
-        : null,
-      host: {
-        name: hostUser?.name || 'Host',
+      meeting: {
+        id: meeting.id,
+        status: meeting.status,
+        start_time: meeting.start_time,
+        end_time: meeting.end_time,
+        timezone: meeting.timezone,
+        google_meet_link: meeting.google_meet_link,
+        guest_first_name: meeting.guest_first_name,
+        guest_last_name: meeting.guest_last_name,
+        meeting_type: meetingType
+          ? {
+              title: meetingType.title,
+              slug: meetingType.slug,
+              duration_minutes: meetingType.duration_minutes,
+              location_type: meetingType.location_type,
+              description: meetingType.description,
+            }
+          : null,
+        host: {
+          name: hostUser?.name || 'Host',
+        },
       },
     })
   } catch (error) {
