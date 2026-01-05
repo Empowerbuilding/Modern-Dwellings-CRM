@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import type { Deal, Activity, PipelineStage, SalesType } from '@/lib/types'
 import { STAGE_LABELS, STAGE_COLORS } from '@/lib/types'
+import LeadAnalytics, { type LeadData } from '@/components/lead-analytics'
 
 export const dynamic = 'force-dynamic'
 
@@ -93,11 +94,24 @@ async function getRecentActivities(): Promise<(Activity & { contact_name?: strin
   }))
 }
 
+async function getLeadData(): Promise<LeadData[]> {
+  const twelveMonthsAgo = new Date()
+  twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1)
+
+  const { data } = await (supabase.from('contacts') as any)
+    .select('id, lead_source, created_at, lifecycle_stage')
+    .gte('created_at', twelveMonthsAgo.toISOString())
+    .order('created_at', { ascending: false })
+
+  return data || []
+}
+
 export default async function Dashboard() {
-  const [pipelineStats, recentDeals, recentActivities] = await Promise.all([
+  const [pipelineStats, recentDeals, recentActivities, leadData] = await Promise.all([
     getPipelineStats(),
     getRecentDeals(),
     getRecentActivities(),
+    getLeadData(),
   ])
 
   return (
@@ -151,6 +165,9 @@ export default async function Dashboard() {
             </div>
           </div>
         </section>
+
+        {/* Lead Analytics */}
+        <LeadAnalytics leads={leadData} />
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Recent Deals */}
