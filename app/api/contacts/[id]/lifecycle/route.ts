@@ -2,7 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { sendFacebookEvent, type FacebookEventName } from '@/lib/facebook-conversions'
-import type { LifecycleStage } from '@/lib/types'
+import type { LifecycleStage, ClientType, SalesType } from '@/lib/types'
 
 // Service role client for bypassing RLS
 const supabaseAdmin = createSupabaseClient(
@@ -44,6 +44,90 @@ interface ContactRow {
   client_user_agent: string | null
   lifecycle_stage: LifecycleStage | null
   fb_events_sent: Record<string, string> | null
+  client_type: ClientType | null
+  company_id: string | null
+  lead_source: string | null
+}
+
+const LEAD_SOURCE_LABELS: Record<string, string> = {
+  facebook_lead_ad: 'Facebook Lead Ad',
+  referral: 'Referral',
+  cost_calc: 'Cost Calculator',
+  guide_download: 'Guide Download',
+  empower_website: 'Empower Website',
+  barnhaus_contact: 'Barnhaus Contact',
+  barnhaus_store_contact: 'Barnhaus Store',
+  shopify_order: 'Shopify Order',
+  calendar_booking: 'Calendar Booking',
+  other: 'Other',
+}
+
+// Determine sales type based on client type
+// Consumer = B2C, everything else = B2B
+function getSalesType(clientType: ClientType | null): SalesType {
+  if (clientType === 'consumer') {
+    return 'b2c'
+  }
+  return 'b2b'
+}
+
+// Create a deal for the contact when they become MQL
+async function createDealForMQL(contact: ContactRow): Promise<{ id: string; title: string } | null> {
+  const timestamp = new Date().toISOString()
+
+  // Check if contact already has a deal
+  const { data: existingDeals } = await supabaseAdmin
+    .from('deals')
+    .select('id')
+    .eq('contact_id', contact.id)
+    .limit(1)
+
+  if (existingDeals && existingDeals.length > 0) {
+    console.log(`[${timestamp}] Contact ${contact.id} already has a deal, skipping auto-creation`)
+    return null
+  }
+
+  const sourceLabel = contact.lead_source
+    ? LEAD_SOURCE_LABELS[contact.lead_source] || contact.lead_source
+    : 'Lead'
+  const dealTitle = `${contact.first_name} ${contact.last_name} - ${sourceLabel}`
+  const salesType = getSalesType(contact.client_type)
+
+  console.log(`[${timestamp}] Auto-creating deal for MQL contact ${contact.id}: ${dealTitle} (${salesType})`)
+
+  const { data: newDeal, error: dealError } = await supabaseAdmin
+    .from('deals')
+    .insert({
+      contact_id: contact.id,
+      company_id: contact.company_id,
+      title: dealTitle,
+      stage: 'qualified',
+      sales_type: salesType,
+    })
+    .select('id, title')
+    .single()
+
+  if (dealError) {
+    console.error(`[${timestamp}] Failed to auto-create deal:`, dealError)
+    return null
+  }
+
+  // Log deal_created activity
+  await supabaseAdmin.from('activities').insert({
+    contact_id: contact.id,
+    deal_id: newDeal.id,
+    activity_type: 'deal_created',
+    title: `Deal auto-created: ${dealTitle}`,
+    description: 'Deal automatically created when contact became Marketing Qualified',
+    metadata: {
+      sales_type: salesType,
+      auto_created: true,
+      trigger: 'mql_lifecycle_stage',
+    },
+  })
+
+  console.log(`[${timestamp}] Deal ${newDeal.id} created successfully for contact ${contact.id}`)
+  return newDeal
 }
 
 interface UpdateLifecycleRequest {
@@ -84,7 +168,7 @@ export async function PUT(
     // 3. Get current contact from database
     const { data: contact, error: contactError } = await supabaseAdmin
       .from('contacts')
-      .select('id, first_name, last_name, email, phone, fbclid, fb_lead_id, fbp, client_ip_address, client_user_agent, lifecycle_stage, fb_events_sent')
+      .select('id, first_name, last_name, email, phone, fbclid, fb_lead_id, fbp, client_ip_address, client_user_agent, lifecycle_stage, fb_events_sent, client_type, company_id, lead_source')
       .eq('id', contactId)
       .single<ContactRow>()
 
@@ -183,9 +267,23 @@ export async function PUT(
 
     console.log(`[${timestamp}] Contact ${contactId} updated successfully`)
 
-    // 7. Return success response with info about all events sent
+    // 7. Auto-create deal if moving to MQL
+    let createdDeal: { id: string; title: string } | null = null
+    if (lifecycle_stage === 'mql') {
+      createdDeal = await createDealForMQL(contact)
+    }
+
+    // 8. Return success response with info about all events sent
     const eventNames = eventsSentThisRequest.map(e => e.eventName)
     const eventCount = eventsSentThisRequest.length
+
+    let message = 'Status updated'
+    if (eventCount > 0) {
+      message = `Status updated & sent ${eventCount} event${eventCount > 1 ? 's' : ''} to Facebook (${eventNames.join(', ')})`
+    }
+    if (createdDeal) {
+      message += ` | Deal created: ${createdDeal.title}`
+    }
 
     return NextResponse.json({
       success: true,
@@ -193,9 +291,8 @@ export async function PUT(
       fb_events_sent_count: eventCount,
       fb_events_sent: eventNames,
       fb_events_details: eventsSentThisRequest,
-      message: eventCount > 0
-        ? `Status updated & sent ${eventCount} event${eventCount > 1 ? 's' : ''} to Facebook (${eventNames.join(', ')})`
-        : 'Status updated',
+      deal_created: createdDeal,
+      message,
     })
   } catch (error) {
     console.error(`[${timestamp}] Lifecycle update error:`, error)
