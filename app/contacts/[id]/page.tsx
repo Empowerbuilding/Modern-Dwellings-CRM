@@ -92,6 +92,36 @@ async function getContactActivities(contactId: string): Promise<Activity[]> {
   return (data as Activity[]) ?? []
 }
 
+interface AttributionData {
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  fbclid?: string | null
+}
+
+function getAttributionFromActivities(activities: Activity[]): AttributionData {
+  // Look for UTM data in form_submit or meeting_scheduled activities (oldest first)
+  const relevantActivities = activities
+    .filter(a => a.activity_type === 'form_submit' || a.activity_type === 'meeting_scheduled')
+    .reverse() // Get oldest first
+
+  for (const activity of relevantActivities) {
+    const metadata = activity.metadata as Record<string, unknown> | null
+    if (metadata) {
+      const utm_source = metadata.utm_source as string | undefined
+      const utm_medium = metadata.utm_medium as string | undefined
+      const utm_campaign = metadata.utm_campaign as string | undefined
+      const fbclid = metadata.fbclid as string | undefined
+
+      if (utm_source || utm_medium || utm_campaign || fbclid) {
+        return { utm_source, utm_medium, utm_campaign, fbclid }
+      }
+    }
+  }
+
+  return {}
+}
+
 async function getContactNotes(contactId: string): Promise<NoteWithAuthor[]> {
   const { data, error } = await (supabase.from('notes') as any)
     .select('*, author:users(id, name)')
@@ -136,6 +166,7 @@ export default async function ContactDetailPage({
   ])
 
   const totalDealValue = deals.reduce((sum, deal) => sum + (deal.value ?? 0), 0)
+  const attribution = getAttributionFromActivities(activities)
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -249,6 +280,60 @@ export default async function ContactDetailPage({
                 </div>
               </dl>
             </div>
+
+            {/* Attribution / Source */}
+            {(contact.lead_source || contact.fbclid || attribution.utm_source || attribution.utm_campaign) && (
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <h2 className="font-medium text-gray-900 mb-3">Attribution</h2>
+                <dl className="space-y-2 text-sm">
+                  {contact.lead_source && (
+                    <div>
+                      <dt className="text-gray-500">Source</dt>
+                      <dd className="text-gray-900">
+                        {LEAD_SOURCE_LABELS[contact.lead_source] || contact.lead_source}
+                      </dd>
+                    </div>
+                  )}
+                  {(contact.fbclid || attribution.fbclid) && (
+                    <div>
+                      <dt className="text-gray-500">Ad Platform</dt>
+                      <dd className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <span className="text-gray-900">Facebook Ad</span>
+                      </dd>
+                    </div>
+                  )}
+                  {attribution.utm_source && (
+                    <div>
+                      <dt className="text-gray-500">UTM Source</dt>
+                      <dd className="text-gray-900">{attribution.utm_source}</dd>
+                    </div>
+                  )}
+                  {attribution.utm_medium && (
+                    <div>
+                      <dt className="text-gray-500">UTM Medium</dt>
+                      <dd className="text-gray-900">{attribution.utm_medium}</dd>
+                    </div>
+                  )}
+                  {attribution.utm_campaign && (
+                    <div>
+                      <dt className="text-gray-500">UTM Campaign</dt>
+                      <dd className="text-gray-900 break-words">{attribution.utm_campaign}</dd>
+                    </div>
+                  )}
+                  {contact.fb_lead_id && (
+                    <div>
+                      <dt className="text-gray-500">FB Lead ID</dt>
+                      <dd className="text-gray-500 text-xs font-mono truncate" title={contact.fb_lead_id}>
+                        {contact.fb_lead_id}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
 
             {/* Associated Deals */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
