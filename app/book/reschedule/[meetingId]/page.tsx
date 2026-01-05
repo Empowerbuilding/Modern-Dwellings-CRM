@@ -157,9 +157,10 @@ export default function RescheduleMeetingPage() {
     setLoadingDates(true)
     try {
       const year = currentMonth.getFullYear()
-      const month = currentMonth.getMonth() + 1
+      const month = String(currentMonth.getMonth() + 1).padStart(2, '0')
+      const monthStr = `${year}-${month}` // API expects YYYY-MM format
       const res = await fetch(
-        `/api/calendar/available-dates?slug=${meeting.meeting_type.slug}&year=${year}&month=${month}&timezone=${encodeURIComponent(timezone)}`
+        `/api/calendar/available-dates?slug=${meeting.meeting_type.slug}&month=${monthStr}&timezone=${encodeURIComponent(timezone)}`
       )
       const data = await res.json()
 
