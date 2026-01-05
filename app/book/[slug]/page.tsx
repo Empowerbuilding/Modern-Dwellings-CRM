@@ -363,7 +363,7 @@ export default function BookingPage() {
 
     // Validate custom required fields
     for (const field of meetingType.custom_fields || []) {
-      if (field.required && !formData.customFields[field.id]?.trim()) {
+      if (field.required && !formData.customFields[field.label]?.trim()) {
         setFormError(`Please fill in "${field.label}"`)
         return
       }
@@ -621,11 +621,11 @@ export default function BookingPage() {
                   </label>
                   {field.type === 'textarea' ? (
                     <textarea
-                      value={formData.customFields[field.id] || ''}
+                      value={formData.customFields[field.label] || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          customFields: { ...formData.customFields, [field.id]: e.target.value },
+                          customFields: { ...formData.customFields, [field.label]: e.target.value },
                         })
                       }
                       placeholder={field.placeholder}
@@ -634,11 +634,11 @@ export default function BookingPage() {
                     />
                   ) : field.type === 'select' ? (
                     <select
-                      value={formData.customFields[field.id] || ''}
+                      value={formData.customFields[field.label] || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          customFields: { ...formData.customFields, [field.id]: e.target.value },
+                          customFields: { ...formData.customFields, [field.label]: e.target.value },
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
@@ -653,11 +653,11 @@ export default function BookingPage() {
                   ) : (
                     <input
                       type={field.type === 'number' ? 'number' : 'text'}
-                      value={formData.customFields[field.id] || ''}
+                      value={formData.customFields[field.label] || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          customFields: { ...formData.customFields, [field.id]: e.target.value },
+                          customFields: { ...formData.customFields, [field.label]: e.target.value },
                         })
                       }
                       placeholder={field.placeholder}
