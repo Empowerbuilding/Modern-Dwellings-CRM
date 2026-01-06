@@ -124,7 +124,7 @@ async function getActivities(companyId: string): Promise<ActivityWithRelations[]
 
 async function getCompanyNotes(companyId: string): Promise<NoteWithAuthor[]> {
   const { data, error } = await (supabase.from('notes') as any)
-    .select('*, author:users(id, name)')
+    .select('*, author:created_by(id, name)')
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
 

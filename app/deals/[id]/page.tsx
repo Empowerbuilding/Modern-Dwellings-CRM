@@ -136,7 +136,7 @@ async function getContactNotes(contactId: string | null): Promise<NoteWithAuthor
   if (!contactId) return []
 
   const { data, error } = await (supabase.from('notes') as any)
-    .select('*, author:users(id, name)')
+    .select('*, author:created_by(id, name)')
     .eq('contact_id', contactId)
     .order('created_at', { ascending: false })
 
