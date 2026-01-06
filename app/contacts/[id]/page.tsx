@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
 import type { Contact, Company, Deal, Activity, User, NoteWithAuthor } from '@/lib/types'
 import { STAGE_LABELS, STAGE_COLORS, LIFECYCLE_STAGE_LABELS, LIFECYCLE_STAGE_COLORS, type LifecycleStage } from '@/lib/types'
 import { ContactActivitiesSection } from './contact-activities-section'
@@ -147,6 +148,21 @@ async function getAllCompanies(): Promise<Pick<Company, 'id' | 'name' | 'type'>[
   return (data as Pick<Company, 'id' | 'name' | 'type'>[]) ?? []
 }
 
+async function getCurrentUserId(): Promise<string | undefined> {
+  const serverSupabase = await createClient()
+  const { data: { user: supabaseUser } } = await serverSupabase.auth.getUser()
+
+  if (!supabaseUser?.email) return undefined
+
+  const { data: crmUser } = await (supabase
+    .from('users') as any)
+    .select('id')
+    .eq('email', supabaseUser.email)
+    .single()
+
+  return crmUser?.id
+}
+
 export default async function ContactDetailPage({
   params,
 }: {
@@ -158,12 +174,13 @@ export default async function ContactDetailPage({
     notFound()
   }
 
-  const [company, deals, activities, notes, allCompanies] = await Promise.all([
+  const [company, deals, activities, notes, allCompanies, currentUserId] = await Promise.all([
     contact.company_id ? getCompany(contact.company_id) : null,
     getContactDeals(contact.id),
     getContactActivities(contact.id),
     getContactNotes(contact.id),
     getAllCompanies(),
+    getCurrentUserId(),
   ])
 
   const totalDealValue = deals.reduce((sum, deal) => sum + (deal.value ?? 0), 0)
@@ -381,6 +398,7 @@ export default async function ContactDetailPage({
             <NotesSection
               contactId={contact.id}
               notes={notes}
+              currentUserId={currentUserId}
             />
             <ContactActivitiesSection
               contactId={contact.id}

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase, getDealValueHistory, getLinkedDeals } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
 import type { Deal, Company, Contact, DealValueHistory, DealType, User, Activity, NoteWithAuthor } from '@/lib/types'
 import { STAGE_LABELS, STAGE_COLORS, getStagesForSalesType } from '@/lib/types'
 import { DealValueEditor } from './deal-value-editor'
@@ -181,6 +182,21 @@ async function getDealAndContactActivities(dealId: string, contactId: string | n
   return allActivities
 }
 
+async function getCurrentUserId(): Promise<string | undefined> {
+  const serverSupabase = await createClient()
+  const { data: { user: supabaseUser } } = await serverSupabase.auth.getUser()
+
+  if (!supabaseUser?.email) return undefined
+
+  const { data: crmUser } = await (supabase
+    .from('users') as any)
+    .select('id')
+    .eq('email', supabaseUser.email)
+    .single()
+
+  return crmUser?.id
+}
+
 export default async function DealDetailPage({
   params,
 }: {
@@ -192,7 +208,7 @@ export default async function DealDetailPage({
     notFound()
   }
 
-  const [company, contact, valueHistory, linkedDeals, allCompanies, allContacts, allUsers, activities, notes] = await Promise.all([
+  const [company, contact, valueHistory, linkedDeals, allCompanies, allContacts, allUsers, activities, notes, currentUserId] = await Promise.all([
     deal.company_id ? getCompany(deal.company_id) : null,
     deal.contact_id ? getContact(deal.contact_id) : null,
     getDealValueHistory(deal.id),
@@ -202,6 +218,7 @@ export default async function DealDetailPage({
     getAllUsers(),
     getDealAndContactActivities(deal.id, deal.contact_id),
     getDealNotes(deal.id),
+    getCurrentUserId(),
   ])
 
   const stages = getStagesForSalesType(deal.sales_type)
@@ -432,6 +449,7 @@ export default async function DealDetailPage({
             <NotesSection
               dealId={deal.id}
               notes={notes}
+              currentUserId={currentUserId}
             />
 
             {/* Activities */}

@@ -68,6 +68,10 @@ export function TaskSlideOver({
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
   const [newNote, setNewNote] = useState('')
   const [addingNote, setAddingNote] = useState(false)
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [editingNoteContent, setEditingNoteContent] = useState('')
+  const [savingNote, setSavingNote] = useState(false)
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null)
 
   // Fetch contact notes when contact changes
   const fetchContactNotes = useCallback(async (contactId: string) => {
@@ -137,6 +141,60 @@ export function TaskSlideOver({
       console.error('Failed to add note:', err)
     } finally {
       setAddingNote(false)
+    }
+  }
+
+  const handleEditNote = (note: NoteWithAuthor) => {
+    setEditingNoteId(note.id)
+    setEditingNoteContent(note.content)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingNoteId || !editingNoteContent.trim()) return
+
+    setSavingNote(true)
+    try {
+      const { error: updateError } = await (supabase.from('notes') as any)
+        .update({ content: editingNoteContent.trim() })
+        .eq('id', editingNoteId)
+
+      if (updateError) throw updateError
+
+      setContactNotes((prev) =>
+        prev.map((n) =>
+          n.id === editingNoteId ? { ...n, content: editingNoteContent.trim() } : n
+        )
+      )
+      setEditingNoteId(null)
+      setEditingNoteContent('')
+    } catch (err) {
+      console.error('Failed to update note:', err)
+    } finally {
+      setSavingNote(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null)
+    setEditingNoteContent('')
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm('Delete this note?')) return
+
+    setDeletingNoteId(noteId)
+    try {
+      const { error: deleteError } = await (supabase.from('notes') as any)
+        .delete()
+        .eq('id', noteId)
+
+      if (deleteError) throw deleteError
+
+      setContactNotes((prev) => prev.filter((n) => n.id !== noteId))
+    } catch (err) {
+      console.error('Failed to delete note:', err)
+    } finally {
+      setDeletingNoteId(null)
     }
   }
 
@@ -508,30 +566,86 @@ export function TaskSlideOver({
                       {contactNotes.map((note) => {
                         const isExpanded = expandedNotes.has(note.id)
                         const isLong = note.content.length > 150 || note.content.split('\n').length > 3
+                        const isEditing = editingNoteId === note.id
+                        const isDeleting = deletingNoteId === note.id
 
                         return (
-                          <div key={note.id} className="text-sm bg-white p-2 rounded border border-gray-200">
-                            <p
-                              className={`text-gray-700 whitespace-pre-wrap ${
-                                !isExpanded && isLong ? 'line-clamp-3' : ''
-                              }`}
-                            >
-                              {note.content}
-                            </p>
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="text-xs text-gray-400">
-                                {note.author?.name || 'Unknown'} · {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              </p>
-                              {isLong && (
-                                <button
-                                  type="button"
-                                  onClick={() => toggleNoteExpanded(note.id)}
-                                  className="text-xs text-blue-600 hover:text-blue-800"
+                          <div key={note.id} className={`text-sm bg-white p-2 rounded border border-gray-200 ${isDeleting ? 'opacity-50' : ''}`}>
+                            {isEditing ? (
+                              <>
+                                <textarea
+                                  value={editingNoteContent}
+                                  onChange={(e) => setEditingNoteContent(e.target.value)}
+                                  rows={3}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                                  autoFocus
+                                />
+                                <div className="flex justify-end gap-2 mt-1">
+                                  <button
+                                    type="button"
+                                    onClick={handleCancelEdit}
+                                    className="px-2 py-1 text-xs text-gray-600 hover:text-gray-800"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleSaveEdit}
+                                    disabled={savingNote || !editingNoteContent.trim()}
+                                    className="px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                                  >
+                                    {savingNote ? 'Saving...' : 'Save'}
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <p
+                                  className={`text-gray-700 whitespace-pre-wrap ${
+                                    !isExpanded && isLong ? 'line-clamp-3' : ''
+                                  }`}
                                 >
-                                  {isExpanded ? 'Show less' : 'Show more'}
-                                </button>
-                              )}
-                            </div>
+                                  {note.content}
+                                </p>
+                                <div className="flex items-center justify-between mt-1">
+                                  <p className="text-xs text-gray-400">
+                                    {note.author?.name || 'Unknown'} · {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    {isLong && (
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleNoteExpanded(note.id)}
+                                        className="text-xs text-blue-600 hover:text-blue-800"
+                                      >
+                                        {isExpanded ? 'Show less' : 'Show more'}
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEditNote(note)}
+                                      className="p-1 text-gray-400 hover:text-gray-600"
+                                      title="Edit note"
+                                    >
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteNote(note.id)}
+                                      disabled={isDeleting}
+                                      className="p-1 text-gray-400 hover:text-red-600"
+                                      title="Delete note"
+                                    >
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         )
                       })}

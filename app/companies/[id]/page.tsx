@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
 import type { Company, Contact, Deal, Activity, ClientType, DealType, ActivityType, NoteWithAuthor } from '@/lib/types'
 import { STAGE_COLORS, STAGE_LABELS } from '@/lib/types'
 import { CompanyActions } from './company-actions'
@@ -136,17 +137,33 @@ async function getCompanyNotes(companyId: string): Promise<NoteWithAuthor[]> {
   return (data as NoteWithAuthor[]) ?? []
 }
 
+async function getCurrentUserId(): Promise<string | undefined> {
+  const serverSupabase = await createClient()
+  const { data: { user: supabaseUser } } = await serverSupabase.auth.getUser()
+
+  if (!supabaseUser?.email) return undefined
+
+  const { data: crmUser } = await (supabase
+    .from('users') as any)
+    .select('id')
+    .eq('email', supabaseUser.email)
+    .single()
+
+  return crmUser?.id
+}
+
 export default async function CompanyDetailPage({
   params,
 }: {
   params: { id: string }
 }) {
-  const [company, contacts, deals, activities, notes] = await Promise.all([
+  const [company, contacts, deals, activities, notes, currentUserId] = await Promise.all([
     getCompany(params.id),
     getContacts(params.id),
     getDeals(params.id),
     getActivities(params.id),
     getCompanyNotes(params.id),
+    getCurrentUserId(),
   ])
 
   if (!company) {
@@ -293,6 +310,7 @@ export default async function CompanyDetailPage({
             <NotesSection
               companyId={company.id}
               notes={notes}
+              currentUserId={currentUserId}
             />
 
             {/* Deals */}
