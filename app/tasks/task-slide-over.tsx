@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import type { User, Contact, Deal, Company, TaskPriority, TaskType } from '@/lib/types'
+import type { User, Contact, Deal, Company, TaskPriority, TaskType, NoteWithAuthor } from '@/lib/types'
 import {
   TASK_PRIORITIES,
   TASK_TYPES,
@@ -62,6 +63,41 @@ export function TaskSlideOver({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [contactNotes, setContactNotes] = useState<NoteWithAuthor[]>([])
+  const [loadingNotes, setLoadingNotes] = useState(false)
+
+  // Fetch contact notes when contact changes
+  const fetchContactNotes = useCallback(async (contactId: string) => {
+    if (!contactId) {
+      setContactNotes([])
+      return
+    }
+
+    setLoadingNotes(true)
+    try {
+      const { data } = await (supabase.from('notes') as any)
+        .select('*, author:created_by(id, name)')
+        .eq('contact_id', contactId)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      setContactNotes(data || [])
+    } catch (err) {
+      console.error('Failed to fetch contact notes:', err)
+      setContactNotes([])
+    } finally {
+      setLoadingNotes(false)
+    }
+  }, [])
+
+  // Fetch notes when contact_id changes
+  useEffect(() => {
+    if (formData.contact_id) {
+      fetchContactNotes(formData.contact_id)
+    } else {
+      setContactNotes([])
+    }
+  }, [formData.contact_id, fetchContactNotes])
 
   useEffect(() => {
     if (task) {
@@ -381,6 +417,38 @@ export function TaskSlideOver({
                   ))}
                 </select>
               </div>
+
+              {/* Contact Notes */}
+              {formData.contact_id && (
+                <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-medium text-gray-700">Contact Notes</h4>
+                    <Link
+                      href={`/contacts/${formData.contact_id}`}
+                      target="_blank"
+                      className="text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      View Contact
+                    </Link>
+                  </div>
+                  {loadingNotes ? (
+                    <p className="text-sm text-gray-400">Loading notes...</p>
+                  ) : contactNotes.length === 0 ? (
+                    <p className="text-sm text-gray-400 italic">No notes for this contact</p>
+                  ) : (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {contactNotes.map((note) => (
+                        <div key={note.id} className="text-sm">
+                          <p className="text-gray-700 whitespace-pre-wrap line-clamp-3">{note.content}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {note.author?.name || 'Unknown'} · {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Deal */}
               <div className="mb-3">

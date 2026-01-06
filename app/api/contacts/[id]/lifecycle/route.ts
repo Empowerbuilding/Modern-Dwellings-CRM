@@ -59,6 +59,7 @@ const LEAD_SOURCE_LABELS: Record<string, string> = {
   barnhaus_store_contact: 'Barnhaus Store',
   shopify_order: 'Shopify Order',
   calendar_booking: 'Calendar Booking',
+  direct_phone_call: 'Direct Phone Call',
   other: 'Other',
 }
 

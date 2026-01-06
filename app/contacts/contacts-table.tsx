@@ -17,6 +17,7 @@ const LEAD_SOURCES: LeadSource[] = [
   'barnhaus_store_contact',
   'shopify_order',
   'calendar_booking',
+  'direct_phone_call',
   'other',
 ]
 
@@ -30,6 +31,7 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   barnhaus_store_contact: 'Barnhaus Store',
   shopify_order: 'Shopify Order',
   calendar_booking: 'Calendar Booking',
+  direct_phone_call: 'Direct Phone Call',
   other: 'Other',
 }
 

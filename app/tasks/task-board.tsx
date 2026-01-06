@@ -45,7 +45,10 @@ interface TaskBoardProps {
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-US', {
+  // Parse as local date to avoid timezone issues (YYYY-MM-DD format)
+  const [year, month, day] = dateString.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -63,18 +66,21 @@ function formatTime(timeString: string | null): string {
 
 function isToday(dateString: string): boolean {
   const today = new Date()
-  const date = new Date(dateString)
+  // Parse as local date to avoid timezone issues
+  const [year, month, day] = dateString.split('-').map(Number)
   return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
+    year === today.getFullYear() &&
+    month - 1 === today.getMonth() &&
+    day === today.getDate()
   )
 }
 
 function isOverdue(dateString: string): boolean {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const date = new Date(dateString)
+  // Parse as local date to avoid timezone issues
+  const [year, month, day] = dateString.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
   return date < today
 }
 

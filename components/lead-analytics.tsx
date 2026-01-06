@@ -36,6 +36,7 @@ const SOURCE_COLORS: Record<string, string> = {
   shopify_order: '#96BF48',
   calendar_booking: '#06B6D4',
   empower_website: '#6366F1',
+  direct_phone_call: '#059669',
   other: '#6B7280',
 }
 
@@ -49,6 +50,7 @@ const SOURCE_LABELS: Record<string, string> = {
   shopify_order: 'Shopify Order',
   calendar_booking: 'Calendar Booking',
   empower_website: 'Empower Website',
+  direct_phone_call: 'Direct Phone Call',
   other: 'Other',
 }
 

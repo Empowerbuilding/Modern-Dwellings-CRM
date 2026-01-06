@@ -48,7 +48,7 @@ export function getStagesForSalesType(salesType: SalesType): PipelineStage[] {
   return salesType === 'b2c' ? B2C_STAGES : B2B_STAGES
 }
 
-export type LeadSource = 'facebook_lead_ad' | 'referral' | 'cost_calc' | 'guide_download' | 'empower_website' | 'barnhaus_contact' | 'barnhaus_store_contact' | 'shopify_order' | 'calendar_booking' | 'other'
+export type LeadSource = 'facebook_lead_ad' | 'referral' | 'cost_calc' | 'guide_download' | 'empower_website' | 'barnhaus_contact' | 'barnhaus_store_contact' | 'shopify_order' | 'calendar_booking' | 'direct_phone_call' | 'other'
 
 export type LifecycleStage = 'subscriber' | 'lead' | 'mql' | 'sql' | 'customer'
 

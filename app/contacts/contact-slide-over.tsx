@@ -1,10 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { LeadSource, Company, ClientType, LifecycleStage } from '@/lib/types'
 import { LIFECYCLE_STAGE_LABELS } from '@/lib/types'
 import type { ContactWithCompany } from './page'
+
+interface DuplicateContact {
+  id: string
+  first_name: string
+  last_name: string
+  email: string | null
+  phone: string | null
+}
 
 const LEAD_SOURCES: LeadSource[] = [
   'facebook_lead_ad',
@@ -16,6 +25,7 @@ const LEAD_SOURCES: LeadSource[] = [
   'barnhaus_store_contact',
   'shopify_order',
   'calendar_booking',
+  'direct_phone_call',
   'other',
 ]
 
@@ -29,6 +39,7 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   barnhaus_store_contact: 'Barnhaus Store',
   shopify_order: 'Shopify Order',
   calendar_booking: 'Calendar Booking',
+  direct_phone_call: 'Direct Phone Call',
   other: 'Other',
 }
 
@@ -101,6 +112,76 @@ export function ContactSlideOver({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [emailDuplicate, setEmailDuplicate] = useState<DuplicateContact | null>(null)
+  const [phoneDuplicate, setPhoneDuplicate] = useState<DuplicateContact | null>(null)
+  const [checkingEmail, setCheckingEmail] = useState(false)
+  const [checkingPhone, setCheckingPhone] = useState(false)
+
+  // Normalize phone number for comparison (remove non-digits)
+  const normalizePhone = (phone: string): string => {
+    return phone.replace(/\D/g, '')
+  }
+
+  // Check for duplicate email
+  const checkEmailDuplicate = useCallback(async (email: string) => {
+    if (!email || !email.includes('@')) {
+      setEmailDuplicate(null)
+      return
+    }
+
+    setCheckingEmail(true)
+    try {
+      const { data } = await (supabase.from('contacts') as any)
+        .select('id, first_name, last_name, email, phone')
+        .ilike('email', email.trim())
+        .limit(1)
+
+      if (data && data.length > 0) {
+        // Exclude current contact if editing
+        const duplicate = data.find((c: DuplicateContact) => c.id !== contact?.id)
+        setEmailDuplicate(duplicate || null)
+      } else {
+        setEmailDuplicate(null)
+      }
+    } catch (err) {
+      console.error('Error checking email duplicate:', err)
+    } finally {
+      setCheckingEmail(false)
+    }
+  }, [contact?.id])
+
+  // Check for duplicate phone
+  const checkPhoneDuplicate = useCallback(async (phone: string) => {
+    const normalized = normalizePhone(phone)
+    if (!normalized || normalized.length < 7) {
+      setPhoneDuplicate(null)
+      return
+    }
+
+    setCheckingPhone(true)
+    try {
+      // Get contacts and filter by normalized phone
+      const { data } = await (supabase.from('contacts') as any)
+        .select('id, first_name, last_name, email, phone')
+        .not('phone', 'is', null)
+
+      if (data && data.length > 0) {
+        // Find duplicate by comparing normalized phone numbers
+        const duplicate = data.find((c: DuplicateContact) => {
+          if (c.id === contact?.id) return false
+          if (!c.phone) return false
+          return normalizePhone(c.phone) === normalized
+        })
+        setPhoneDuplicate(duplicate || null)
+      } else {
+        setPhoneDuplicate(null)
+      }
+    } catch (err) {
+      console.error('Error checking phone duplicate:', err)
+    } finally {
+      setCheckingPhone(false)
+    }
+  }, [contact?.id])
 
   // Get the selected company's type (if any)
   const selectedCompany = formData.company_id
@@ -136,6 +217,8 @@ export function ContactSlideOver({
       })
     }
     setError(null)
+    setEmailDuplicate(null)
+    setPhoneDuplicate(null)
   }, [contact, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -344,24 +427,86 @@ export function ContactSlideOver({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value })
+                    setEmailDuplicate(null)
+                  }}
+                  onBlur={(e) => checkEmailDuplicate(e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none ${
+                    emailDuplicate ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                  }`}
+                />
+                {checkingEmail && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg className="animate-spin h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              {emailDuplicate && (
+                <div className="mt-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-medium">Duplicate found:</span>{' '}
+                    <Link
+                      href={`/contacts/${emailDuplicate.id}`}
+                      target="_blank"
+                      className="text-amber-900 underline hover:no-underline"
+                    >
+                      {emailDuplicate.first_name} {emailDuplicate.last_name}
+                    </Link>
+                    {' '}already has this email
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone
               </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              />
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => {
+                    setFormData({ ...formData, phone: e.target.value })
+                    setPhoneDuplicate(null)
+                  }}
+                  onBlur={(e) => checkPhoneDuplicate(e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none ${
+                    phoneDuplicate ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                  }`}
+                />
+                {checkingPhone && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg className="animate-spin h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              {phoneDuplicate && (
+                <div className="mt-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-medium">Duplicate found:</span>{' '}
+                    <Link
+                      href={`/contacts/${phoneDuplicate.id}`}
+                      target="_blank"
+                      className="text-amber-900 underline hover:no-underline"
+                    >
+                      {phoneDuplicate.first_name} {phoneDuplicate.last_name}
+                    </Link>
+                    {' '}already has this phone
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
