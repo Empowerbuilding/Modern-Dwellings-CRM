@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 
 // Facebook Conversions API event names
-export type FacebookEventName = 'initial_lead' | 'Lead' | 'lead' | 'marketingqualifiedlead' | 'salesqualifiedlead' | 'customer'
+export type FacebookEventName = 'PageView' | 'initial_lead' | 'Lead' | 'lead' | 'marketingqualifiedlead' | 'salesqualifiedlead' | 'customer'
 
 export interface FacebookUserData {
   email?: string | null

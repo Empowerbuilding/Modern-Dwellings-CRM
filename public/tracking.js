@@ -178,6 +178,7 @@
     var pageUrl = window.location.href;
     var pageTitle = getPageTitle();
     var referrer = getReferrer();
+    var fbCookies = getFacebookCookies();
 
     var data = {
       anonymous_id: visitorId,
@@ -195,7 +196,11 @@
         viewport_height: window.innerHeight || null,
         timezone: Intl && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
         language: navigator.language || null,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        // Facebook cookies for CAPI
+        fbp: fbCookies.fbp || null,
+        fbc: fbCookies.fbc || null,
+        fbclid: getFbclid() || null
       }
     };
 
@@ -281,12 +286,39 @@
         return parts.slice(3).join('.');
       }
     }
+    // Try localStorage fallback
+    try {
+      var stored = localStorage.getItem('_crm_fbclid');
+      if (stored) return stored;
+    } catch (e) {}
     return null;
+  }
+
+  // Save fbclid to _fbc cookie if present in URL (30-day expiry)
+  function saveFbclidToCookie() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var fbclid = urlParams.get('fbclid');
+    if (fbclid) {
+      // Format: fb.1.{timestamp}.{fbclid}
+      var fbc = 'fb.1.' + Date.now() + '.' + fbclid;
+      var expires = new Date();
+      expires.setDate(expires.getDate() + 30);
+      document.cookie = '_fbc=' + fbc + ';expires=' + expires.toUTCString() + ';path=/;SameSite=Lax';
+      log('Saved fbclid to _fbc cookie:', fbc);
+
+      // Also save to localStorage as backup
+      try {
+        localStorage.setItem('_crm_fbclid', fbclid);
+      } catch (e) {}
+    }
   }
 
   // Initialize tracking
   function init() {
     log('Initializing with config:', config);
+
+    // Save fbclid to cookie if present (before tracking page view)
+    saveFbclidToCookie();
 
     // Track initial page view
     if (document.readyState === 'complete') {

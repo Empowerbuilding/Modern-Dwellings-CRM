@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import type { ActivityType } from '@/lib/types'
+import { sendFacebookEvent } from '@/lib/facebook-conversions'
 
 // Use service role key for server-side operations (bypasses RLS)
 const supabase = createClient(
@@ -160,6 +161,34 @@ export async function POST(request: NextRequest) {
 
     // Log successful tracking with site info
     console.log(`[${timestamp}] Tracked ${payload.activity_type} from ${validSite}: ${payload.title.substring(0, 50)}`)
+
+    // Send page view to Facebook CAPI for dual-stream tracking
+    if (payload.activity_type === 'page_view') {
+      try {
+        // Extract Facebook cookies from metadata if provided
+        const fbp = payload.metadata?.fbp as string | undefined
+        const fbc = payload.metadata?.fbc as string | undefined
+        const fbclid = payload.metadata?.fbclid as string | undefined
+
+        await sendFacebookEvent({
+          eventName: 'PageView',
+          eventId: data.id, // Use activity ID for deduplication
+          userData: {
+            fbp: fbp || null,
+            fbclid: fbc || fbclid || null,
+            clientIpAddress: ip || null,
+            clientUserAgent: request.headers.get('user-agent') || null,
+            externalId: payload.anonymous_id || null,
+          },
+          eventSourceUrl: payload.page_url || undefined,
+        })
+
+        console.log(`[${timestamp}] Sent PageView to Facebook CAPI`)
+      } catch (fbError) {
+        // Don't fail the tracking if FB event fails
+        console.error(`[${timestamp}] Facebook PageView error (non-fatal):`, fbError)
+      }
+    }
 
     return NextResponse.json(
       { success: true, activity_id: data.id },
