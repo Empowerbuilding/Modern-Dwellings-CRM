@@ -65,6 +65,9 @@ export function TaskSlideOver({
   const [error, setError] = useState<string | null>(null)
   const [contactNotes, setContactNotes] = useState<NoteWithAuthor[]>([])
   const [loadingNotes, setLoadingNotes] = useState(false)
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
+  const [newNote, setNewNote] = useState('')
+  const [addingNote, setAddingNote] = useState(false)
 
   // Fetch contact notes when contact changes
   const fetchContactNotes = useCallback(async (contactId: string) => {
@@ -97,7 +100,45 @@ export function TaskSlideOver({
     } else {
       setContactNotes([])
     }
+    setExpandedNotes(new Set())
+    setNewNote('')
   }, [formData.contact_id, fetchContactNotes])
+
+  const toggleNoteExpanded = (noteId: string) => {
+    setExpandedNotes((prev) => {
+      const next = new Set(prev)
+      if (next.has(noteId)) {
+        next.delete(noteId)
+      } else {
+        next.add(noteId)
+      }
+      return next
+    })
+  }
+
+  const handleAddNote = async () => {
+    if (!newNote.trim() || !formData.contact_id) return
+
+    setAddingNote(true)
+    try {
+      const { data, error: insertError } = await (supabase.from('notes') as any)
+        .insert({
+          contact_id: formData.contact_id,
+          content: newNote.trim(),
+        })
+        .select('*, author:created_by(id, name)')
+        .single()
+
+      if (insertError) throw insertError
+
+      setContactNotes((prev) => [data, ...prev])
+      setNewNote('')
+    } catch (err) {
+      console.error('Failed to add note:', err)
+    } finally {
+      setAddingNote(false)
+    }
+  }
 
   useEffect(() => {
     if (task) {
@@ -422,7 +463,9 @@ export function TaskSlideOver({
               {formData.contact_id && (
                 <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">Contact Notes</h4>
+                    <h4 className="text-sm font-medium text-gray-700">
+                      Contact Notes {contactNotes.length > 0 && `(${contactNotes.length})`}
+                    </h4>
                     <Link
                       href={`/contacts/${formData.contact_id}`}
                       target="_blank"
@@ -431,20 +474,67 @@ export function TaskSlideOver({
                       View Contact
                     </Link>
                   </div>
+
+                  {/* Add Note Form */}
+                  <div className="mb-3">
+                    <textarea
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Add a note..."
+                      rows={2}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none bg-white"
+                    />
+                    {newNote.trim() && (
+                      <div className="flex justify-end mt-1">
+                        <button
+                          type="button"
+                          onClick={handleAddNote}
+                          disabled={addingNote}
+                          className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        >
+                          {addingNote ? 'Adding...' : 'Add Note'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Notes List */}
                   {loadingNotes ? (
                     <p className="text-sm text-gray-400">Loading notes...</p>
                   ) : contactNotes.length === 0 ? (
-                    <p className="text-sm text-gray-400 italic">No notes for this contact</p>
+                    <p className="text-sm text-gray-400 italic">No notes for this contact yet</p>
                   ) : (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {contactNotes.map((note) => (
-                        <div key={note.id} className="text-sm">
-                          <p className="text-gray-700 whitespace-pre-wrap line-clamp-3">{note.content}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {note.author?.name || 'Unknown'} · {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </p>
-                        </div>
-                      ))}
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {contactNotes.map((note) => {
+                        const isExpanded = expandedNotes.has(note.id)
+                        const isLong = note.content.length > 150 || note.content.split('\n').length > 3
+
+                        return (
+                          <div key={note.id} className="text-sm bg-white p-2 rounded border border-gray-200">
+                            <p
+                              className={`text-gray-700 whitespace-pre-wrap ${
+                                !isExpanded && isLong ? 'line-clamp-3' : ''
+                              }`}
+                            >
+                              {note.content}
+                            </p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-xs text-gray-400">
+                                {note.author?.name || 'Unknown'} · {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </p>
+                              {isLong && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleNoteExpanded(note.id)}
+                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  {isExpanded ? 'Show less' : 'Show more'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
