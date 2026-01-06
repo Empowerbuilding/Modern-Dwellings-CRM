@@ -132,18 +132,20 @@ interface ActivityWithUser extends Activity {
   user?: User | null
 }
 
-async function getDealNotes(dealId: string): Promise<NoteWithAuthor[]> {
+async function getContactNotes(contactId: string | null): Promise<NoteWithAuthor[]> {
+  if (!contactId) return []
+
   const { data, error } = await (supabase.from('notes') as any)
     .select('*, author:users(id, name)')
-    .eq('deal_id', dealId)
+    .eq('contact_id', contactId)
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching deal notes:', error)
+    console.error('Error fetching contact notes:', error)
     return []
   }
 
-  console.log(`Fetched ${data?.length ?? 0} notes for deal ${dealId}`)
+  console.log(`Fetched ${data?.length ?? 0} notes for contact ${contactId}`)
   return (data as NoteWithAuthor[]) ?? []
 }
 
@@ -217,7 +219,7 @@ export default async function DealDetailPage({
     getAllContacts(),
     getAllUsers(),
     getDealAndContactActivities(deal.id, deal.contact_id),
-    getDealNotes(deal.id),
+    getContactNotes(deal.contact_id),
     getCurrentUserId(),
   ])
 
@@ -446,11 +448,18 @@ export default async function DealDetailPage({
           {/* Right Column - Notes, Activities & Value History */}
           <div className="lg:col-span-2 space-y-6">
             {/* Notes */}
-            <NotesSection
-              dealId={deal.id}
-              notes={notes}
-              currentUserId={currentUserId}
-            />
+            {deal.contact_id ? (
+              <NotesSection
+                contactId={deal.contact_id}
+                notes={notes}
+                currentUserId={currentUserId}
+              />
+            ) : (
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <h2 className="font-medium text-gray-900 mb-2">Notes</h2>
+                <p className="text-sm text-gray-500">Link a contact to this deal to add notes.</p>
+              </div>
+            )}
 
             {/* Activities */}
             <ActivitiesSection dealId={deal.id} activities={activities} />
