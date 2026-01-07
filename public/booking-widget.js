@@ -41,25 +41,66 @@
     },
 
     /**
-     * Build URL with embed params and UTM passthrough
+     * Get a cookie value by name
+     * @param {string} name - Cookie name
+     * @returns {string|null} Cookie value or null
+     */
+    _getCookie: function(name) {
+      var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
+    },
+
+    /**
+     * Extract fbclid from _fbc cookie
+     * Cookie format: fb.1.{timestamp}.{fbclid}
+     * @returns {string|null} fbclid or null
+     */
+    _extractFbclidFromCookie: function() {
+      var fbc = this._getCookie('_fbc');
+      if (fbc) {
+        var parts = fbc.split('.');
+        if (parts.length >= 4) {
+          return parts.slice(3).join('.');
+        }
+      }
+      return null;
+    },
+
+    /**
+     * Build URL with embed params and UTM/Facebook passthrough
      * @param {string} slug - The meeting type slug
      * @returns {string} URL with query params
      */
     _buildEmbedUrl: function(slug) {
+      var self = this;
       var url = this.getLink(slug) + '?embed=true';
 
-      // Pass through UTM params from parent page
+      // Pass through UTM params and fbclid from parent page
       try {
         var params = new URLSearchParams(window.location.search);
-        var utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
-        utmParams.forEach(function(param) {
+        var trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid'];
+        trackingParams.forEach(function(param) {
           var value = params.get(param);
           if (value) {
             url += '&' + param + '=' + encodeURIComponent(value);
           }
         });
+
+        // If fbclid not in URL, try to extract from _fbc cookie
+        if (!params.get('fbclid')) {
+          var fbclidFromCookie = self._extractFbclidFromCookie();
+          if (fbclidFromCookie) {
+            url += '&fbclid=' + encodeURIComponent(fbclidFromCookie);
+          }
+        }
+
+        // Pass _fbp cookie value if it exists
+        var fbp = self._getCookie('_fbp');
+        if (fbp) {
+          url += '&fbp=' + encodeURIComponent(fbp);
+        }
       } catch (e) {
-        // URLSearchParams not supported, skip UTM passthrough
+        // URLSearchParams not supported, skip tracking passthrough
       }
 
       return url;
