@@ -602,7 +602,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 13. Update lifecycle stage and send Facebook event
+    // 13. Update lifecycle stage and send Facebook events
     if (contact) {
       try {
         // Higher lifecycle stages that shouldn't be downgraded
@@ -610,38 +610,66 @@ export async function POST(request: NextRequest) {
         const currentStage = contact.lifecycle_stage
         const shouldUpdateStage = !currentStage || !higherStages.includes(currentStage)
 
-        // Check if lead event was already sent
+        // Check which events were already sent
         const fbEventsSent = contact.fb_events_sent || {}
+        const subscriberEventAlreadySent = !!fbEventsSent['subscriber']
         const leadEventAlreadySent = !!fbEventsSent['lead']
 
         // Prepare updates for contact
         const contactUpdates: Record<string, unknown> = {}
+        const updatedFbEventsSent = { ...fbEventsSent }
 
         if (shouldUpdateStage) {
           contactUpdates.lifecycle_stage = 'lead'
         }
 
-        // Send Facebook lead event if not already sent
+        const bookingPageUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.empowerbuilding.ai'}/book/${slug}`
+
+        // Common user data for Facebook events
+        const fbUserData = {
+          email: contact.email,
+          phone: contact.phone,
+          firstName: contact.first_name,
+          lastName: contact.last_name,
+          fbclid: contact.fbclid,
+          fbp: contact.fbp,
+          leadId: contact.fb_lead_id,
+          clientIpAddress: contact.client_ip_address || clientIpAddress,
+          clientUserAgent: contact.client_user_agent || clientUserAgent,
+          externalId: contact.id,
+        }
+
+        // Send initial_lead event first if not already sent (for CAPI consistency)
+        if (!subscriberEventAlreadySent) {
+          console.log(`[${timestamp}] Sending initial_lead event to Facebook for contact:`, contact.id)
+
+          const initialLeadResult = await sendFacebookEvent({
+            eventName: 'initial_lead',
+            eventId: `${contact.id}-subscriber`,
+            userData: fbUserData,
+            eventSourceUrl: bookingPageUrl,
+            customData: {
+              leadEventSource: 'calendar_booking',
+            },
+          })
+
+          console.log(`[${timestamp}] Facebook initial_lead event result:`, initialLeadResult)
+
+          if (initialLeadResult.success) {
+            updatedFbEventsSent.subscriber = new Date().toISOString()
+          }
+        } else {
+          console.log(`[${timestamp}] initial_lead event already sent for contact:`, contact.id)
+        }
+
+        // Send lead event if not already sent
         if (!leadEventAlreadySent) {
           console.log(`[${timestamp}] Sending lead event to Facebook for contact:`, contact.id)
-
-          const bookingPageUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.empowerbuilding.ai'}/book/${slug}`
 
           const fbResult = await sendFacebookEvent({
             eventName: 'lead',
             eventId: `${contact.id}-lead`,
-            userData: {
-              email: contact.email,
-              phone: contact.phone,
-              firstName: contact.first_name,
-              lastName: contact.last_name,
-              fbclid: contact.fbclid,
-              fbp: contact.fbp,
-              leadId: contact.fb_lead_id,
-              clientIpAddress: contact.client_ip_address || clientIpAddress,
-              clientUserAgent: contact.client_user_agent || clientUserAgent,
-              externalId: contact.id,
-            },
+            userData: fbUserData,
             eventSourceUrl: bookingPageUrl,
             customData: {
               leadEventSource: 'calendar_booking',
@@ -651,14 +679,15 @@ export async function POST(request: NextRequest) {
           console.log(`[${timestamp}] Facebook lead event result:`, fbResult)
 
           if (fbResult.success) {
-            // Record that lead event was sent
-            contactUpdates.fb_events_sent = {
-              ...fbEventsSent,
-              lead: new Date().toISOString(),
-            }
+            updatedFbEventsSent.lead = new Date().toISOString()
           }
         } else {
           console.log(`[${timestamp}] Lead event already sent for contact:`, contact.id)
+        }
+
+        // Update fb_events_sent if any new events were sent
+        if (Object.keys(updatedFbEventsSent).length > Object.keys(fbEventsSent).length) {
+          contactUpdates.fb_events_sent = updatedFbEventsSent
         }
 
         // Apply updates if any
