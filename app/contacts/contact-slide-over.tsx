@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import type { LeadSource, Company, ClientType, LifecycleStage } from '@/lib/types'
+import type { LeadSource, Company, ClientType, LifecycleStage, User } from '@/lib/types'
 import { LIFECYCLE_STAGE_LABELS } from '@/lib/types'
 import type { ContactWithCompany } from './page'
 
@@ -72,6 +72,7 @@ interface ContactSlideOverProps {
   onClose: () => void
   contact: ContactWithCompany | null
   companies: Pick<Company, 'id' | 'name' | 'type'>[]
+  users: User[]
   onSave: (contact: ContactWithCompany) => void
   onDelete: (contactId: string) => void
 }
@@ -83,6 +84,7 @@ interface FormData {
   phone: string
   role: string
   company_id: string
+  owner_id: string
   lead_source: LeadSource | ''
   client_type: ClientType | ''
   lifecycle_stage: LifecycleStage | ''
@@ -94,6 +96,7 @@ export function ContactSlideOver({
   onClose,
   contact,
   companies,
+  users,
   onSave,
   onDelete,
 }: ContactSlideOverProps) {
@@ -104,6 +107,7 @@ export function ContactSlideOver({
     phone: '',
     role: '',
     company_id: '',
+    owner_id: '',
     lead_source: '',
     client_type: '',
     lifecycle_stage: '',
@@ -197,6 +201,7 @@ export function ContactSlideOver({
         phone: contact.phone ?? '',
         role: contact.role ?? '',
         company_id: contact.company_id ?? '',
+        owner_id: contact.owner_id ?? '',
         lead_source: contact.lead_source ?? '',
         client_type: contact.client_type ?? '',
         lifecycle_stage: contact.lifecycle_stage ?? '',
@@ -210,6 +215,7 @@ export function ContactSlideOver({
         phone: '',
         role: '',
         company_id: '',
+        owner_id: '',
         lead_source: '',
         client_type: '',
         lifecycle_stage: 'subscriber',
@@ -239,6 +245,7 @@ export function ContactSlideOver({
         phone: formData.phone || null,
         role: formData.role || null,
         company_id: formData.company_id || null,
+        owner_id: formData.owner_id || null,
         lead_source: formData.lead_source || null,
         client_type: effectiveClientType,
         lifecycle_stage: formData.lifecycle_stage || 'subscriber',
@@ -522,6 +529,24 @@ export function ContactSlideOver({
                 {LEAD_SOURCES.map((source) => (
                   <option key={source} value={source}>
                     {LEAD_SOURCE_LABELS[source]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Owner
+              </label>
+              <select
+                value={formData.owner_id}
+                onChange={(e) => setFormData({ ...formData, owner_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="">Unassigned</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
                   </option>
                 ))}
               </select>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import type { LeadSource, Company, ClientType, LifecycleStage } from '@/lib/types'
+import type { LeadSource, Company, ClientType, LifecycleStage, User } from '@/lib/types'
 import { LIFECYCLE_STAGE_LABELS, LIFECYCLE_STAGE_COLORS } from '@/lib/types'
 import type { ContactWithCompany } from './page'
 import { ContactSlideOver } from './contact-slide-over'
@@ -55,11 +55,11 @@ const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
 
 const LIFECYCLE_STAGES: LifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'customer']
 
-type SortField = 'name' | 'company' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'created_at' | 'updated_at' | 'role'
+type SortField = 'name' | 'company' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'created_at' | 'updated_at' | 'role' | 'owner'
 type SortDirection = 'asc' | 'desc'
 type UnsubscribedFilter = 'all' | 'subscribed' | 'unsubscribed'
 
-type ColumnKey = 'name' | 'company' | 'type' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'role' | 'created_at' | 'created_time' | 'updated_at' | 'unsubscribed'
+type ColumnKey = 'name' | 'company' | 'type' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'owner' | 'role' | 'created_at' | 'created_time' | 'updated_at' | 'unsubscribed'
 
 interface ColumnConfig {
   key: ColumnKey
@@ -80,6 +80,7 @@ const COLUMNS: ColumnConfig[] = [
   { key: 'phone', label: 'Phone', defaultVisible: true, sortable: true, sortField: 'phone', hideOnMobile: true, hideOnTablet: true },
   { key: 'lead_source', label: 'Lead Source', defaultVisible: true, sortable: true, sortField: 'lead_source', hideOnMobile: true, hideOnTablet: true },
   { key: 'lifecycle_stage', label: 'Lifecycle Stage', defaultVisible: true, sortable: true, sortField: 'lifecycle_stage', hideOnMobile: true, hideOnTablet: true },
+  { key: 'owner', label: 'Owner', defaultVisible: true, sortable: true, sortField: 'owner', hideOnMobile: true, hideOnTablet: true },
   { key: 'role', label: 'Role', defaultVisible: false, sortable: true, sortField: 'role', hideOnMobile: true, hideOnTablet: true },
   { key: 'created_at', label: 'Created Date', defaultVisible: true, sortable: true, sortField: 'created_at', hideOnMobile: true, hideOnTablet: true },
   { key: 'created_time', label: 'Created Time', defaultVisible: false, hideOnMobile: true, hideOnTablet: true },
@@ -153,6 +154,7 @@ interface Filters {
   leadSource: LeadSource | ''
   lifecycleStage: LifecycleStage | ''
   clientType: ClientType | ''
+  owner: string
   dateFrom: string
   dateTo: string
   unsubscribed: UnsubscribedFilter
@@ -162,6 +164,7 @@ const defaultFilters: Filters = {
   leadSource: '',
   lifecycleStage: '',
   clientType: '',
+  owner: '',
   dateFrom: '',
   dateTo: '',
   unsubscribed: 'all',
@@ -170,13 +173,14 @@ const defaultFilters: Filters = {
 interface ContactsTableProps {
   initialContacts: ContactWithCompany[]
   companies: Pick<Company, 'id' | 'name' | 'type'>[]
+  users: User[]
 }
 
 function getEffectiveClientType(contact: ContactWithCompany): ClientType | null {
   return contact.company_type ?? contact.client_type ?? null
 }
 
-export function ContactsTable({ initialContacts, companies }: ContactsTableProps) {
+export function ContactsTable({ initialContacts, companies, users }: ContactsTableProps) {
   const router = useRouter()
   const [contacts, setContacts] = useState(initialContacts)
   const [search, setSearch] = useState('')
@@ -216,6 +220,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
     if (filters.leadSource) count++
     if (filters.lifecycleStage) count++
     if (filters.clientType) count++
+    if (filters.owner) count++
     if (filters.dateFrom) count++
     if (filters.dateTo) count++
     if (filters.unsubscribed !== 'all') count++
@@ -256,6 +261,15 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
         const effectiveType = getEffectiveClientType(contact)
         return effectiveType === filters.clientType
       })
+    }
+
+    // Owner filter
+    if (filters.owner) {
+      if (filters.owner === 'unassigned') {
+        result = result.filter((contact) => !contact.owner_id)
+      } else {
+        result = result.filter((contact) => contact.owner_id === filters.owner)
+      }
     }
 
     // Date range filter
@@ -312,6 +326,10 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
         case 'lifecycle_stage':
           aVal = a.lifecycle_stage
           bVal = b.lifecycle_stage
+          break
+        case 'owner':
+          aVal = a.owner_name
+          bVal = b.owner_name
           break
         case 'role':
           aVal = a.role
@@ -571,6 +589,24 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
               </select>
             </div>
 
+            {/* Owner */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Owner</label>
+              <select
+                value={filters.owner}
+                onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="">All Owners</option>
+                <option value="unassigned">Unassigned</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Date From */}
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Created From</label>
@@ -678,6 +714,16 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                     className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   >
                     Stage <SortIcon field="lifecycle_stage" />
+                  </th>
+                )}
+
+                {/* Owner */}
+                {isColumnVisible('owner') && (
+                  <th
+                    onClick={() => handleSort('owner')}
+                    className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Owner <SortIcon field="owner" />
                   </th>
                 )}
 
@@ -825,6 +871,22 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
                       </td>
                     )}
 
+                    {/* Owner */}
+                    {isColumnVisible('owner') && (
+                      <td className="hidden xl:table-cell px-4 py-3">
+                        {contact.owner_name ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">
+                              {contact.owner_name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <span className="text-sm text-gray-700">{contact.owner_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
+                      </td>
+                    )}
+
                     {/* Role */}
                     {isColumnVisible('role') && (
                       <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
@@ -887,6 +949,7 @@ export function ContactsTable({ initialContacts, companies }: ContactsTableProps
         }}
         contact={editingContact}
         companies={companies}
+        users={users}
         onSave={handleSave}
         onDelete={handleDelete}
       />

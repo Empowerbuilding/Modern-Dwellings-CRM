@@ -9,6 +9,8 @@ import { ContactActions } from './contact-actions'
 import { NotesSection } from '@/components/notes-section'
 import { ContactMeetingsSection } from './contact-meetings-section'
 import { LifecycleStageSelect } from './lifecycle-stage-select'
+import { ContactOwnerSelect } from './contact-owner-select'
+import { ContactTasksSection, type TaskWithRelations } from './contact-tasks-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -148,6 +150,45 @@ async function getAllCompanies(): Promise<Pick<Company, 'id' | 'name' | 'type'>[
   return (data as Pick<Company, 'id' | 'name' | 'type'>[]) ?? []
 }
 
+async function getAllUsers(): Promise<User[]> {
+  const { data } = await (supabase.from('users') as any)
+    .select('id, email, name, avatar_url, role')
+    .order('name')
+
+  return (data as User[]) ?? []
+}
+
+async function getContactTasks(contactId: string): Promise<TaskWithRelations[]> {
+  const { data } = await (supabase.from('tasks') as any)
+    .select(`
+      *,
+      assigned_user:users!tasks_assigned_to_fkey(id, name),
+      deal:deals(id, title)
+    `)
+    .eq('contact_id', contactId)
+    .order('completed', { ascending: true })
+    .order('due_date', { ascending: true, nullsFirst: false })
+
+  if (!data) return []
+
+  return data.map((task: any) => ({
+    ...task,
+    contact_name: null,
+    deal_title: task.deal?.title ?? null,
+    company_name: null,
+    assigned_user_name: task.assigned_user?.name ?? null,
+  }))
+}
+
+async function getContactDealsForTasks(contactId: string): Promise<Pick<Deal, 'id' | 'title'>[]> {
+  const { data } = await (supabase.from('deals') as any)
+    .select('id, title')
+    .eq('contact_id', contactId)
+    .order('title')
+
+  return data ?? []
+}
+
 async function getCurrentUserId(): Promise<string | undefined> {
   const serverSupabase = await createClient()
   const { data: { user: supabaseUser } } = await serverSupabase.auth.getUser()
@@ -174,12 +215,15 @@ export default async function ContactDetailPage({
     notFound()
   }
 
-  const [company, deals, activities, notes, allCompanies, currentUserId] = await Promise.all([
+  const [company, deals, activities, notes, allCompanies, allUsers, tasks, dealsForTasks, currentUserId] = await Promise.all([
     contact.company_id ? getCompany(contact.company_id) : null,
     getContactDeals(contact.id),
     getContactActivities(contact.id),
     getContactNotes(contact.id),
     getAllCompanies(),
+    getAllUsers(),
+    getContactTasks(contact.id),
+    getContactDealsForTasks(contact.id),
     getCurrentUserId(),
   ])
 
@@ -296,6 +340,11 @@ export default async function ContactDetailPage({
                   <dt className="text-gray-500">Created</dt>
                   <dd className="text-gray-900">{formatDate(contact.created_at)}</dd>
                 </div>
+                <ContactOwnerSelect
+                  contactId={contact.id}
+                  currentOwnerId={contact.owner_id}
+                  users={allUsers}
+                />
               </dl>
             </div>
 
@@ -388,6 +437,15 @@ export default async function ContactDetailPage({
                 </div>
               )}
             </div>
+
+            {/* Tasks */}
+            <ContactTasksSection
+              contactId={contact.id}
+              tasks={tasks}
+              users={allUsers}
+              deals={dealsForTasks}
+              currentUserId={currentUserId}
+            />
 
             {/* Meetings */}
             <ContactMeetingsSection contactId={contact.id} />

@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase-server'
 import type { Company, Contact, Deal, Activity, ClientType, DealType, ActivityType, NoteWithAuthor } from '@/lib/types'
-import { STAGE_COLORS, STAGE_LABELS } from '@/lib/types'
 import { CompanyActions } from './company-actions'
 import { NotesSection } from '@/components/notes-section'
+import { CompanyDealsSection } from './company-deals-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -314,77 +314,12 @@ export default async function CompanyDetailPage({
             />
 
             {/* Deals */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h2 className="font-medium text-gray-900 mb-3">
-                Deals ({deals.length})
-              </h2>
-              {deals.length === 0 ? (
-                <p className="text-sm text-gray-500">No deals yet</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase">
-                          Deal
-                        </th>
-                        <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase">
-                          Contact
-                        </th>
-                        <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase">
-                          Stage
-                        </th>
-                        <th className="pb-2 text-right text-xs font-medium text-gray-500 uppercase">
-                          Value
-                        </th>
-                        <th className="pb-2 text-right text-xs font-medium text-gray-500 uppercase">
-                          Close Date
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {deals.map((deal) => (
-                        <tr key={deal.id}>
-                          <td className="py-2">
-                            <Link
-                              href={`/deals/${deal.id}`}
-                              className="text-sm font-medium text-gray-900 hover:text-blue-600"
-                            >
-                              {deal.title}
-                            </Link>
-                            {deal.deal_type && (
-                              <p className="text-xs text-gray-500">
-                                {DEAL_TYPE_LABELS[deal.deal_type]}
-                              </p>
-                            )}
-                          </td>
-                          <td className="py-2 text-sm text-gray-600">
-                            {deal.contacts
-                              ? `${deal.contacts.first_name} ${deal.contacts.last_name}`
-                              : '-'}
-                          </td>
-                          <td className="py-2">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STAGE_COLORS[deal.stage]}`}
-                            >
-                              {STAGE_LABELS[deal.stage]}
-                            </span>
-                          </td>
-                          <td className="py-2 text-sm text-gray-900 text-right">
-                            {deal.value ? formatCurrency(deal.value) : '-'}
-                          </td>
-                          <td className="py-2 text-sm text-gray-600 text-right">
-                            {deal.stage === 'complete' || deal.stage === 'lost'
-                              ? formatDate(deal.actual_close_date)
-                              : formatDate(deal.expected_close_date)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <CompanyDealsSection
+              companyId={company.id}
+              companyName={company.name}
+              deals={deals}
+              contacts={contacts}
+            />
 
             {/* Activity Timeline */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">

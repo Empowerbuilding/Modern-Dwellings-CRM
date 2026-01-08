@@ -110,6 +110,7 @@ export interface Company {
 export interface Contact {
   id: string
   company_id: string | null
+  owner_id: string | null
   first_name: string
   last_name: string
   email: string | null

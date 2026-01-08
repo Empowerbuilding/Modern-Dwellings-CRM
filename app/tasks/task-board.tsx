@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { User, Contact, Deal, Company, TaskPriority, TaskType } from '@/lib/types'
 import {
@@ -92,6 +93,66 @@ function getDueDateStatus(task: TaskWithRelations): 'overdue' | 'today' | 'upcom
   return 'upcoming'
 }
 
+// Confirmation Popover Component
+function ConfirmationPopover({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const popoverRef = useRef<HTMLDivElement>(null)
+
+  // Auto-dismiss after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onCancel()
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [onCancel])
+
+  // Close on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        onCancel()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [onCancel])
+
+  return (
+    <div
+      ref={popoverRef}
+      className="absolute left-0 top-full mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-2 whitespace-nowrap"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <p className="text-xs text-gray-600 mb-2">Mark as complete?</p>
+      <div className="flex gap-1.5">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onConfirm()
+          }}
+          className="px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          Yes
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onCancel()
+          }}
+          className="px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-800 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function TaskBoard({ initialTasks, users, contacts, deals, companies }: TaskBoardProps) {
   const router = useRouter()
   const [tasks, setTasks] = useState(initialTasks)
@@ -104,6 +165,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies }: T
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [slideOverOpen, setSlideOverOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskWithRelations | null>(null)
+  const [confirmingTaskId, setConfirmingTaskId] = useState<string | null>(null)
 
   const filteredAndSortedTasks = useMemo(() => {
     let result = [...tasks]
@@ -203,8 +265,20 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies }: T
     }
   }
 
-  const handleToggleComplete = async (task: TaskWithRelations, e: React.MouseEvent) => {
+  const handleCheckboxClick = (task: TaskWithRelations, e: React.MouseEvent) => {
     e.stopPropagation()
+
+    if (task.completed) {
+      // Uncompleting - no confirmation needed
+      performToggleComplete(task)
+    } else {
+      // Completing - show confirmation
+      setConfirmingTaskId(task.id)
+    }
+  }
+
+  const performToggleComplete = async (task: TaskWithRelations) => {
+    setConfirmingTaskId(null)
 
     const newCompleted = !task.completed
     const completedAt = newCompleted ? new Date().toISOString() : null
@@ -455,24 +529,32 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies }: T
                       }`}
                     >
                       <td className="px-4 py-3">
-                        <button
-                          onClick={(e) => handleToggleComplete(task, e)}
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                            task.completed
-                              ? 'bg-green-500 border-green-500 text-white'
-                              : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                        >
-                          {task.completed && (
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => handleCheckboxClick(task, e)}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              task.completed
+                                ? 'bg-green-500 border-green-500 text-white'
+                                : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                          >
+                            {task.completed && (
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                          {confirmingTaskId === task.id && (
+                            <ConfirmationPopover
+                              onConfirm={() => performToggleComplete(task)}
+                              onCancel={() => setConfirmingTaskId(null)}
+                            />
                           )}
-                        </button>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         {task.contact_id ? (
@@ -499,17 +581,35 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies }: T
                         )}
                       </td>
                       <td className="hidden sm:table-cell px-4 py-3">
-                        <div className="text-sm">
-                          {task.contact_name && (
-                            <p className="text-gray-900">{task.contact_name}</p>
+                        <div className="text-sm space-y-0.5">
+                          {task.contact_id && task.contact_name && (
+                            <Link
+                              href={`/contacts/${task.contact_id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="block text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {task.contact_name}
+                            </Link>
                           )}
-                          {task.deal_title && (
-                            <p className="text-gray-500 truncate max-w-[150px]">{task.deal_title}</p>
+                          {task.deal_id && task.deal_title && (
+                            <Link
+                              href={`/deals/${task.deal_id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="block text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[150px]"
+                            >
+                              {task.deal_title}
+                            </Link>
                           )}
-                          {task.company_name && !task.contact_name && (
-                            <p className="text-gray-500">{task.company_name}</p>
+                          {task.company_id && task.company_name && !task.contact_id && (
+                            <Link
+                              href={`/companies/${task.company_id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="block text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {task.company_name}
+                            </Link>
                           )}
-                          {!task.contact_name && !task.deal_title && !task.company_name && (
+                          {!task.contact_id && !task.deal_id && !task.company_id && (
                             <span className="text-gray-400">-</span>
                           )}
                         </div>
