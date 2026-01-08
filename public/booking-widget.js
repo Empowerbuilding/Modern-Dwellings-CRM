@@ -284,7 +284,7 @@
         return null;
       }
 
-      var minHeight = options.minHeight || 600;
+      var minHeight = options.minHeight || 400;
 
       // Create iframe
       var iframe = document.createElement('iframe');
@@ -293,7 +293,8 @@
         'width: 100%',
         'min-height: ' + minHeight + 'px',
         'border: none',
-        'display: block'
+        'display: block',
+        'transition: height 0.2s ease-out'
       ].join(';');
       iframe.setAttribute('title', 'Book a meeting');
       iframe.setAttribute('loading', 'lazy');
@@ -304,11 +305,14 @@
 
         switch (event.data.type) {
           case 'barnhaus-booking-ready':
+            // Set both height and min-height so iframe can shrink to fit content
             iframe.style.height = event.data.height + 'px';
+            iframe.style.minHeight = event.data.height + 'px';
             if (options.onReady) options.onReady();
             break;
           case 'barnhaus-booking-resize':
             iframe.style.height = event.data.height + 'px';
+            iframe.style.minHeight = event.data.height + 'px';
             break;
           case 'barnhaus-booking-complete':
             if (options.onBooked) {

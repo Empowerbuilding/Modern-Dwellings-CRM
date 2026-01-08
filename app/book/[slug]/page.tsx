@@ -156,6 +156,15 @@ export default function BookingPage() {
   // Mobile step: 'calendar' or 'times' (only used on mobile)
   const [mobileStep, setMobileStep] = useState<'calendar' | 'times'>('calendar')
 
+  // Send height update when layout changes (for embed mode)
+  useEffect(() => {
+    // Small delay to allow DOM to update after state change
+    const timer = setTimeout(() => {
+      sendHeightUpdate()
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [mobileStep, pageState, selectedDate, sendHeightUpdate])
+
   // Booking form
   const [formData, setFormData] = useState<BookingFormData>({
     firstName: '',
