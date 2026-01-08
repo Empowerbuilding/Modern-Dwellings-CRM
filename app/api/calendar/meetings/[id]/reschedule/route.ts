@@ -293,12 +293,12 @@ export async function POST(
         const result = await createCalendarEvent({
           accessToken,
           calendarId: calendarIntegration.calendar_id || 'primary',
-          summary: `${meetingType.title} - ${meeting.guest_first_name} ${meeting.guest_last_name}`,
+          summary: `${meeting.guest_first_name} ${meeting.guest_last_name} and Barnhaus Introductory Phone Call`,
           description: descriptionParts.join('\n'),
           startTime: newStart,
           endTime: newEnd,
           attendeeEmail: meeting.guest_email,
-          addGoogleMeet: meetingType.location_type === 'google_meet',
+          addGoogleMeet: true,
           timezone: meetingType.timezone,
         })
 
