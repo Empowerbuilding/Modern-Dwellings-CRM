@@ -170,6 +170,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
         isOpen={taskModalOpen}
         onClose={() => setTaskModalOpen(false)}
         contact={contact}
+        contactOwnerId={contact.owner_id}
       />
 
       <CreateDealModal

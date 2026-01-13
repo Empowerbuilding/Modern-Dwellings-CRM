@@ -10,9 +10,10 @@ interface DealActionsProps {
   companies: Pick<Company, 'id' | 'name'>[]
   contacts: Pick<Contact, 'id' | 'first_name' | 'last_name'>[]
   users: User[]
+  contactOwnerId?: string | null
 }
 
-export function DealActions({ deal, companies, contacts, users }: DealActionsProps) {
+export function DealActions({ deal, companies, contacts, users, contactOwnerId }: DealActionsProps) {
   const [slideOverOpen, setSlideOverOpen] = useState(false)
   const [taskModalOpen, setTaskModalOpen] = useState(false)
 
@@ -37,6 +38,7 @@ export function DealActions({ deal, companies, contacts, users }: DealActionsPro
         isOpen={taskModalOpen}
         onClose={() => setTaskModalOpen(false)}
         deal={deal}
+        contactOwnerId={contactOwnerId}
       />
 
       <DealSlideOver

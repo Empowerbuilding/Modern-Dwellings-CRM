@@ -18,6 +18,7 @@ interface CreateTaskModalProps {
   contact?: Pick<Contact, 'id' | 'first_name' | 'last_name'> | null
   deal?: Pick<Deal, 'id' | 'title'> | null
   company?: Pick<Company, 'id' | 'name'> | null
+  contactOwnerId?: string | null
 }
 
 interface FormData {
@@ -36,6 +37,7 @@ export function CreateTaskModal({
   contact,
   deal,
   company,
+  contactOwnerId,
 }: CreateTaskModalProps) {
   const router = useRouter()
   const [formData, setFormData] = useState<FormData>({
@@ -45,7 +47,7 @@ export function CreateTaskModal({
     task_type: 'to_do',
     due_date: '',
     due_time: '',
-    assigned_to: '',
+    assigned_to: contactOwnerId ?? '',
   })
   const [users, setUsers] = useState<User[]>([])
   const [creating, setCreating] = useState(false)
@@ -73,12 +75,12 @@ export function CreateTaskModal({
         task_type: 'to_do',
         due_date: '',
         due_time: '',
-        assigned_to: '',
+        assigned_to: contactOwnerId ?? '',
       })
       setCreatedTask(null)
       setError(null)
     }
-  }, [isOpen])
+  }, [isOpen, contactOwnerId])
 
   const associatedWith = contact
     ? `${contact.first_name} ${contact.last_name}`
@@ -133,7 +135,7 @@ export function CreateTaskModal({
       task_type: 'to_do',
       due_date: '',
       due_time: '',
-      assigned_to: '',
+      assigned_to: contactOwnerId ?? '',
     })
     setError(null)
     onClose()

@@ -246,7 +246,7 @@ export default async function DealDetailPage({
             >
               ← Back to Pipeline
             </Link>
-            <DealActions deal={deal} companies={allCompanies} contacts={allContacts} users={allUsers} />
+            <DealActions deal={deal} companies={allCompanies} contacts={allContacts} users={allUsers} contactOwnerId={contact?.owner_id} />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
