@@ -42,6 +42,7 @@ interface TaskBoardProps {
   contacts: Pick<Contact, 'id' | 'first_name' | 'last_name'>[]
   deals: Pick<Deal, 'id' | 'title'>[]
   companies: Pick<Company, 'id' | 'name'>[]
+  initialTaskId?: string | null
 }
 
 function formatDate(dateString: string | null): string {
@@ -153,7 +154,7 @@ function ConfirmationPopover({
   )
 }
 
-export function TaskBoard({ initialTasks, users, contacts, deals, companies }: TaskBoardProps) {
+export function TaskBoard({ initialTasks, users, contacts, deals, companies, initialTaskId }: TaskBoardProps) {
   const router = useRouter()
   const [tasks, setTasks] = useState(initialTasks)
   const [search, setSearch] = useState('')
@@ -166,6 +167,17 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies }: T
   const [slideOverOpen, setSlideOverOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskWithRelations | null>(null)
   const [confirmingTaskId, setConfirmingTaskId] = useState<string | null>(null)
+
+  // Auto-open task slide-over if initialTaskId is provided
+  useEffect(() => {
+    if (initialTaskId) {
+      const task = tasks.find((t) => t.id === initialTaskId)
+      if (task) {
+        setEditingTask(task)
+        setSlideOverOpen(true)
+      }
+    }
+  }, [initialTaskId, tasks])
 
   const filteredAndSortedTasks = useMemo(() => {
     let result = [...tasks]
@@ -557,23 +569,11 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies }: T
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        {task.contact_id ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              router.push(`/contacts/${task.contact_id}`)
-                            }}
-                            className={`font-medium text-blue-600 hover:text-blue-800 hover:underline text-left ${task.completed ? 'line-through' : ''}`}
-                          >
-                            {task.title}
-                          </button>
-                        ) : (
-                          <p
-                            className={`font-medium text-gray-900 ${task.completed ? 'line-through' : ''}`}
-                          >
-                            {task.title}
-                          </p>
-                        )}
+                        <p
+                          className={`font-medium text-gray-900 ${task.completed ? 'line-through' : ''}`}
+                        >
+                          {task.title}
+                        </p>
                         {task.description && (
                           <p className="text-sm text-gray-500 truncate max-w-xs">
                             {task.description}

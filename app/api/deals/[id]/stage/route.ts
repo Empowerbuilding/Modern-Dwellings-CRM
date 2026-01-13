@@ -1,7 +1,8 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { sendFacebookEvent } from '@/lib/facebook-conversions'
-import type { PipelineStage, LifecycleStage } from '@/lib/types'
+import type { PipelineStage, LifecycleStage, SalesType } from '@/lib/types'
+import { B2C_WON_STAGES, isB2CWonStage } from '@/lib/types'
 
 // Service role client for database operations
 const supabaseAdmin = createSupabaseClient(
@@ -14,14 +15,28 @@ const VALID_STAGES: PipelineStage[] = [
   'proposal', 'active', 'complete', 'lost'
 ]
 
-// The "won" stage that triggers customer event
-const WON_STAGE: PipelineStage = 'complete'
+// B2B "won" stage that triggers customer event
+const B2B_WON_STAGE: PipelineStage = 'complete'
+
+// Check if moving to this stage should trigger "won" event
+function isWonStageTransition(newStage: PipelineStage, previousStage: PipelineStage, salesType: SalesType): boolean {
+  if (salesType === 'b2c') {
+    // B2C: won when entering concept/design/engineering (from qualified)
+    // Only trigger if coming from a non-won stage
+    const wasWon = isB2CWonStage(previousStage)
+    const isNowWon = isB2CWonStage(newStage)
+    return !wasWon && isNowWon
+  }
+  // B2B: won when entering 'complete'
+  return newStage === B2B_WON_STAGE && previousStage !== B2B_WON_STAGE
+}
 
 interface DealRow {
   id: string
   title: string
   value: number | null
   stage: PipelineStage
+  sales_type: SalesType
   contact_id: string | null
 }
 
@@ -62,7 +77,7 @@ export async function PUT(
     // 2. Get current deal from database
     const { data: deal, error: dealError } = await supabaseAdmin
       .from('deals')
-      .select('id, title, value, stage, contact_id')
+      .select('id, title, value, stage, sales_type, contact_id')
       .eq('id', dealId)
       .single<DealRow>()
 
@@ -107,8 +122,11 @@ export async function PUT(
     }
 
     // 5. Handle "won" stage - send Facebook customer event
+    // B2C: triggers when entering concept/design/engineering
+    // B2B: triggers when entering complete
     let fbEventSent = false
-    if (stage === WON_STAGE && deal.contact_id) {
+    const shouldSendWonEvent = isWonStageTransition(stage, previousStage, deal.sales_type)
+    if (shouldSendWonEvent && deal.contact_id) {
       try {
         // Get contact details
         const { data: contact, error: contactError } = await supabaseAdmin

@@ -445,6 +445,7 @@ export default async function ContactDetailPage({
               users={allUsers}
               deals={dealsForTasks}
               currentUserId={currentUserId}
+              contactOwnerId={contact.owner_id}
             />
 
             {/* Meetings */}

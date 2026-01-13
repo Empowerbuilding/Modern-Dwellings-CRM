@@ -16,6 +16,7 @@ import {
   type User,
   STAGE_LABELS,
   getStagesForSalesType,
+  isB2CWonStage,
 } from '@/lib/types'
 import type { DealWithCompany } from './page'
 
@@ -46,6 +47,7 @@ const DEAL_TYPE_COLORS: Record<DealType, string> = {
   software_fees: 'border-l-green-500',
   referral: 'border-l-pink-500',
   budget_builder: 'border-l-yellow-500',
+  marketing: 'border-l-purple-500',
 }
 
 const DEAL_TYPE_LABELS: Record<DealType, string> = {
@@ -55,6 +57,7 @@ const DEAL_TYPE_LABELS: Record<DealType, string> = {
   software_fees: 'Software Fees',
   referral: 'Referral',
   budget_builder: 'Budget Builder',
+  marketing: 'Marketing',
 }
 
 function formatCurrency(value: number): string {
@@ -103,8 +106,18 @@ export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
       {} as Record<PipelineStage, DealWithCompany[]>
     )
 
+    // Pipeline value = deals not yet won or lost
+    // B2C: only qualified (concept/design/engineering are won categories)
+    // B2B: qualified, proposal (active/complete are won)
     const totalValue = filtered
-      .filter((d) => d.stage !== 'complete' && d.stage !== 'lost')
+      .filter((d) => {
+        if (d.stage === 'lost') return false
+        if (salesType === 'b2c') {
+          return d.stage === 'qualified'
+        }
+        // B2B: exclude active and complete (won stages)
+        return d.stage !== 'complete' && d.stage !== 'active'
+      })
       .reduce((sum, d) => sum + (d.value || 0), 0)
 
     return { filteredDeals: filtered, dealsByStage: byStage, totalPipelineValue: totalValue }
@@ -215,7 +228,7 @@ export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
       {/* Workflow description - hidden on mobile */}
       <p className="hidden sm:block text-xs text-gray-500 mb-4">
         {salesType === 'b2c'
-          ? 'Consumer workflow: One client = one deal that grows in value over time'
+          ? 'Consumer workflow: Qualified deals move to Concept, Design, or Engineering when won. Same client can have multiple deals.'
           : 'Builder workflow: One company = many deals over time (design, software, referral fees)'
         }
       </p>

@@ -24,6 +24,7 @@ const DEAL_TYPE_LABELS: Record<DealType, string> = {
   software_fees: 'Software Fees',
   referral: 'Referral',
   budget_builder: 'Budget Builder',
+  marketing: 'Marketing',
 }
 
 const DEAL_TYPES: DealType[] = [
@@ -33,6 +34,7 @@ const DEAL_TYPES: DealType[] = [
   'software_fees',
   'referral',
   'budget_builder',
+  'marketing',
 ]
 
 function formatCurrency(value: number): string {

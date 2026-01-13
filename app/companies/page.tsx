@@ -30,8 +30,8 @@ async function getCompaniesWithStats(): Promise<CompanyWithStats[]> {
   // Fetch deals for stats
   const { data: deals } = await supabase
     .from('deals')
-    .select('company_id, stage, value')
-    .returns<Pick<Deal, 'company_id' | 'stage' | 'value'>[]>()
+    .select('company_id, stage, value, sales_type')
+    .returns<Pick<Deal, 'company_id' | 'stage' | 'value' | 'sales_type'>[]>()
 
   const contactsByCompany = new Map<string, string>()
   contacts?.forEach((c) => {
@@ -44,7 +44,15 @@ async function getCompaniesWithStats(): Promise<CompanyWithStats[]> {
   deals?.forEach((d) => {
     if (d.company_id) {
       const stats = dealStatsByCompany.get(d.company_id) ?? { openCount: 0, revenue: 0 }
-      if (d.stage === 'complete') {
+
+      // Determine if deal is won based on sales type
+      // B2C: won = concept, design, engineering, complete
+      // B2B: won = active, complete
+      const isWon = d.sales_type === 'b2c'
+        ? ['concept', 'design', 'engineering', 'complete'].includes(d.stage)
+        : ['active', 'complete'].includes(d.stage)
+
+      if (isWon) {
         stats.revenue += d.value ?? 0
       } else if (d.stage !== 'lost') {
         stats.openCount += 1

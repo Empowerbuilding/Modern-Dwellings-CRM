@@ -14,6 +14,7 @@ const DEAL_TYPES: { value: DealType; label: string }[] = [
   { value: 'software_fees', label: 'Software Fees' },
   { value: 'referral', label: 'Referral' },
   { value: 'budget_builder', label: 'Budget Builder' },
+  { value: 'marketing', label: 'Marketing' },
 ]
 
 // Map company type to sales type

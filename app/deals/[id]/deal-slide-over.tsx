@@ -13,6 +13,7 @@ const DEAL_TYPES: DealType[] = [
   'software_fees',
   'referral',
   'budget_builder',
+  'marketing',
 ]
 
 const DEAL_TYPE_LABELS: Record<DealType, string> = {
@@ -22,6 +23,7 @@ const DEAL_TYPE_LABELS: Record<DealType, string> = {
   software_fees: 'Software Fees',
   referral: 'Referral',
   budget_builder: 'Budget Builder',
+  marketing: 'Marketing',
 }
 
 interface DealSlideOverProps {

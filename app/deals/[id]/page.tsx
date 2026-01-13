@@ -19,6 +19,7 @@ const DEAL_TYPE_LABELS: Record<DealType, string> = {
   software_fees: 'Software Fees',
   referral: 'Referral',
   budget_builder: 'Budget Builder',
+  marketing: 'Marketing',
 }
 
 const LEAD_SOURCE_LABELS: Record<string, string> = {

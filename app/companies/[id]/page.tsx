@@ -32,6 +32,7 @@ const DEAL_TYPE_LABELS: Record<DealType, string> = {
   software_fees: 'Software Fees',
   referral: 'Referral',
   budget_builder: 'Budget Builder',
+  marketing: 'Marketing',
 }
 
 const ACTIVITY_ICONS: Record<ActivityType, string> = {
@@ -170,12 +171,29 @@ export default async function CompanyDetailPage({
     notFound()
   }
 
+  // Calculate revenue from won deals
+  // B2C: won = concept, design, engineering, complete
+  // B2B: won = active, complete
   const totalRevenue = deals
-    .filter((d) => d.stage === 'complete')
+    .filter((d) => {
+      if (d.sales_type === 'b2c') {
+        return ['concept', 'design', 'engineering', 'complete'].includes(d.stage)
+      }
+      return ['active', 'complete'].includes(d.stage)
+    })
     .reduce((sum, d) => sum + (d.value ?? 0), 0)
 
+  // Calculate open deals value (not yet won)
+  // B2C: open = qualified only
+  // B2B: open = qualified, proposal
   const openDealsValue = deals
-    .filter((d) => d.stage !== 'complete' && d.stage !== 'lost')
+    .filter((d) => {
+      if (d.stage === 'lost') return false
+      if (d.sales_type === 'b2c') {
+        return d.stage === 'qualified'
+      }
+      return ['qualified', 'proposal'].includes(d.stage)
+    })
     .reduce((sum, d) => sum + (d.value ?? 0), 0)
 
   return (
@@ -272,16 +290,22 @@ export default async function CompanyDetailPage({
                 <ul className="space-y-3">
                   {contacts.map((contact) => (
                     <li key={contact.id} className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
+                      <Link
+                        href={`/contacts/${contact.id}`}
+                        className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0 hover:bg-gray-300 transition-colors"
+                      >
                         {contact.first_name[0]}{contact.last_name[0]}
-                      </div>
+                      </Link>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
+                        <Link
+                          href={`/contacts/${contact.id}`}
+                          className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                        >
                           {contact.first_name} {contact.last_name}
                           {contact.is_primary && (
                             <span className="ml-2 text-xs text-blue-600">Primary</span>
                           )}
-                        </p>
+                        </Link>
                         {contact.role && (
                           <p className="text-xs text-gray-500">{contact.role}</p>
                         )}

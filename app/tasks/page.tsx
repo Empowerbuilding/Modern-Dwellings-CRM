@@ -70,7 +70,12 @@ async function getCompanies(): Promise<Pick<Company, 'id' | 'name'>[]> {
   return data ?? []
 }
 
-export default async function TasksPage() {
+export default async function TasksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ taskId?: string }>
+}) {
+  const params = await searchParams
   const [tasks, users, contacts, deals, companies] = await Promise.all([
     getTasks(),
     getUsers(),
@@ -88,6 +93,7 @@ export default async function TasksPage() {
           contacts={contacts}
           deals={deals}
           companies={companies}
+          initialTaskId={params.taskId}
         />
       </div>
     </main>

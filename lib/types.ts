@@ -1,13 +1,14 @@
 // Enum types matching your business domain
 export type ClientType = 'builder' | 'consumer' | 'subcontractor' | 'engineer' | 'architect'
 
-export type DealType = 'custom_design' | 'builder_design' | 'engineering' | 'software_fees' | 'referral' | 'budget_builder'
+export type DealType = 'custom_design' | 'builder_design' | 'engineering' | 'software_fees' | 'referral' | 'budget_builder' | 'marketing'
 
 export type SalesType = 'b2c' | 'b2b'
 
 // Combined stages from both workflows
-// B2C: qualified → concept → design → engineering → complete → lost
-// B2B: qualified → proposal → active → complete → lost
+// B2C: qualified → (concept OR design OR engineering) → complete → lost
+//      (concept/design/engineering are won deal categories, not a progression)
+// B2B: qualified → proposal → active → complete → lost (still a progression)
 export type PipelineStage =
   | 'qualified'
   | 'concept'      // B2C only
@@ -21,6 +22,23 @@ export type PipelineStage =
 // Stage configurations by sales type
 export const B2C_STAGES: PipelineStage[] = ['qualified', 'concept', 'design', 'engineering', 'complete', 'lost']
 export const B2B_STAGES: PipelineStage[] = ['qualified', 'proposal', 'active', 'complete', 'lost']
+
+// B2C won stages (deal categories) - deals skip directly to one of these from qualified
+export const B2C_WON_STAGES: PipelineStage[] = ['concept', 'design', 'engineering']
+
+// Check if a B2C deal is in a "won" state (in a category or complete)
+export function isB2CWonStage(stage: PipelineStage): boolean {
+  return B2C_WON_STAGES.includes(stage) || stage === 'complete'
+}
+
+// Check if a deal is won based on sales type
+export function isDealWon(stage: PipelineStage, salesType: SalesType): boolean {
+  if (salesType === 'b2c') {
+    return isB2CWonStage(stage)
+  }
+  // B2B: won when active or complete
+  return stage === 'active' || stage === 'complete'
+}
 
 export const STAGE_LABELS: Record<PipelineStage, string> = {
   qualified: 'Qualified',

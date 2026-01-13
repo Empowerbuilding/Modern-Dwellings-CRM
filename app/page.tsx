@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Deal, Activity, PipelineStage, SalesType } from '@/lib/types'
-import { STAGE_LABELS, STAGE_COLORS } from '@/lib/types'
+import { STAGE_LABELS, STAGE_COLORS, isB2CWonStage } from '@/lib/types'
 import LeadAnalytics, { type LeadData } from '@/components/lead-analytics'
 
 export const dynamic = 'force-dynamic'
@@ -39,13 +39,16 @@ async function getPipelineStats(): Promise<PipelineStats> {
     }
   }
 
-  // Only count open deals (not complete or lost)
-  const openDeals = deals.filter(
-    (d: any) => d.stage !== 'complete' && d.stage !== 'lost'
+  // Only count open deals (not won or lost)
+  // B2C: open = qualified only (concept/design/engineering are won categories)
+  // B2B: open = qualified and proposal (active/complete are won)
+  const b2cDeals = deals.filter(
+    (d: any) => d.sales_type === 'b2c' && d.stage === 'qualified'
   )
-
-  const b2cDeals = openDeals.filter((d: any) => d.sales_type === 'b2c')
-  const b2bDeals = openDeals.filter((d: any) => d.sales_type === 'b2b')
+  const b2bDeals = deals.filter(
+    (d: any) => d.sales_type === 'b2b' && d.stage !== 'active' && d.stage !== 'complete' && d.stage !== 'lost'
+  )
+  const openDeals = [...b2cDeals, ...b2bDeals]
 
   return {
     b2c: {

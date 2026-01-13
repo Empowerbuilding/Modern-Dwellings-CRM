@@ -27,6 +27,7 @@ interface ContactTasksSectionProps {
   users: User[]
   deals: Pick<Deal, 'id' | 'title'>[]
   currentUserId?: string
+  contactOwnerId?: string | null
 }
 
 function formatDate(dateString: string | null): string {
@@ -131,6 +132,7 @@ function AddTaskModal({
   users,
   deals,
   onSave,
+  defaultAssigneeId,
 }: {
   open: boolean
   onClose: () => void
@@ -138,6 +140,7 @@ function AddTaskModal({
   users: User[]
   deals: Pick<Deal, 'id' | 'title'>[]
   onSave: (task: TaskWithRelations) => void
+  defaultAssigneeId?: string | null
 }) {
   const [formData, setFormData] = useState({
     title: '',
@@ -146,7 +149,7 @@ function AddTaskModal({
     task_type: 'to_do' as TaskType,
     due_date: '',
     due_time: '',
-    assigned_to: '',
+    assigned_to: defaultAssigneeId ?? '',
     deal_id: '',
   })
   const [saving, setSaving] = useState(false)
@@ -161,12 +164,12 @@ function AddTaskModal({
         task_type: 'to_do',
         due_date: '',
         due_time: '',
-        assigned_to: '',
+        assigned_to: defaultAssigneeId ?? '',
         deal_id: '',
       })
       setError(null)
     }
-  }, [open])
+  }, [open, defaultAssigneeId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -393,6 +396,7 @@ export function ContactTasksSection({
   users,
   deals,
   currentUserId,
+  contactOwnerId,
 }: ContactTasksSectionProps) {
   const router = useRouter()
   const [tasks, setTasks] = useState(initialTasks)
@@ -488,7 +492,7 @@ export function ContactTasksSection({
                 </div>
                 <div className="flex-1 min-w-0">
                   <Link
-                    href="/tasks"
+                    href={`/tasks?taskId=${task.id}`}
                     className="text-sm font-medium text-gray-900 hover:text-blue-600 block truncate"
                   >
                     {task.title}
@@ -582,6 +586,7 @@ export function ContactTasksSection({
         users={users}
         deals={deals}
         onSave={handleTaskSave}
+        defaultAssigneeId={contactOwnerId}
       />
     </div>
   )
