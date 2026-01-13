@@ -17,7 +17,7 @@ interface TaskSlideOverProps {
   onClose: () => void
   task: TaskWithRelations | null
   users: User[]
-  contacts: Pick<Contact, 'id' | 'first_name' | 'last_name'>[]
+  contacts: Pick<Contact, 'id' | 'first_name' | 'last_name' | 'owner_id'>[]
   deals: Pick<Deal, 'id' | 'title'>[]
   companies: Pick<Company, 'id' | 'name'>[]
   onSave: (task: TaskWithRelations) => void
@@ -505,7 +505,15 @@ export function TaskSlideOver({
                 </label>
                 <select
                   value={formData.contact_id}
-                  onChange={(e) => setFormData({ ...formData, contact_id: e.target.value })}
+                  onChange={(e) => {
+                    const contactId = e.target.value
+                    const selectedContact = contacts.find((c) => c.id === contactId)
+                    // Auto-fill assignee if not already set and contact has an owner
+                    const newAssignedTo = !formData.assigned_to && selectedContact?.owner_id
+                      ? selectedContact.owner_id
+                      : formData.assigned_to
+                    setFormData({ ...formData, contact_id: contactId, assigned_to: newAssignedTo })
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                 >
                   <option value="">No contact</option>

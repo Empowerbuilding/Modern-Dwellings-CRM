@@ -39,7 +39,7 @@ const PRIORITY_ORDER: Record<TaskPriority, number> = {
 interface TaskBoardProps {
   initialTasks: TaskWithRelations[]
   users: User[]
-  contacts: Pick<Contact, 'id' | 'first_name' | 'last_name'>[]
+  contacts: Pick<Contact, 'id' | 'first_name' | 'last_name' | 'owner_id'>[]
   deals: Pick<Deal, 'id' | 'title'>[]
   companies: Pick<Company, 'id' | 'name'>[]
   initialTaskId?: string | null

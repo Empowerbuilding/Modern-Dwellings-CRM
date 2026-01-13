@@ -46,9 +46,9 @@ async function getUsers(): Promise<User[]> {
   return data ?? []
 }
 
-async function getContacts(): Promise<Pick<Contact, 'id' | 'first_name' | 'last_name'>[]> {
+async function getContacts(): Promise<Pick<Contact, 'id' | 'first_name' | 'last_name' | 'owner_id'>[]> {
   const { data } = await (supabase.from('contacts') as any)
-    .select('id, first_name, last_name')
+    .select('id, first_name, last_name, owner_id')
     .order('first_name')
 
   return data ?? []
