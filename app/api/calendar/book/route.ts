@@ -97,12 +97,27 @@ function normalizePhone(phone: string | null | undefined): string | null {
 // Format custom fields for notes display
 function formatCustomFieldsForNotes(
   meetingTitle: string,
+  startTime: Date,
+  timezone: string,
   customFields?: Record<string, unknown>,
   guestNotes?: string
 ): string | null {
   const lines: string[] = []
 
   lines.push(`Meeting Booking: ${meetingTitle}`)
+
+  // Format date and time in the user's timezone
+  const formattedDateTime = startTime.toLocaleString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: timezone,
+  })
+  lines.push(`Scheduled: ${formattedDateTime}`)
 
   if (customFields && Object.keys(customFields).length > 0) {
     lines.push('')
@@ -588,7 +603,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Create a note with form responses if there are custom fields or notes
-      const noteContent = formatCustomFieldsForNotes(meetingType.title, body.customFields, body.notes)
+      const noteContent = formatCustomFieldsForNotes(meetingType.title, startDate, timezone, body.customFields, body.notes)
       if (noteContent) {
         const { error: noteError } = await supabase.from('notes').insert({
           contact_id: contact.id,

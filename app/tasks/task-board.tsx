@@ -584,7 +584,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                         <div className="text-sm space-y-0.5">
                           {task.contact_id && task.contact_name && (
                             <Link
-                              href={`/contacts/${task.contact_id}`}
+                              href={`/contacts/${task.contact_id}?from=tasks`}
                               onClick={(e) => e.stopPropagation()}
                               className="block text-blue-600 hover:text-blue-800 hover:underline"
                             >

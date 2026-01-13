@@ -206,10 +206,15 @@ async function getCurrentUserId(): Promise<string | undefined> {
 
 export default async function ContactDetailPage({
   params,
+  searchParams,
 }: {
   params: { id: string }
+  searchParams: Promise<{ from?: string }>
 }) {
-  const contact = await getContact(params.id)
+  const [contact, resolvedSearchParams] = await Promise.all([
+    getContact(params.id),
+    searchParams,
+  ])
 
   if (!contact) {
     notFound()
@@ -237,10 +242,10 @@ export default async function ContactDetailPage({
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <Link
-              href="/contacts"
+              href={resolvedSearchParams.from === 'tasks' ? '/tasks' : '/contacts'}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              ← Back to Contacts
+              ← {resolvedSearchParams.from === 'tasks' ? 'Back to Tasks' : 'Back to Contacts'}
             </Link>
             <ContactActions contact={contact} companies={allCompanies} />
           </div>
