@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic'
 
 export interface TaskWithRelations extends Task {
   contact_name: string | null
+  contact_email: string | null
+  contact_phone: string | null
   deal_title: string | null
   company_name: string | null
   assigned_user_name: string | null
@@ -15,7 +17,7 @@ async function getTasks(): Promise<TaskWithRelations[]> {
   const { data } = await (supabase.from('tasks') as any)
     .select(`
       *,
-      contacts(first_name, last_name),
+      contacts(first_name, last_name, email, phone),
       deals(title),
       companies(name),
       assigned_user:users!tasks_assigned_to_fkey(name)
@@ -30,6 +32,8 @@ async function getTasks(): Promise<TaskWithRelations[]> {
     contact_name: task.contacts
       ? `${task.contacts.first_name} ${task.contacts.last_name}`
       : null,
+    contact_email: task.contacts?.email ?? null,
+    contact_phone: task.contacts?.phone ?? null,
     deal_title: task.deals?.title ?? null,
     company_name: task.companies?.name ?? null,
     assigned_user_name: task.assigned_user?.name ?? null,

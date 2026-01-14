@@ -93,7 +93,8 @@ export async function GET(request: NextRequest) {
           title,
           duration_minutes,
           location_type,
-          slug
+          slug,
+          timezone
         ),
         contacts (
           id,

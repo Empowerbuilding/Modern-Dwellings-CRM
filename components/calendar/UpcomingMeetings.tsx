@@ -19,6 +19,7 @@ export interface ScheduledMeetingDisplay {
     title: string
     duration_minutes: number
     location_type: string
+    timezone?: string
   } | null
   contact?: {
     first_name: string
@@ -175,7 +176,8 @@ export function UpcomingMeetings({
     return (
       <div className="space-y-2">
         {meetings.map((meeting) => {
-          const { date, time, relative } = formatDateTime(meeting.start_time, meeting.timezone)
+          const displayTimezone = meeting.meeting_type?.timezone || meeting.timezone || 'America/Chicago'
+          const { date, time, relative } = formatDateTime(meeting.start_time, displayTimezone)
           return (
             <div
               key={meeting.id}
@@ -206,7 +208,8 @@ export function UpcomingMeetings({
   return (
     <div className="space-y-3">
       {meetings.map((meeting) => {
-        const { date, time, relative } = formatDateTime(meeting.start_time, meeting.timezone)
+        const displayTimezone = meeting.meeting_type?.timezone || meeting.timezone || 'America/Chicago'
+        const { date, time, relative } = formatDateTime(meeting.start_time, displayTimezone)
         const locationType = meeting.meeting_type?.location_type || 'custom'
 
         return (

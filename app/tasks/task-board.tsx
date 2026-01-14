@@ -20,6 +20,26 @@ type StatusFilter = 'all' | 'due_today' | 'overdue' | 'upcoming' | 'completed' |
 type SortField = 'due_date' | 'priority' | 'title' | 'created_at'
 type SortDirection = 'asc' | 'desc'
 
+type ColumnKey = 'associated' | 'dueDate' | 'priority' | 'type' | 'assignedTo' | 'contactEmail' | 'contactPhone'
+
+interface ColumnConfig {
+  key: ColumnKey
+  label: string
+  defaultVisible: boolean
+}
+
+const COLUMN_CONFIGS: ColumnConfig[] = [
+  { key: 'associated', label: 'Associated With', defaultVisible: true },
+  { key: 'dueDate', label: 'Due Date', defaultVisible: true },
+  { key: 'priority', label: 'Priority', defaultVisible: true },
+  { key: 'type', label: 'Type', defaultVisible: true },
+  { key: 'assignedTo', label: 'Assigned To', defaultVisible: true },
+  { key: 'contactEmail', label: 'Contact Email', defaultVisible: false },
+  { key: 'contactPhone', label: 'Contact Phone', defaultVisible: false },
+]
+
+const COLUMN_STORAGE_KEY = 'crm-task-board-columns'
+
 const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All Tasks' },
   { value: 'due_today', label: 'Due Today' },
@@ -167,6 +187,50 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
   const [slideOverOpen, setSlideOverOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskWithRelations | null>(null)
   const [confirmingTaskId, setConfirmingTaskId] = useState<string | null>(null)
+  const [columnSettingsOpen, setColumnSettingsOpen] = useState(false)
+  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
+    const defaults: Record<ColumnKey, boolean> = {} as Record<ColumnKey, boolean>
+    COLUMN_CONFIGS.forEach((col) => {
+      defaults[col.key] = col.defaultVisible
+    })
+    return defaults
+  })
+  const columnSettingsRef = useRef<HTMLDivElement>(null)
+
+  // Load column settings from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(COLUMN_STORAGE_KEY)
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        setVisibleColumns((prev) => ({ ...prev, ...parsed }))
+      } catch {
+        // Ignore invalid JSON
+      }
+    }
+  }, [])
+
+  // Save column settings to localStorage
+  const toggleColumn = (key: ColumnKey) => {
+    setVisibleColumns((prev) => {
+      const updated = { ...prev, [key]: !prev[key] }
+      localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }
+
+  // Close column settings dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (columnSettingsRef.current && !columnSettingsRef.current.contains(event.target as Node)) {
+        setColumnSettingsOpen(false)
+      }
+    }
+    if (columnSettingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [columnSettingsOpen])
 
   // Auto-open task slide-over if initialTaskId is provided
   useEffect(() => {
@@ -368,12 +432,45 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
     <>
       <div className="flex items-center justify-between mb-6 pt-14 md:pt-0">
         <h1 className="text-2xl font-semibold text-gray-900">Tasks</h1>
-        <button
-          onClick={handleAddNew}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Add Task
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative" ref={columnSettingsRef}>
+            <button
+              onClick={() => setColumnSettingsOpen(!columnSettingsOpen)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Column settings"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            {columnSettingsOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[180px]">
+                <p className="px-3 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">Columns</p>
+                {COLUMN_CONFIGS.map((col) => (
+                  <label
+                    key={col.key}
+                    className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns[col.key]}
+                      onChange={() => toggleColumn(col.key)}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{col.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={handleAddNew}
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Add Task
+          </button>
+        </div>
       </div>
 
       {/* Status Filter Tabs */}
@@ -496,33 +593,53 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                 >
                   Task <SortIcon field="title" />
                 </th>
-                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Associated With
-                </th>
-                <th
-                  onClick={() => handleSort('due_date')}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  Due Date <SortIcon field="due_date" />
-                </th>
-                <th
-                  onClick={() => handleSort('priority')}
-                  className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  Priority <SortIcon field="priority" />
-                </th>
-                <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Assigned To
-                </th>
+                {visibleColumns.associated && (
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Associated With
+                  </th>
+                )}
+                {visibleColumns.contactEmail && (
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                )}
+                {visibleColumns.contactPhone && (
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Phone
+                  </th>
+                )}
+                {visibleColumns.dueDate && (
+                  <th
+                    onClick={() => handleSort('due_date')}
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Due Date <SortIcon field="due_date" />
+                  </th>
+                )}
+                {visibleColumns.priority && (
+                  <th
+                    onClick={() => handleSort('priority')}
+                    className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Priority <SortIcon field="priority" />
+                  </th>
+                )}
+                {visibleColumns.type && (
+                  <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </th>
+                )}
+                {visibleColumns.assignedTo && (
+                  <th className="hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Assigned To
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredAndSortedTasks.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={2 + Object.values(visibleColumns).filter(Boolean).length} className="px-4 py-8 text-center text-gray-500">
                     {tasks.length === 0
                       ? 'No tasks yet. Create your first task to get started.'
                       : 'No tasks match your filters.'}
@@ -580,77 +697,117 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                           </p>
                         )}
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-3">
-                        <div className="text-sm space-y-0.5">
-                          {task.contact_id && task.contact_name && (
-                            <Link
-                              href={`/contacts/${task.contact_id}?from=tasks`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="block text-blue-600 hover:text-blue-800 hover:underline"
-                            >
-                              {task.contact_name}
-                            </Link>
-                          )}
-                          {task.deal_id && task.deal_title && (
-                            <Link
-                              href={`/deals/${task.deal_id}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="block text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[150px]"
-                            >
-                              {task.deal_title}
-                            </Link>
-                          )}
-                          {task.company_id && task.company_name && !task.contact_id && (
-                            <Link
-                              href={`/companies/${task.company_id}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="block text-blue-600 hover:text-blue-800 hover:underline"
-                            >
-                              {task.company_name}
-                            </Link>
-                          )}
-                          {!task.contact_id && !task.deal_id && !task.company_id && (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {task.due_date ? (
-                          <div
-                            className={`text-sm ${
-                              dueDateStatus === 'overdue'
-                                ? 'text-red-600 font-medium'
-                                : dueDateStatus === 'today'
-                                  ? 'text-orange-600 font-medium'
-                                  : 'text-gray-600'
-                            }`}
-                          >
-                            <p>{formatDate(task.due_date)}</p>
-                            {task.due_time && (
-                              <p className="text-xs">{formatTime(task.due_time)}</p>
+                      {visibleColumns.associated && (
+                        <td className="hidden sm:table-cell px-4 py-3">
+                          <div className="text-sm space-y-0.5">
+                            {task.contact_id && task.contact_name && (
+                              <Link
+                                href={`/contacts/${task.contact_id}?from=tasks`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="block text-blue-600 hover:text-blue-800 hover:underline"
+                              >
+                                {task.contact_name}
+                              </Link>
+                            )}
+                            {task.deal_id && task.deal_title && (
+                              <Link
+                                href={`/deals/${task.deal_id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="block text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[150px]"
+                              >
+                                {task.deal_title}
+                              </Link>
+                            )}
+                            {task.company_id && task.company_name && !task.contact_id && (
+                              <Link
+                                href={`/companies/${task.company_id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="block text-blue-600 hover:text-blue-800 hover:underline"
+                              >
+                                {task.company_name}
+                              </Link>
+                            )}
+                            {!task.contact_id && !task.deal_id && !task.company_id && (
+                              <span className="text-gray-400">-</span>
                             )}
                           </div>
-                        ) : (
-                          <span className="text-sm text-gray-400">No due date</span>
-                        )}
-                      </td>
-                      <td className="hidden md:table-cell px-4 py-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${TASK_PRIORITY_COLORS[task.priority]}`}
-                        >
-                          {TASK_PRIORITY_LABELS[task.priority]}
-                        </span>
-                      </td>
-                      <td className="hidden lg:table-cell px-4 py-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${TASK_TYPE_COLORS[task.task_type]}`}
-                        >
-                          {TASK_TYPE_LABELS[task.task_type]}
-                        </span>
-                      </td>
-                      <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
-                        {task.assigned_user_name ?? '-'}
-                      </td>
+                        </td>
+                      )}
+                      {visibleColumns.contactEmail && (
+                        <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-600">
+                          {task.contact_email ? (
+                            <a
+                              href={`mailto:${task.contact_email}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {task.contact_email}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      )}
+                      {visibleColumns.contactPhone && (
+                        <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-600">
+                          {task.contact_phone ? (
+                            <a
+                              href={`tel:${task.contact_phone}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {task.contact_phone}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      )}
+                      {visibleColumns.dueDate && (
+                        <td className="px-4 py-3">
+                          {task.due_date ? (
+                            <div
+                              className={`text-sm ${
+                                dueDateStatus === 'overdue'
+                                  ? 'text-red-600 font-medium'
+                                  : dueDateStatus === 'today'
+                                    ? 'text-orange-600 font-medium'
+                                    : 'text-gray-600'
+                              }`}
+                            >
+                              <p>{formatDate(task.due_date)}</p>
+                              {task.due_time && (
+                                <p className="text-xs">{formatTime(task.due_time)}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">No due date</span>
+                          )}
+                        </td>
+                      )}
+                      {visibleColumns.priority && (
+                        <td className="hidden md:table-cell px-4 py-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${TASK_PRIORITY_COLORS[task.priority]}`}
+                          >
+                            {TASK_PRIORITY_LABELS[task.priority]}
+                          </span>
+                        </td>
+                      )}
+                      {visibleColumns.type && (
+                        <td className="hidden lg:table-cell px-4 py-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${TASK_TYPE_COLORS[task.task_type]}`}
+                          >
+                            {TASK_TYPE_LABELS[task.task_type]}
+                          </span>
+                        </td>
+                      )}
+                      {visibleColumns.assignedTo && (
+                        <td className="hidden xl:table-cell px-4 py-3 text-sm text-gray-600">
+                          {task.assigned_user_name ?? '-'}
+                        </td>
+                      )}
                     </tr>
                   )
                 })
