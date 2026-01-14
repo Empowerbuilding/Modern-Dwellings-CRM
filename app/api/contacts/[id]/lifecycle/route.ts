@@ -268,13 +268,27 @@ export async function PUT(
 
     console.log(`[${timestamp}] Contact ${contactId} updated successfully`)
 
-    // 7. Auto-create deal if moving to MQL
+    // 7. Log lifecycle stage change activity
+    const previousStage = contact.lifecycle_stage
+    if (previousStage !== lifecycle_stage) {
+      await supabaseAdmin.from('activities').insert({
+        contact_id: contactId,
+        activity_type: 'lifecycle_stage_changed',
+        title: `Lifecycle: ${previousStage || 'none'} → ${lifecycle_stage}`,
+        metadata: {
+          from_stage: previousStage,
+          to_stage: lifecycle_stage,
+        },
+      })
+    }
+
+    // 8. Auto-create deal if moving to MQL
     let createdDeal: { id: string; title: string } | null = null
     if (lifecycle_stage === 'mql') {
       createdDeal = await createDealForMQL(contact)
     }
 
-    // 8. Return success response with info about all events sent
+    // 9. Return success response with info about all events sent
     const eventNames = eventsSentThisRequest.map(e => e.eventName)
     const eventCount = eventsSentThisRequest.length
 

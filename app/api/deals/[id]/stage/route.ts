@@ -111,12 +111,15 @@ export async function PUT(
       await supabaseAdmin.from('activities').insert({
         deal_id: dealId,
         contact_id: deal.contact_id,
-        activity_type: 'stage_change',
-        title: `Stage: ${previousStage} → ${stage}`,
+        activity_type: 'deal_stage_changed',
+        title: `Deal "${deal.title}" moved: ${previousStage} → ${stage}`,
         metadata: {
-          previous_stage: previousStage,
-          new_stage: stage,
+          deal_id: dealId,
+          from_stage: previousStage,
+          to_stage: stage,
           deal_title: deal.title,
+          deal_value: deal.value,
+          sales_type: deal.sales_type,
         },
       })
     }
