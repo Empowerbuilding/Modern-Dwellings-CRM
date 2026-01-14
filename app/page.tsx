@@ -6,9 +6,18 @@ import LeadAnalytics, { type LeadData } from '@/components/lead-analytics'
 export const dynamic = 'force-dynamic'
 
 interface PipelineStats {
-  b2c: { count: number; value: number }
-  b2b: { count: number; value: number }
-  total: { count: number; value: number }
+  b2c: {
+    pipeline: { count: number; value: number }
+    closed: { count: number; value: number }
+  }
+  b2b: {
+    pipeline: { count: number; value: number }
+    closed: { count: number; value: number }
+  }
+  totals: {
+    pipeline: { count: number; value: number }
+    closed: { count: number; value: number }
+  }
 }
 
 function formatCurrency(value: number): string {
@@ -33,35 +42,59 @@ async function getPipelineStats(): Promise<PipelineStats> {
 
   if (!deals) {
     return {
-      b2c: { count: 0, value: 0 },
-      b2b: { count: 0, value: 0 },
-      total: { count: 0, value: 0 },
+      b2c: {
+        pipeline: { count: 0, value: 0 },
+        closed: { count: 0, value: 0 },
+      },
+      b2b: {
+        pipeline: { count: 0, value: 0 },
+        closed: { count: 0, value: 0 },
+      },
+      totals: {
+        pipeline: { count: 0, value: 0 },
+        closed: { count: 0, value: 0 },
+      },
     }
   }
 
-  // Only count open deals (not won or lost)
-  // B2C: open = qualified only (concept/design/engineering are won categories)
-  // B2B: open = qualified and proposal (active/complete are won)
-  const b2cDeals = deals.filter(
+  // B2C Pipeline: qualified stage (potential deals)
+  const b2cPipeline = deals.filter(
     (d: any) => d.sales_type === 'b2c' && d.stage === 'qualified'
   )
-  const b2bDeals = deals.filter(
-    (d: any) => d.sales_type === 'b2b' && d.stage !== 'active' && d.stage !== 'complete' && d.stage !== 'lost'
+  // B2C Closed: concept, design, engineering (won but still in work)
+  const b2cClosed = deals.filter(
+    (d: any) => d.sales_type === 'b2c' && ['concept', 'design', 'engineering'].includes(d.stage)
   )
-  const openDeals = [...b2cDeals, ...b2bDeals]
+
+  // B2B Pipeline: qualified and proposal stages (potential deals)
+  const b2bPipeline = deals.filter(
+    (d: any) => d.sales_type === 'b2b' && ['qualified', 'proposal'].includes(d.stage)
+  )
+  // B2B Closed: active stage (won but still in work)
+  const b2bClosed = deals.filter(
+    (d: any) => d.sales_type === 'b2b' && d.stage === 'active'
+  )
+
+  const sumValue = (arr: any[]) => arr.reduce((sum: number, d: any) => sum + (d.value || 0), 0)
 
   return {
     b2c: {
-      count: b2cDeals.length,
-      value: b2cDeals.reduce((sum: number, d: any) => sum + (d.value || 0), 0),
+      pipeline: { count: b2cPipeline.length, value: sumValue(b2cPipeline) },
+      closed: { count: b2cClosed.length, value: sumValue(b2cClosed) },
     },
     b2b: {
-      count: b2bDeals.length,
-      value: b2bDeals.reduce((sum: number, d: any) => sum + (d.value || 0), 0),
+      pipeline: { count: b2bPipeline.length, value: sumValue(b2bPipeline) },
+      closed: { count: b2bClosed.length, value: sumValue(b2bClosed) },
     },
-    total: {
-      count: openDeals.length,
-      value: openDeals.reduce((sum: number, d: any) => sum + (d.value || 0), 0),
+    totals: {
+      pipeline: {
+        count: b2cPipeline.length + b2bPipeline.length,
+        value: sumValue(b2cPipeline) + sumValue(b2bPipeline),
+      },
+      closed: {
+        count: b2cClosed.length + b2bClosed.length,
+        value: sumValue(b2cClosed) + sumValue(b2bClosed),
+      },
     },
   }
 }
@@ -125,45 +158,87 @@ export default async function Dashboard() {
         {/* Pipeline Summary */}
         <section className="mb-8">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Pipeline Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* B2C Card */}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* B2C Consumer Section */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-4">
                 <div className="w-3 h-3 rounded-full bg-green-500" />
                 <h3 className="font-medium text-gray-900">B2C Consumer</h3>
               </div>
-              <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(pipelineStats.b2c.value)}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                {pipelineStats.b2c.count} active deals
-              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Pipeline */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Pipeline</p>
+                  <p className="text-xl font-semibold text-gray-900">
+                    {formatCurrency(pipelineStats.b2c.pipeline.value)}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {pipelineStats.b2c.pipeline.count} {pipelineStats.b2c.pipeline.count === 1 ? 'deal' : 'deals'}
+                  </p>
+                </div>
+                {/* Closed */}
+                <div className="bg-green-50 rounded-lg p-4">
+                  <p className="text-xs font-medium text-green-700 uppercase tracking-wide mb-1">Closed</p>
+                  <p className="text-xl font-semibold text-green-900">
+                    {formatCurrency(pipelineStats.b2c.closed.value)}
+                  </p>
+                  <p className="text-sm text-green-700">
+                    {pipelineStats.b2c.closed.count} {pipelineStats.b2c.closed.count === 1 ? 'deal' : 'deals'}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* B2B Card */}
+            {/* B2B Builder Section */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-4">
                 <div className="w-3 h-3 rounded-full bg-blue-500" />
                 <h3 className="font-medium text-gray-900">B2B Builder</h3>
               </div>
-              <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(pipelineStats.b2b.value)}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Pipeline */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Pipeline</p>
+                  <p className="text-xl font-semibold text-gray-900">
+                    {formatCurrency(pipelineStats.b2b.pipeline.value)}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {pipelineStats.b2b.pipeline.count} {pipelineStats.b2b.pipeline.count === 1 ? 'deal' : 'deals'}
+                  </p>
+                </div>
+                {/* Closed */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <p className="text-xs font-medium text-blue-700 uppercase tracking-wide mb-1">Closed</p>
+                  <p className="text-xl font-semibold text-blue-900">
+                    {formatCurrency(pipelineStats.b2b.closed.value)}
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    {pipelineStats.b2b.closed.count} {pipelineStats.b2b.closed.count === 1 ? 'deal' : 'deals'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Totals Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 text-white">
+              <p className="text-xs font-medium text-slate-300 uppercase tracking-wide mb-1">Total Pipeline</p>
+              <p className="text-2xl font-semibold">
+                {formatCurrency(pipelineStats.totals.pipeline.value)}
               </p>
-              <p className="text-sm text-gray-500 mt-1">
-                {pipelineStats.b2b.count} active deals
+              <p className="text-sm text-slate-300">
+                {pipelineStats.totals.pipeline.count} {pipelineStats.totals.pipeline.count === 1 ? 'deal' : 'deals'}
               </p>
             </div>
-
-            {/* Total Card */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-5 text-white">
-              <div className="flex items-center gap-2 mb-3">
-                <h3 className="font-medium">Total Pipeline</h3>
-              </div>
+            <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg p-4 text-white">
+              <p className="text-xs font-medium text-emerald-200 uppercase tracking-wide mb-1">Total Closed</p>
               <p className="text-2xl font-semibold">
-                {formatCurrency(pipelineStats.total.value)}
+                {formatCurrency(pipelineStats.totals.closed.value)}
               </p>
-              <p className="text-sm text-slate-300 mt-1">
-                {pipelineStats.total.count} active deals
+              <p className="text-sm text-emerald-200">
+                {pipelineStats.totals.closed.count} {pipelineStats.totals.closed.count === 1 ? 'deal' : 'deals'}
               </p>
             </div>
           </div>

@@ -180,6 +180,8 @@ function getEffectiveClientType(contact: ContactWithCompany): ClientType | null 
   return contact.company_type ?? contact.client_type ?? null
 }
 
+const CONTACTS_PER_PAGE = 100
+
 export function ContactsTable({ initialContacts, companies, users }: ContactsTableProps) {
   const router = useRouter()
   const [contacts, setContacts] = useState(initialContacts)
@@ -192,6 +194,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
   const [editingContact, setEditingContact] = useState<ContactWithCompany | null>(null)
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(getDefaultVisibleColumns)
   const [showColumnPicker, setShowColumnPicker] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const columnPickerRef = useRef<HTMLDivElement>(null)
 
   // Load visible columns from localStorage on mount
@@ -214,6 +217,11 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, filters, sortField, sortDirection])
 
   const activeFilterCount = useMemo(() => {
     let count = 0
@@ -356,6 +364,13 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
 
     return result
   }, [contacts, search, filters, sortField, sortDirection])
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAndSortedContacts.length / CONTACTS_PER_PAGE)
+  const paginatedContacts = useMemo(() => {
+    const startIndex = (currentPage - 1) * CONTACTS_PER_PAGE
+    return filteredAndSortedContacts.slice(startIndex, startIndex + CONTACTS_PER_PAGE)
+  }, [filteredAndSortedContacts, currentPage])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -773,7 +788,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredAndSortedContacts.length === 0 ? (
+              {paginatedContacts.length === 0 ? (
                 <tr>
                   <td colSpan={20} className="px-4 py-8 text-center text-gray-500">
                     {contacts.length === 0
@@ -782,7 +797,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                   </td>
                 </tr>
               ) : (
-                filteredAndSortedContacts.map((contact) => (
+                paginatedContacts.map((contact) => (
                   <tr
                     key={contact.id}
                     onClick={() => handleRowClick(contact)}
@@ -937,9 +952,83 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
         </div>
       </div>
 
-      <p className="mt-4 text-sm text-gray-500">
-        {filteredAndSortedContacts.length} of {contacts.length} contacts
-      </p>
+      {/* Pagination Controls */}
+      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="text-sm text-gray-500">
+          Showing {paginatedContacts.length > 0 ? ((currentPage - 1) * CONTACTS_PER_PAGE) + 1 : 0}–{Math.min(currentPage * CONTACTS_PER_PAGE, filteredAndSortedContacts.length)} of {filteredAndSortedContacts.length} contacts
+          {filteredAndSortedContacts.length !== contacts.length && ` (filtered from ${contacts.length})`}
+        </p>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-2 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed"
+            >
+              First
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+
+            <div className="flex items-center gap-1">
+              {/* Show page numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((page) => {
+                  // Show first, last, current, and pages near current
+                  if (page === 1 || page === totalPages) return true
+                  if (Math.abs(page - currentPage) <= 1) return true
+                  return false
+                })
+                .reduce((acc: (number | 'ellipsis')[], page, idx, arr) => {
+                  // Add ellipsis where there are gaps
+                  if (idx > 0 && page - (arr[idx - 1] as number) > 1) {
+                    acc.push('ellipsis')
+                  }
+                  acc.push(page)
+                  return acc
+                }, [])
+                .map((item, idx) => (
+                  item === 'ellipsis' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">...</span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setCurrentPage(item)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg ${
+                        currentPage === item
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                ))}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-2 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed"
+            >
+              Last
+            </button>
+          </div>
+        )}
+      </div>
 
       <ContactSlideOver
         open={slideOverOpen}
