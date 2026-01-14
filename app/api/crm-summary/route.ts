@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
       created_at: note.created_at,
       contact_id: note.contact_id,
       contact_name: note.contacts
-        ? `${note.contacts.first_name} ${note.contacts.last_name}`
+        ? `${(note.contacts as any).first_name} ${(note.contacts as any).last_name}`
         : 'Unknown',
       author_name: note.author?.name || null,
     }))
@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
       return {
         contact_id: activity.contact_id,
         contact_name: activity.contacts
-          ? `${activity.contacts.first_name} ${activity.contacts.last_name}`
+          ? `${(activity.contacts as any).first_name} ${(activity.contacts as any).last_name}`
           : 'Unknown',
         from_stage: fromStage,
         from_stage_label: LIFECYCLE_STAGE_LABELS[fromStage as keyof typeof LIFECYCLE_STAGE_LABELS] || fromStage,
@@ -271,7 +271,7 @@ export async function GET(request: NextRequest) {
       stage_label: STAGE_LABELS[deal.stage as keyof typeof STAGE_LABELS] || deal.stage,
       sales_type: deal.sales_type,
       contact_name: deal.contacts
-        ? `${deal.contacts.first_name} ${deal.contacts.last_name}`
+        ? `${(deal.contacts as any).first_name} ${(deal.contacts as any).last_name}`
         : null,
       company_name: deal.companies?.name || null,
       created_at: deal.created_at,
@@ -328,7 +328,7 @@ export async function GET(request: NextRequest) {
             to_stage_label: STAGE_LABELS[toStage as keyof typeof STAGE_LABELS] || toStage,
             sales_type: deal.sales_type,
             contact_name: activity.contacts
-              ? `${activity.contacts.first_name} ${activity.contacts.last_name}`
+              ? `${(activity.contacts as any).first_name} ${(activity.contacts as any).last_name}`
               : null,
             moved_at: activity.created_at,
           })
@@ -357,7 +357,7 @@ export async function GET(request: NextRequest) {
       activity_type: activity.activity_type,
       title: activity.title,
       contact_name: activity.contacts
-        ? `${activity.contacts.first_name} ${activity.contacts.last_name}`
+        ? `${(activity.contacts as any).first_name} ${(activity.contacts as any).last_name}`
         : null,
       created_at: activity.created_at,
       user_name: activity.user?.name || null,
