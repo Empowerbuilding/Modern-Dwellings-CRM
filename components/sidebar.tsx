@@ -123,7 +123,7 @@ export function Sidebar() {
             <img
               src="https://ozhkjwcjsifdhfdexayd.supabase.co/storage/v1/object/public/website-images/Showcase/showcase-builders-logo (2).avif"
               alt="Logo"
-              className="w-8 h-8 rounded-lg object-contain bg-white"
+              className="w-12 h-12 rounded-lg object-contain bg-white"
               onError={(e) => {
                 console.error('Logo failed to load');
                 (e.target as HTMLImageElement).style.display = 'none';
