@@ -121,9 +121,13 @@ export function Sidebar() {
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
           <div className="flex items-center">
             <img
-              src="https://ozhkjwcjsifdhfdexayd.supabase.co/storage/v1/object/public/website-images/Showcase/showcase-builders-logo%20(2).avif"
+              src="https://ozhkjwcjsifdhfdexayd.supabase.co/storage/v1/object/public/website-images/Showcase/showcase-builders-logo (2).avif"
               alt="Logo"
-              className="w-8 h-8 rounded-lg object-contain"
+              className="w-8 h-8 rounded-lg object-contain bg-white"
+              onError={(e) => {
+                console.error('Logo failed to load');
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
             <span className="ml-3 text-white font-semibold md:hidden lg:block">CRM</span>
           </div>
