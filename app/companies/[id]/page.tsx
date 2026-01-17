@@ -18,7 +18,7 @@ const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
 }
 
 const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
-  builder: 'bg-blue-100 text-blue-800',
+  builder: 'bg-brand-100 text-brand-800',
   consumer: 'bg-green-100 text-green-800',
   subcontractor: 'bg-orange-100 text-orange-800',
   engineer: 'bg-purple-100 text-purple-800',
@@ -254,7 +254,7 @@ export default async function CompanyDetailPage({
                         href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        className="text-brand-600 hover:underline"
                       >
                         {company.website}
                       </a>
@@ -299,11 +299,11 @@ export default async function CompanyDetailPage({
                       <div className="flex-1 min-w-0">
                         <Link
                           href={`/contacts/${contact.id}`}
-                          className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                          className="text-sm font-medium text-gray-900 hover:text-brand-600 transition-colors"
                         >
                           {contact.first_name} {contact.last_name}
                           {contact.is_primary && (
-                            <span className="ml-2 text-xs text-blue-600">Primary</span>
+                            <span className="ml-2 text-xs text-brand-600">Primary</span>
                           )}
                         </Link>
                         {contact.role && (
@@ -312,7 +312,7 @@ export default async function CompanyDetailPage({
                         {contact.email && (
                           <a
                             href={`mailto:${contact.email}`}
-                            className="text-xs text-blue-600 hover:underline block truncate"
+                            className="text-xs text-brand-600 hover:underline block truncate"
                           >
                             {contact.email}
                           </a>

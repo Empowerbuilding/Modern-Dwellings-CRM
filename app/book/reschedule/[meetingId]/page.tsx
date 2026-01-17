@@ -291,7 +291,7 @@ export default function RescheduleMeetingPage() {
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-brand-600 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading meeting details...</p>
         </div>
       </main>
@@ -312,7 +312,7 @@ export default function RescheduleMeetingPage() {
           <p className="text-gray-600 mb-6">{invalidReason}</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+            className="inline-flex items-center gap-2 text-brand-600 hover:text-brand-700 font-medium"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -338,7 +338,7 @@ export default function RescheduleMeetingPage() {
           <p className="text-gray-600 mb-6">{errorMessage}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-brand-600 hover:text-brand-700 font-medium"
           >
             Try Again
           </button>
@@ -383,7 +383,7 @@ export default function RescheduleMeetingPage() {
           {meeting?.meeting_type?.slug && (
             <Link
               href={`/book/${meeting.meeting_type.slug}`}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-brand-600 hover:text-brand-700 font-medium"
             >
               Book another meeting
             </Link>
@@ -484,9 +484,9 @@ export default function RescheduleMeetingPage() {
                         ${!inMonth ? 'text-gray-300' : ''}
                         ${inMonth && isPast ? 'text-gray-300 cursor-not-allowed' : ''}
                         ${inMonth && !isPast && !isAvailable ? 'text-gray-400 cursor-not-allowed' : ''}
-                        ${inMonth && !isPast && isAvailable && !isSelected ? 'text-gray-900 hover:bg-blue-50 font-medium' : ''}
-                        ${isSelected ? 'bg-blue-600 text-white font-medium' : ''}
-                        ${isToday && !isSelected ? 'ring-1 ring-blue-600' : ''}
+                        ${inMonth && !isPast && isAvailable && !isSelected ? 'text-gray-900 hover:bg-brand-50 font-medium' : ''}
+                        ${isSelected ? 'bg-brand-600 text-white font-medium' : ''}
+                        ${isToday && !isSelected ? 'ring-1 ring-brand-600' : ''}
                       `}
                     >
                       {day.getDate()}
@@ -521,8 +521,8 @@ export default function RescheduleMeetingPage() {
                       onClick={() => setSelectedSlot(slot)}
                       className={`w-full px-4 py-3 text-left rounded-lg border transition-colors ${
                         isSelected
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                          ? 'border-brand-600 bg-brand-50 text-brand-700'
+                          : 'border-gray-200 hover:border-brand-300 hover:bg-brand-50'
                       }`}
                     >
                       <span className="font-medium">{slot.startFormatted}</span>
@@ -538,7 +538,7 @@ export default function RescheduleMeetingPage() {
                 <button
                   onClick={handleReschedule}
                   disabled={pageState === 'rescheduling'}
-                  className="w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-4 py-3 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 disabled:bg-brand-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
                   {pageState === 'rescheduling' ? (
                     <>

@@ -258,7 +258,7 @@ export default async function DealDetailPage({
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
                   deal.sales_type === 'b2c'
                     ? 'bg-green-100 text-green-700'
-                    : 'bg-blue-100 text-blue-700'
+                    : 'bg-brand-100 text-brand-700'
                 }`}>
                   {deal.sales_type === 'b2c' ? 'B2C' : 'B2B'}
                 </span>
@@ -294,7 +294,7 @@ export default async function DealDetailPage({
                       isLost && isCurrent
                         ? 'bg-red-500'
                         : isCompleted || isCurrent
-                          ? 'bg-blue-500'
+                          ? 'bg-brand-500'
                           : 'bg-gray-200'
                     }`}
                   />
@@ -330,7 +330,7 @@ export default async function DealDetailPage({
                     <dd>
                       <Link
                         href={`/companies/${company.id}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-brand-600 hover:underline"
                       >
                         {company.name}
                       </Link>
@@ -343,7 +343,7 @@ export default async function DealDetailPage({
                     <dd>
                       <Link
                         href={`/contacts/${contact.id}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-brand-600 hover:underline"
                       >
                         {contact.first_name} {contact.last_name}
                       </Link>
@@ -380,7 +380,7 @@ export default async function DealDetailPage({
                   <h2 className="font-medium text-gray-900">Contact Info</h2>
                   <Link
                     href={`/contacts/${contact.id}`}
-                    className="text-xs text-blue-600 hover:underline"
+                    className="text-xs text-brand-600 hover:underline"
                   >
                     View Contact
                   </Link>
@@ -398,7 +398,7 @@ export default async function DealDetailPage({
                       <dd>
                         <a
                           href={`mailto:${contact.email}`}
-                          className="text-blue-600 hover:underline"
+                          className="text-brand-600 hover:underline"
                         >
                           {contact.email}
                         </a>
@@ -411,7 +411,7 @@ export default async function DealDetailPage({
                       <dd>
                         <a
                           href={`tel:${contact.phone}`}
-                          className="text-blue-600 hover:underline"
+                          className="text-brand-600 hover:underline"
                         >
                           {contact.phone}
                         </a>
@@ -421,7 +421,7 @@ export default async function DealDetailPage({
                   {(contact.lead_source || contact.client_type) && (
                     <div className="flex flex-wrap gap-2 pt-1">
                       {contact.lead_source && (
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-brand-100 text-brand-800">
                           {LEAD_SOURCE_LABELS[contact.lead_source] || contact.lead_source}
                         </span>
                       )}
@@ -489,7 +489,7 @@ export default async function DealDetailPage({
                         <div
                           className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                             index === valueChanges.length - 1
-                              ? 'bg-blue-500 text-white'
+                              ? 'bg-brand-500 text-white'
                               : 'bg-gray-200 text-gray-600'
                           }`}
                         >

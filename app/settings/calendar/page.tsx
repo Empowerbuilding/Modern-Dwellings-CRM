@@ -296,7 +296,7 @@ export default function CalendarSettingsPage() {
               Profile
             </button>
             <button
-              className="pb-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-colors"
+              className="pb-3 text-sm font-medium border-b-2 border-brand-600 text-brand-600 transition-colors"
             >
               Calendar
             </button>
@@ -351,7 +351,7 @@ export default function CalendarSettingsPage() {
               </p>
               <a
                 href="/api/calendar/connect"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.372 0 0 5.373 0 12s5.372 12 12 12c6.627 0 12-5.373 12-12S18.627 0 12 0zm.14 19.018c-3.868 0-7-3.14-7-7.018c0-3.878 3.132-7.018 7-7.018c1.89 0 3.47.697 4.682 1.829l-1.974 1.978v-.004c-.735-.702-1.667-1.062-2.708-1.062c-2.31 0-4.187 1.956-4.187 4.273c0 2.315 1.877 4.277 4.187 4.277c2.096 0 3.522-1.202 3.816-2.852H12.14v-2.737h6.585c.088.47.135.96.135 1.474c0 4.01-2.677 6.86-6.72 6.86z"/>
@@ -397,7 +397,7 @@ export default function CalendarSettingsPage() {
               <h2 className="text-lg font-medium text-gray-900">Meeting Types</h2>
               <button
                 onClick={openCreateForm}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -454,7 +454,7 @@ export default function CalendarSettingsPage() {
                           </code>
                           <button
                             onClick={() => handleCopyLink(mt.slug)}
-                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                            className="text-xs text-brand-600 hover:text-brand-700 font-medium"
                           >
                             Copy Link
                           </button>
@@ -577,7 +577,7 @@ export default function CalendarSettingsPage() {
               <h2 className="text-lg font-medium text-gray-900">Upcoming Meetings</h2>
               <Link
                 href="/meetings"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-brand-600 hover:text-brand-700 font-medium"
               >
                 View All
               </Link>
@@ -585,7 +585,7 @@ export default function CalendarSettingsPage() {
 
             {loadingMeetings ? (
               <div className="flex items-center justify-center py-8">
-                <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-gray-300 border-t-brand-600 rounded-full animate-spin" />
               </div>
             ) : (
               <UpcomingMeetings

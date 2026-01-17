@@ -196,7 +196,7 @@ export function DealSlideOver({
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
               />
             </div>
 
@@ -215,7 +215,7 @@ export function DealSlideOver({
                     const newStage = newStages.includes(formData.stage) ? formData.stage : 'qualified'
                     setFormData({ ...formData, sales_type: newSalesType, stage: newStage })
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   <option value="b2c">B2C</option>
                   <option value="b2b">B2B</option>
@@ -229,7 +229,7 @@ export function DealSlideOver({
                   required
                   value={formData.stage}
                   onChange={(e) => setFormData({ ...formData, stage: e.target.value as PipelineStage })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   {stages.map((stage) => (
                     <option key={stage} value={stage}>
@@ -247,7 +247,7 @@ export function DealSlideOver({
               <select
                 value={formData.deal_type}
                 onChange={(e) => setFormData({ ...formData, deal_type: e.target.value as DealType | '' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">Select type</option>
                 {DEAL_TYPES.map((type) => (
@@ -265,7 +265,7 @@ export function DealSlideOver({
               <select
                 value={formData.company_id}
                 onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">No company</option>
                 {companies.map((company) => (
@@ -283,7 +283,7 @@ export function DealSlideOver({
               <select
                 value={formData.contact_id}
                 onChange={(e) => setFormData({ ...formData, contact_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">No contact</option>
                 {contacts.map((contact) => (
@@ -301,7 +301,7 @@ export function DealSlideOver({
               <select
                 value={formData.owner_id}
                 onChange={(e) => setFormData({ ...formData, owner_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">Unassigned</option>
                 {users.map((user) => (
@@ -323,7 +323,7 @@ export function DealSlideOver({
                   step="0.01"
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
               <div>
@@ -336,7 +336,7 @@ export function DealSlideOver({
                   max="100"
                   value={formData.probability}
                   onChange={(e) => setFormData({ ...formData, probability: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
             </div>
@@ -349,7 +349,7 @@ export function DealSlideOver({
                 type="date"
                 value={formData.expected_close_date}
                 onChange={(e) => setFormData({ ...formData, expected_close_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
               />
             </div>
 
@@ -361,7 +361,7 @@ export function DealSlideOver({
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none"
               />
             </div>
           </div>
@@ -388,7 +388,7 @@ export function DealSlideOver({
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
             >
               {saving ? 'Saving...' : 'Update'}
             </button>

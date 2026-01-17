@@ -239,7 +239,7 @@ export default function BookingConfirmation({
                   href={meeting.googleMeetLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 14.052l-1.676 1.095a.75.75 0 01-1.168-.625v-1.69H9.5a1.5 1.5 0 01-1.5-1.5v-2.664a1.5 1.5 0 011.5-1.5h5.55v-1.69a.75.75 0 011.168-.625l1.676 1.095a2.25 2.25 0 010 3.75l-1.676 1.095a.75.75 0 01-1.168-.625v-1.69H9.5v2.664h5.55v-1.69a.75.75 0 011.168-.625l1.676 1.095a2.25 2.25 0 010 3.75z" />
@@ -257,8 +257,8 @@ export default function BookingConfirmation({
 
       {/* Custom Confirmation Message */}
       {meetingType.confirmation_message && (
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 text-left">
-          <p className="text-sm text-blue-800">{meetingType.confirmation_message}</p>
+        <div className="bg-brand-50 border border-brand-100 rounded-lg p-4 mb-6 text-left">
+          <p className="text-sm text-brand-800">{meetingType.confirmation_message}</p>
         </div>
       )}
 
@@ -282,14 +282,14 @@ export default function BookingConfirmation({
         <div className="flex items-center justify-center gap-6 text-sm">
           <a
             href={`/book/reschedule/${meeting.id}`}
-            className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+            className="text-brand-600 hover:text-brand-700 hover:underline font-medium"
           >
             Reschedule
           </a>
           <span className="text-gray-300">|</span>
           <a
             href={`/book/cancel/${meeting.id}`}
-            className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+            className="text-brand-600 hover:text-brand-700 hover:underline font-medium"
           >
             Cancel
           </a>

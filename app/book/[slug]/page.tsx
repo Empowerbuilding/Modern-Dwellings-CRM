@@ -478,7 +478,7 @@ export default function BookingPage() {
     return (
       <div className={`flex items-center justify-center ${isEmbed ? 'min-h-[400px] bg-white' : 'min-h-screen bg-gray-50'}`}>
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -547,7 +547,7 @@ export default function BookingPage() {
                     href={bookedMeeting.googleMeetLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-brand-600 hover:underline"
                   >
                     Join Google Meet
                   </a>
@@ -608,7 +608,7 @@ export default function BookingPage() {
                     required
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
                 <div>
@@ -620,7 +620,7 @@ export default function BookingPage() {
                     required
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
               </div>
@@ -634,7 +634,7 @@ export default function BookingPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
 
@@ -646,7 +646,7 @@ export default function BookingPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
 
@@ -667,7 +667,7 @@ export default function BookingPage() {
                       }
                       placeholder={field.placeholder}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none"
                     />
                   ) : field.type === 'select' ? (
                     <select
@@ -678,7 +678,7 @@ export default function BookingPage() {
                           customFields: { ...formData.customFields, [field.label]: e.target.value },
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                     >
                       <option value="">Select...</option>
                       {field.options?.map((opt) => (
@@ -698,7 +698,7 @@ export default function BookingPage() {
                         })
                       }
                       placeholder={field.placeholder}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   )}
                 </div>
@@ -713,7 +713,7 @@ export default function BookingPage() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Anything you'd like us to know beforehand?"
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none"
                 />
               </div>
 
@@ -886,7 +886,7 @@ export default function BookingPage() {
                 <select
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
-                  className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 >
                   <option value="America/New_York">Eastern Time (ET)</option>
                   <option value="America/Chicago">Central Time (CT)</option>
@@ -936,14 +936,14 @@ export default function BookingPage() {
                         disabled={!isAvailable}
                         className={`w-full py-3 px-4 text-left border rounded-lg transition-colors ${
                           isAvailable
-                            ? 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 group cursor-pointer'
+                            ? 'border-gray-200 hover:border-brand-500 hover:bg-brand-50 group cursor-pointer'
                             : 'border-gray-100 bg-gray-50 cursor-not-allowed'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className={`font-medium ${
                             isAvailable
-                              ? 'text-gray-900 group-hover:text-blue-600'
+                              ? 'text-gray-900 group-hover:text-brand-600'
                               : 'text-gray-400 line-through'
                           }`}>
                             {slot.startFormatted}

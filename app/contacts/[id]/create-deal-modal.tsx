@@ -146,7 +146,7 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
                   </button>
                   <Link
                     href={`/deals/${createdDeal.id}`}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
                   >
                     View Deal
                   </Link>
@@ -189,7 +189,7 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
                       onClick={() => setSalesType('b2b')}
                       className={`px-4 py-3 rounded-lg border-2 text-sm font-medium transition-colors ${
                         salesType === 'b2b'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          ? 'border-brand-500 bg-brand-50 text-brand-700'
                           : 'border-gray-200 text-gray-700 hover:border-gray-300'
                       }`}
                     >
@@ -213,7 +213,7 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
                       value={value}
                       onChange={(e) => setValue(e.target.value)}
                       placeholder="0"
-                      className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   </div>
                   <p className="mt-1 text-xs text-gray-500">You can set or update this later</p>
@@ -231,7 +231,7 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
                   <button
                     type="submit"
                     disabled={creating}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
                   >
                     {creating ? 'Creating...' : 'Create Deal'}
                   </button>

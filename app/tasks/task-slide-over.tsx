@@ -391,7 +391,7 @@ export function TaskSlideOver({
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="e.g., Follow up with client"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
               />
             </div>
 
@@ -405,7 +405,7 @@ export function TaskSlideOver({
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
                 placeholder="Add any additional details..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none"
               />
             </div>
 
@@ -420,7 +420,7 @@ export function TaskSlideOver({
                   onChange={(e) =>
                     setFormData({ ...formData, priority: e.target.value as TaskPriority })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   {TASK_PRIORITIES.map((priority) => (
                     <option key={priority} value={priority}>
@@ -438,7 +438,7 @@ export function TaskSlideOver({
                   onChange={(e) =>
                     setFormData({ ...formData, task_type: e.target.value as TaskType })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   {TASK_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -459,7 +459,7 @@ export function TaskSlideOver({
                   type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
               <div>
@@ -470,7 +470,7 @@ export function TaskSlideOver({
                   type="time"
                   value={formData.due_time}
                   onChange={(e) => setFormData({ ...formData, due_time: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
             </div>
@@ -483,7 +483,7 @@ export function TaskSlideOver({
               <select
                 value={formData.assigned_to}
                 onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">Unassigned</option>
                 {users.map((user) => (
@@ -514,7 +514,7 @@ export function TaskSlideOver({
                       : formData.assigned_to
                     setFormData({ ...formData, contact_id: contactId, assigned_to: newAssignedTo })
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   <option value="">No contact</option>
                   {contacts.map((contact) => (
@@ -535,7 +535,7 @@ export function TaskSlideOver({
                     <Link
                       href={`/contacts/${formData.contact_id}`}
                       target="_blank"
-                      className="text-xs text-blue-600 hover:text-blue-800"
+                      className="text-xs text-brand-600 hover:text-brand-800"
                     >
                       View Contact
                     </Link>
@@ -548,7 +548,7 @@ export function TaskSlideOver({
                       onChange={(e) => setNewNote(e.target.value)}
                       placeholder="Add a note..."
                       rows={2}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none bg-white"
                     />
                     {newNote.trim() && (
                       <div className="flex justify-end mt-1">
@@ -556,7 +556,7 @@ export function TaskSlideOver({
                           type="button"
                           onClick={handleAddNote}
                           disabled={addingNote}
-                          className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                          className="px-3 py-1 text-xs font-medium text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50 transition-colors"
                         >
                           {addingNote ? 'Adding...' : 'Add Note'}
                         </button>
@@ -585,7 +585,7 @@ export function TaskSlideOver({
                                   value={editingNoteContent}
                                   onChange={(e) => setEditingNoteContent(e.target.value)}
                                   rows={3}
-                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none"
                                   autoFocus
                                 />
                                 <div className="flex justify-end gap-2 mt-1">
@@ -600,7 +600,7 @@ export function TaskSlideOver({
                                     type="button"
                                     onClick={handleSaveEdit}
                                     disabled={savingNote || !editingNoteContent.trim()}
-                                    className="px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                                    className="px-2 py-1 text-xs font-medium text-white bg-brand-600 rounded hover:bg-brand-700 disabled:opacity-50"
                                   >
                                     {savingNote ? 'Saving...' : 'Save'}
                                   </button>
@@ -624,7 +624,7 @@ export function TaskSlideOver({
                                       <button
                                         type="button"
                                         onClick={() => toggleNoteExpanded(note.id)}
-                                        className="text-xs text-blue-600 hover:text-blue-800"
+                                        className="text-xs text-brand-600 hover:text-brand-800"
                                       >
                                         {isExpanded ? 'Show less' : 'Show more'}
                                       </button>
@@ -670,7 +670,7 @@ export function TaskSlideOver({
                 <select
                   value={formData.deal_id}
                   onChange={(e) => setFormData({ ...formData, deal_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   <option value="">No deal</option>
                   {deals.map((deal) => (
@@ -689,7 +689,7 @@ export function TaskSlideOver({
                 <select
                   value={formData.company_id}
                   onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   <option value="">No company</option>
                   {companies.map((company) => (
@@ -728,7 +728,7 @@ export function TaskSlideOver({
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
             >
               {saving ? 'Saving...' : task ? 'Update' : 'Create'}
             </button>

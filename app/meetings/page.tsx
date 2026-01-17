@@ -222,7 +222,7 @@ export default function MeetingsPage() {
                     onClick={() => setTimeFilter(filter)}
                     className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                       timeFilter === filter
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-brand-600 text-white'
                         : 'bg-white text-gray-700 hover:bg-gray-50'
                     } ${filter !== 'upcoming' ? 'border-l border-gray-300' : ''}`}
                   >
@@ -238,7 +238,7 @@ export default function MeetingsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
               >
                 <option value="all">All Statuses</option>
                 <option value="scheduled">Scheduled</option>
@@ -260,7 +260,7 @@ export default function MeetingsPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-brand-600 rounded-full animate-spin" />
             </div>
           ) : (
             <UpcomingMeetings

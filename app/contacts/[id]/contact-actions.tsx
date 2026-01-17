@@ -160,7 +160,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
         </button>
         <button
           onClick={() => setSlideOverOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
         >
           Edit Contact
         </button>
@@ -221,7 +221,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                       required
                       value={formData.first_name}
                       onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   </div>
                   <div>
@@ -233,7 +233,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                       required
                       value={formData.last_name}
                       onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   </div>
                 </div>
@@ -246,7 +246,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
 
@@ -258,7 +258,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
 
@@ -269,7 +269,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                   <select
                     value={formData.company_id}
                     onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                   >
                     <option value="">No company</option>
                     {companies.map((company) => (
@@ -289,7 +289,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     placeholder="e.g. Owner, Project Manager"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
 
@@ -301,7 +301,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                     <select
                       value={formData.lead_source}
                       onChange={(e) => setFormData({ ...formData, lead_source: e.target.value as LeadSource | '' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                     >
                       <option value="">Select source</option>
                       {LEAD_SOURCES.map((source) => (
@@ -318,7 +318,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                     <select
                       value={formData.client_type}
                       onChange={(e) => setFormData({ ...formData, client_type: e.target.value as ClientType | '' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                     >
                       <option value="">Select type</option>
                       {CLIENT_TYPES.map((type) => (
@@ -336,7 +336,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                     id="is_primary"
                     checked={formData.is_primary}
                     onChange={(e) => setFormData({ ...formData, is_primary: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
                   />
                   <label htmlFor="is_primary" className="text-sm text-gray-700">
                     Primary contact for company
@@ -367,7 +367,7 @@ export function ContactActions({ contact, companies }: ContactActionsProps) {
                 <button
                   onClick={handleSubmit}
                   disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
                 >
                   {saving ? 'Saving...' : 'Update'}
                 </button>

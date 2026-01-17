@@ -51,7 +51,7 @@ export function ContactOwnerSelect({
             value={ownerId || ''}
             onChange={(e) => handleChange(e.target.value)}
             disabled={saving}
-            className="w-full px-3 py-1.5 pr-8 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white appearance-none disabled:opacity-50"
+            className="w-full px-3 py-1.5 pr-8 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white appearance-none disabled:opacity-50"
           >
             <option value="">Unassigned</option>
             {users.map((user) => (
@@ -75,7 +75,7 @@ export function ContactOwnerSelect({
         </div>
         {currentOwner && (
           <div className="flex items-center gap-2 mt-1.5">
-            <div className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-medium">
+            <div className="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs font-medium">
               {currentOwner.name.split(' ').map(n => n[0]).join('')}
             </div>
             <span className="text-sm text-gray-700">{currentOwner.name}</span>

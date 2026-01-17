@@ -192,7 +192,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab('profile')}
               className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'profile'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-brand-600 text-brand-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -215,7 +215,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab('team')}
                 className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'team'
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-brand-600 text-brand-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
 
@@ -285,7 +285,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -296,8 +296,8 @@ export default function SettingsPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
@@ -310,7 +310,7 @@ export default function SettingsPage() {
               </div>
               <button
                 onClick={() => router.push('/settings/calendar')}
-                className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
               >
                 Manage →
               </button>
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                       onChange={(e) => setInviteName(e.target.value)}
                       required
                       placeholder="John Doe"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   </div>
 
@@ -364,7 +364,7 @@ export default function SettingsPage() {
                       onChange={(e) => setInviteEmail(e.target.value)}
                       required
                       placeholder="john@example.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   </div>
                 </div>
@@ -376,7 +376,7 @@ export default function SettingsPage() {
                   <select
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value as 'sales' | 'admin')}
-                    className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                    className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                   >
                     <option value="sales">Sales</option>
                     <option value="admin">Admin</option>
@@ -386,7 +386,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={inviting}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
                 >
                   {inviting ? 'Inviting...' : 'Send Invite'}
                 </button>
@@ -425,7 +425,7 @@ export default function SettingsPage() {
                         <tr key={user.id}>
                           <td className="py-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium">
+                              <div className="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center text-sm font-medium">
                                 {user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                               </div>
                               <span className="text-sm font-medium text-gray-900">

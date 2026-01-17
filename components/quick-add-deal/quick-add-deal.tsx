@@ -295,14 +295,14 @@ export function QuickAddDeal() {
       {/* Slide-over panel */}
       <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl z-50 flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-blue-600">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-brand-600">
           <div>
             <h2 className="text-lg font-semibold text-white">Quick Add Deal</h2>
-            <p className="text-blue-100 text-sm">Add a new lead in seconds</p>
+            <p className="text-brand-100 text-sm">Add a new lead in seconds</p>
           </div>
           <button
             onClick={close}
-            className="p-2 text-blue-100 hover:text-white transition-colors"
+            className="p-2 text-brand-100 hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -331,7 +331,7 @@ export function QuickAddDeal() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Smith Residence - Custom Home"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
               />
             </div>
 
@@ -345,7 +345,7 @@ export function QuickAddDeal() {
                   <span className="flex-1 text-gray-900">
                     {selectedCompany.name}
                     {selectedCompany.isNew && (
-                      <span className="ml-2 text-xs text-blue-600">(new)</span>
+                      <span className="ml-2 text-xs text-brand-600">(new)</span>
                     )}
                   </span>
                   <button
@@ -369,7 +369,7 @@ export function QuickAddDeal() {
                   onFocus={() => setShowCompanyDropdown(true)}
                   onBlur={() => setTimeout(() => setShowCompanyDropdown(false), 200)}
                   placeholder="Search or create company..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               )}
               {showCompanyDropdown && companyOptions.length > 0 && (
@@ -387,7 +387,7 @@ export function QuickAddDeal() {
                       >
                         {option.isNew ? (
                           <>
-                            <span className="text-blue-600">+ Create</span>
+                            <span className="text-brand-600">+ Create</span>
                             <span className="font-medium">"{option.name}"</span>
                           </>
                         ) : (
@@ -417,7 +417,7 @@ export function QuickAddDeal() {
                     onClick={() => setNewCompanyType('builder')}
                     className={`px-3 py-1 text-xs rounded-full ${
                       newCompanyType === 'builder'
-                        ? 'bg-blue-100 text-blue-800'
+                        ? 'bg-brand-100 text-brand-800'
                         : 'bg-gray-100 text-gray-600'
                     }`}
                   >
@@ -437,7 +437,7 @@ export function QuickAddDeal() {
                   <span className="flex-1 text-gray-900">
                     {selectedContact.name}
                     {selectedContact.isNew && (
-                      <span className="ml-2 text-xs text-blue-600">(new)</span>
+                      <span className="ml-2 text-xs text-brand-600">(new)</span>
                     )}
                   </span>
                   <button
@@ -459,7 +459,7 @@ export function QuickAddDeal() {
                   onFocus={() => setShowContactDropdown(true)}
                   onBlur={() => setTimeout(() => setShowContactDropdown(false), 200)}
                   placeholder="Search or create contact..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               )}
               {showContactDropdown && contactOptions.length > 0 && (
@@ -477,7 +477,7 @@ export function QuickAddDeal() {
                       >
                         {option.isNew ? (
                           <>
-                            <span className="text-blue-600">+ Create</span>
+                            <span className="text-brand-600">+ Create</span>
                             <span className="font-medium">"{option.name}"</span>
                           </>
                         ) : (
@@ -504,7 +504,7 @@ export function QuickAddDeal() {
                   placeholder="0"
                   min="0"
                   step="100"
-                  className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
             </div>
@@ -517,7 +517,7 @@ export function QuickAddDeal() {
               <select
                 value={dealType}
                 onChange={(e) => setDealType(e.target.value as DealType | '')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">Select type...</option>
                 {DEAL_TYPES.map((type) => (
@@ -537,7 +537,7 @@ export function QuickAddDeal() {
                 type="date"
                 value={expectedCloseDate}
                 onChange={(e) => setExpectedCloseDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
               />
             </div>
           </div>
@@ -566,7 +566,7 @@ export function QuickAddDeal() {
                   onClick={() => setSalesType('b2b')}
                   className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
                     salesType === 'b2b'
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      ? 'border-brand-500 bg-brand-50 text-brand-700'
                       : 'border-gray-300 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
@@ -611,7 +611,7 @@ export function QuickAddDeal() {
             <button
               onClick={handleSubmit}
               disabled={saving || !title.trim()}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
             >
               {saving ? 'Adding...' : 'Add Deal'}
             </button>

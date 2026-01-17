@@ -29,7 +29,7 @@ const ACTIVITY_TYPE_CONFIG: Partial<Record<ActivityType, { label: string; icon: 
   },
   email_sent: {
     label: 'Email',
-    color: 'bg-blue-100 text-blue-600',
+    color: 'bg-brand-100 text-brand-600',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -171,7 +171,7 @@ export function ActivitiesSection({ dealId, activities, currentUserId }: Activit
         <h2 className="font-medium text-gray-900">Activity</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
         >
           {showForm ? 'Cancel' : '+ Add'}
         </button>
@@ -210,7 +210,7 @@ export function ActivitiesSection({ dealId, activities, currentUserId }: Activit
               placeholder={`${ACTIVITY_TYPE_CONFIG[formData.activity_type]?.label || 'Activity'} title...`}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm"
               autoFocus
             />
 
@@ -220,7 +220,7 @@ export function ActivitiesSection({ dealId, activities, currentUserId }: Activit
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm resize-none"
             />
 
             {/* Submit */}
@@ -228,7 +228,7 @@ export function ActivitiesSection({ dealId, activities, currentUserId }: Activit
               <button
                 type="submit"
                 disabled={saving || !formData.title.trim()}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving...' : 'Add Activity'}
               </button>

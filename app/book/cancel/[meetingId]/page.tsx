@@ -131,7 +131,7 @@ export default function CancelMeetingPage() {
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-brand-600 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading meeting details...</p>
         </div>
       </main>
@@ -154,7 +154,7 @@ export default function CancelMeetingPage() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+            className="inline-flex items-center gap-2 text-brand-600 hover:text-brand-700 font-medium"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -183,7 +183,7 @@ export default function CancelMeetingPage() {
           {meeting.meeting_type?.slug && (
             <Link
               href={`/book/${meeting.meeting_type.slug}`}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 transition-colors"
             >
               Book a New Meeting
             </Link>
@@ -207,7 +207,7 @@ export default function CancelMeetingPage() {
           <p className="text-gray-600 mb-6">{errorMessage}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-brand-600 hover:text-brand-700 font-medium"
           >
             Try Again
           </button>
@@ -233,7 +233,7 @@ export default function CancelMeetingPage() {
           {meeting?.meeting_type?.slug && (
             <Link
               href={`/book/${meeting.meeting_type.slug}`}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 transition-colors"
             >
               Book a New Meeting
             </Link>

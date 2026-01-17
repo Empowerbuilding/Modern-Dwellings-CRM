@@ -121,7 +121,7 @@ export function Sidebar() {
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
           <div className="flex items-center">
             <img
-              src="https://aepixjgabpgkvoxmudwo.supabase.co/storage/v1/object/public/company-logos/0cf9dac9-b539-4d3f-9ad0-303332323442/company_logo_112b338d.png"
+              src="https://ozhkjwcjsifdhfdexayd.supabase.co/storage/v1/object/public/website-images/Showcase/showcase-builders-logo%20(2).avif"
               alt="Logo"
               className="w-8 h-8 rounded-lg object-contain"
             />
@@ -150,7 +150,7 @@ export function Sidebar() {
                     onClick={() => router.push(item.href)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors md:justify-center lg:justify-start ${
                       active
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-brand-600 text-white'
                         : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                     }`}
                     title={item.label}
@@ -170,7 +170,7 @@ export function Sidebar() {
                   onClick={() => router.push('/settings?tab=team')}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors md:justify-center lg:justify-start ${
                     pathname === '/settings' && pathname.includes('team')
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-brand-600 text-white'
                       : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
                   title="Team"
@@ -198,7 +198,7 @@ export function Sidebar() {
                 }}
                 className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors md:justify-center lg:justify-start"
               >
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-medium flex-shrink-0">
                   {crmUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </div>
                 <div className="flex-1 min-w-0 text-left md:hidden lg:block overflow-hidden">

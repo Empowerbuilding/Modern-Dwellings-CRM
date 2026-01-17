@@ -201,7 +201,7 @@ export function CreateTaskModal({
                   </button>
                   <Link
                     href="/tasks"
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
                   >
                     View All Tasks
                   </Link>
@@ -234,7 +234,7 @@ export function CreateTaskModal({
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="e.g., Follow up with client"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
 
@@ -247,7 +247,7 @@ export function CreateTaskModal({
                       onChange={(e) =>
                         setFormData({ ...formData, priority: e.target.value as TaskPriority })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                     >
                       {TASK_PRIORITIES.map((priority) => (
                         <option key={priority} value={priority}>
@@ -263,7 +263,7 @@ export function CreateTaskModal({
                       onChange={(e) =>
                         setFormData({ ...formData, task_type: e.target.value as TaskType })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                     >
                       {TASK_TYPES.map((type) => (
                         <option key={type} value={type}>
@@ -282,7 +282,7 @@ export function CreateTaskModal({
                       type="date"
                       value={formData.due_date}
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   </div>
                   <div>
@@ -291,7 +291,7 @@ export function CreateTaskModal({
                       type="time"
                       value={formData.due_time}
                       onChange={(e) => setFormData({ ...formData, due_time: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   </div>
                 </div>
@@ -304,7 +304,7 @@ export function CreateTaskModal({
                   <select
                     value={formData.assigned_to}
                     onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                   >
                     <option value="">Unassigned</option>
                     {users.map((user) => (
@@ -327,7 +327,7 @@ export function CreateTaskModal({
                   <button
                     type="submit"
                     disabled={creating}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
                   >
                     {creating ? 'Creating...' : 'Create Task'}
                   </button>

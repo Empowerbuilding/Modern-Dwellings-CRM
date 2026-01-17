@@ -84,7 +84,7 @@ function NoteContent({
       {needsExpand && (
         <button
           onClick={onToggleExpand}
-          className="text-xs text-blue-600 hover:text-blue-800 font-medium mt-1"
+          className="text-xs text-brand-600 hover:text-brand-800 font-medium mt-1"
         >
           {isExpanded ? 'Show less' : 'Show more'}
         </button>
@@ -234,7 +234,7 @@ export function NotesSection({
         <h2 className="font-medium text-gray-900">Notes</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
         >
           {showForm ? 'Cancel' : '+ Add Note'}
         </button>
@@ -249,7 +249,7 @@ export function NotesSection({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm resize-none"
               autoFocus
             />
             <div className="flex justify-end gap-2">
@@ -266,7 +266,7 @@ export function NotesSection({
               <button
                 type="submit"
                 disabled={saving || !content.trim()}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving...' : 'Save Note'}
               </button>
@@ -298,7 +298,7 @@ export function NotesSection({
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm resize-none"
                       autoFocus
                     />
                     <div className="flex justify-end gap-2">
@@ -313,7 +313,7 @@ export function NotesSection({
                         type="button"
                         onClick={() => handleSaveEdit(note.id)}
                         disabled={saving || !editContent.trim()}
-                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
                       >
                         {saving ? 'Saving...' : 'Save'}
                       </button>

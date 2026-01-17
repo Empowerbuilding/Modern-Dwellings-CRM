@@ -159,7 +159,7 @@ function AddDealModal({
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 placeholder="Deal title"
                 autoFocus
               />
@@ -172,7 +172,7 @@ function AddDealModal({
               <select
                 value={formData.contact_id}
                 onChange={(e) => setFormData({ ...formData, contact_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">No contact</option>
                 {contacts.map((contact) => (
@@ -193,7 +193,7 @@ function AddDealModal({
                   type="number"
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                  className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   placeholder="0"
                   min="0"
                 />
@@ -207,7 +207,7 @@ function AddDealModal({
               <select
                 value={formData.deal_type}
                 onChange={(e) => setFormData({ ...formData, deal_type: e.target.value as DealType | '' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">Select type...</option>
                 {DEAL_TYPES.map((type) => (
@@ -226,7 +226,7 @@ function AddDealModal({
                 type="date"
                 value={formData.expected_close_date}
                 onChange={(e) => setFormData({ ...formData, expected_close_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
               />
             </div>
 
@@ -241,7 +241,7 @@ function AddDealModal({
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Creating...' : 'Create Deal'}
               </button>
@@ -276,7 +276,7 @@ export function CompanyDealsSection({
         </h2>
         <button
           onClick={() => setModalOpen(true)}
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          className="text-sm text-brand-600 hover:text-brand-800 font-medium"
         >
           + Add Deal
         </button>
@@ -312,7 +312,7 @@ export function CompanyDealsSection({
                   <td className="py-2">
                     <Link
                       href={`/deals/${deal.id}`}
-                      className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                      className="text-sm font-medium text-gray-900 hover:text-brand-600"
                     >
                       {deal.title}
                     </Link>

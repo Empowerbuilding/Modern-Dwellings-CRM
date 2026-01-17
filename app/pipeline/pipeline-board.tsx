@@ -30,7 +30,7 @@ function getInitials(name: string): string {
 }
 
 const STAGE_DOT_COLORS: Record<PipelineStage, string> = {
-  qualified: 'bg-blue-500',
+  qualified: 'bg-brand-500',
   concept: 'bg-cyan-500',
   design: 'bg-indigo-500',
   engineering: 'bg-violet-500',
@@ -41,7 +41,7 @@ const STAGE_DOT_COLORS: Record<PipelineStage, string> = {
 }
 
 const DEAL_TYPE_COLORS: Record<DealType, string> = {
-  custom_design: 'border-l-blue-500',
+  custom_design: 'border-l-brand-500',
   builder_design: 'border-l-indigo-500',
   engineering: 'border-l-orange-500',
   software_fees: 'border-l-green-500',
@@ -208,7 +208,7 @@ export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
           <select
             value={ownerFilter}
             onChange={(e) => setOwnerFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
           >
             <option value="all">All Owners</option>
             {users.map((user) => (
@@ -290,13 +290,13 @@ export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
                                   : 'border-l-gray-300'
                               } ${
                                 snapshot.isDragging
-                                  ? 'shadow-lg ring-2 ring-blue-400'
+                                  ? 'shadow-lg ring-2 ring-brand-400'
                                   : ''
                               } ${updating === deal.id ? 'opacity-50' : ''}`}
                             >
                               <Link
                                 href={`/deals/${deal.id}`}
-                                className="font-medium text-gray-900 text-sm mb-1 line-clamp-2 hover:text-blue-600 block"
+                                className="font-medium text-gray-900 text-sm mb-1 line-clamp-2 hover:text-brand-600 block"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {deal.title}
@@ -324,7 +324,7 @@ export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
                                 )}
                                 {deal.owner_name && (
                                   <div
-                                    className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-medium ml-auto"
+                                    className="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center text-xs font-medium ml-auto"
                                     title={deal.owner_name}
                                   >
                                     {getInitials(deal.owner_name)}

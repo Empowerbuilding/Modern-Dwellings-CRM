@@ -193,7 +193,7 @@ export default async function Dashboard() {
             {/* B2B Builder Section */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
+                <div className="w-3 h-3 rounded-full bg-brand-500" />
                 <h3 className="font-medium text-gray-900">B2B Builder</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -208,12 +208,12 @@ export default async function Dashboard() {
                   </p>
                 </div>
                 {/* Closed */}
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-xs font-medium text-blue-700 uppercase tracking-wide mb-1">Closed</p>
-                  <p className="text-xl font-semibold text-blue-900">
+                <div className="bg-brand-50 rounded-lg p-4">
+                  <p className="text-xs font-medium text-brand-700 uppercase tracking-wide mb-1">Closed</p>
+                  <p className="text-xl font-semibold text-brand-900">
                     {formatCurrency(pipelineStats.b2b.closed.value)}
                   </p>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-brand-700">
                     {pipelineStats.b2b.closed.count} {pipelineStats.b2b.closed.count === 1 ? 'deal' : 'deals'}
                   </p>
                 </div>
@@ -267,7 +267,7 @@ export default async function Dashboard() {
                           <span className={`text-xs px-1.5 py-0.5 rounded ${
                             deal.sales_type === 'b2c'
                               ? 'bg-green-100 text-green-700'
-                              : 'bg-blue-100 text-blue-700'
+                              : 'bg-brand-100 text-brand-700'
                           }`}>
                             {deal.sales_type === 'b2c' ? 'B2C' : 'B2B'}
                           </span>

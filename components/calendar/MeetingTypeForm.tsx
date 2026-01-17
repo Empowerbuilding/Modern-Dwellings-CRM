@@ -357,7 +357,7 @@ export function MeetingTypeForm({
               onClick={() => setActiveSection(section.id)}
               className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
                 activeSection === section.id
-                  ? 'bg-blue-100 text-blue-700'
+                  ? 'bg-brand-100 text-brand-700'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -387,7 +387,7 @@ export function MeetingTypeForm({
                   value={formData.title}
                   onChange={(e) => handleTitleChange(e.target.value)}
                   placeholder="e.g., 30 Minute Consultation"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
 
@@ -401,7 +401,7 @@ export function MeetingTypeForm({
                   value={formData.slug}
                   onChange={(e) => handleSlugChange(e.target.value)}
                   placeholder="e.g., 30-minute-consultation"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none font-mono text-sm"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Booking link: crm.empowerbuilding.ai/book/<span className="font-medium">{formData.slug || 'your-slug'}</span>
@@ -417,7 +417,7 @@ export function MeetingTypeForm({
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Describe what this meeting is about..."
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none"
                 />
               </div>
 
@@ -429,7 +429,7 @@ export function MeetingTypeForm({
                   <select
                     value={formData.duration_minutes}
                     onChange={(e) => setFormData({ ...formData, duration_minutes: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                   >
                     {DURATION_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -446,7 +446,7 @@ export function MeetingTypeForm({
                   <select
                     value={formData.location_type}
                     onChange={(e) => setFormData({ ...formData, location_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                   >
                     {LOCATION_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -467,7 +467,7 @@ export function MeetingTypeForm({
                     value={formData.custom_location}
                     onChange={(e) => setFormData({ ...formData, custom_location: e.target.value })}
                     placeholder="Enter address or location details"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
               )}
@@ -489,7 +489,7 @@ export function MeetingTypeForm({
                       onClick={() => toggleDay(day.value)}
                       className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
                         formData.available_days.includes(day.value)
-                          ? 'bg-blue-600 text-white border-blue-600'
+                          ? 'bg-brand-600 text-white border-brand-600'
                           : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                       }`}
                     >
@@ -508,7 +508,7 @@ export function MeetingTypeForm({
                     type="time"
                     value={formData.availability_start}
                     onChange={(e) => setFormData({ ...formData, availability_start: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
                 <div>
@@ -519,7 +519,7 @@ export function MeetingTypeForm({
                     type="time"
                     value={formData.availability_end}
                     onChange={(e) => setFormData({ ...formData, availability_end: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
               </div>
@@ -531,7 +531,7 @@ export function MeetingTypeForm({
                 <select
                   value={formData.timezone}
                   onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   {TIMEZONE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -557,7 +557,7 @@ export function MeetingTypeForm({
                     max="120"
                     value={formData.buffer_before}
                     onChange={(e) => setFormData({ ...formData, buffer_before: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                   <p className="mt-1 text-xs text-gray-500">Blocked time before meeting</p>
                 </div>
@@ -571,7 +571,7 @@ export function MeetingTypeForm({
                     max="120"
                     value={formData.buffer_after}
                     onChange={(e) => setFormData({ ...formData, buffer_after: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                   <p className="mt-1 text-xs text-gray-500">Blocked time after meeting</p>
                 </div>
@@ -588,7 +588,7 @@ export function MeetingTypeForm({
                     max="168"
                     value={formData.min_notice_hours}
                     onChange={(e) => setFormData({ ...formData, min_notice_hours: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                   <p className="mt-1 text-xs text-gray-500">How far in advance must guests book</p>
                 </div>
@@ -602,7 +602,7 @@ export function MeetingTypeForm({
                     max="365"
                     value={formData.max_days_ahead}
                     onChange={(e) => setFormData({ ...formData, max_days_ahead: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                   <p className="mt-1 text-xs text-gray-500">How far into the future guests can book</p>
                 </div>
@@ -621,7 +621,7 @@ export function MeetingTypeForm({
                 <button
                   type="button"
                   onClick={addCustomField}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -666,7 +666,7 @@ export function MeetingTypeForm({
                             value={field.label}
                             onChange={(e) => updateCustomField(index, { label: e.target.value })}
                             placeholder="e.g., Preferred Square Footage"
-                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                           />
                         </div>
 
@@ -682,7 +682,7 @@ export function MeetingTypeForm({
                                   type: e.target.value as CustomField['type'],
                                 })
                               }
-                              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                             >
                               {FIELD_TYPES.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -699,7 +699,7 @@ export function MeetingTypeForm({
                                 onChange={(e) =>
                                   updateCustomField(index, { required: e.target.checked })
                                 }
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
                               />
                               <span className="text-sm text-gray-700">Required</span>
                             </label>
@@ -720,7 +720,7 @@ export function MeetingTypeForm({
                               }
                               placeholder="Under $100k&#10;$100k-$250k&#10;$250k-$500k&#10;Over $500k"
                               rows={4}
-                              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none font-mono"
+                              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none font-mono"
                             />
                           </div>
                         )}
@@ -750,7 +750,7 @@ export function MeetingTypeForm({
                     type="text"
                     value={formData.brand_color}
                     onChange={(e) => setFormData({ ...formData, brand_color: e.target.value })}
-                    className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
+                    className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none font-mono text-sm"
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">Used for buttons and accents on the booking page</p>
@@ -765,7 +765,7 @@ export function MeetingTypeForm({
                   value={formData.logo_url}
                   onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
                   placeholder="https://example.com/logo.png"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
                 <p className="mt-1 text-xs text-gray-500">Logo displayed on the booking page (recommended: square image, at least 48x48px)</p>
                 {formData.logo_url && (
@@ -792,7 +792,7 @@ export function MeetingTypeForm({
                   onChange={(e) => setFormData({ ...formData, confirmation_message: e.target.value })}
                   placeholder="Thank you for scheduling! We look forward to speaking with you."
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none"
                 />
                 <p className="mt-1 text-xs text-gray-500">Shown to guests after they book</p>
               </div>
@@ -812,7 +812,7 @@ export function MeetingTypeForm({
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Meeting Type'}
           </button>

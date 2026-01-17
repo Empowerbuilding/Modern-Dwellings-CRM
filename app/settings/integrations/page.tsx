@@ -181,7 +181,7 @@ export default function IntegrationsSettingsPage() {
               Calendar
             </button>
             <button
-              className="pb-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-colors"
+              className="pb-3 text-sm font-medium border-b-2 border-brand-600 text-brand-600 transition-colors"
             >
               Integrations
             </button>
@@ -267,8 +267,8 @@ export default function IntegrationsSettingsPage() {
                 Connect your Facebook account to receive leads from Facebook Lead Ads and send
                 conversion events for better ad optimization.
               </p>
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
+              <div className="mb-4 p-3 bg-brand-50 border border-brand-200 rounded-lg">
+                <p className="text-sm text-brand-800">
                   <strong>Permissions requested:</strong> leads_retrieval, pages_read_engagement,
                   pages_show_list, ads_management
                 </p>
@@ -321,7 +321,7 @@ export default function IntegrationsSettingsPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => router.push('/settings/calendar')}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-brand-600 hover:text-brand-700 hover:bg-brand-50 rounded-lg transition-colors"
                 >
                   Manage
                 </button>
@@ -342,7 +342,7 @@ export default function IntegrationsSettingsPage() {
               </p>
               <a
                 href="/api/calendar/connect"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

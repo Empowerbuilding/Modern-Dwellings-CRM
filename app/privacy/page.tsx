@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
       <div className="max-w-3xl mx-auto px-4 py-12">
         <Link
           href="/"
-          className="text-sm text-blue-600 hover:text-blue-800 mb-8 inline-block"
+          className="text-sm text-brand-600 hover:text-brand-800 mb-8 inline-block"
         >
           &larr; Back to Home
         </Link>
@@ -27,7 +27,7 @@ export default function PrivacyPolicyPage() {
               This Privacy Policy applies to the services provided by <strong>Barnhaus Steel Builders</strong> and <strong>Empower Building AI</strong>.
             </p>
             <p className="mt-2">
-              Contact Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-blue-600 hover:underline">info@barnhaussteelbuilders.com</a>
+              Contact Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-brand-600 hover:underline">info@barnhaussteelbuilders.com</a>
             </p>
           </section>
 
@@ -104,7 +104,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">Data Deletion Requests</h2>
             <p>
               To request deletion of your personal data, please contact us at{' '}
-              <a href="mailto:info@barnhaussteelbuilders.com" className="text-blue-600 hover:underline">
+              <a href="mailto:info@barnhaussteelbuilders.com" className="text-brand-600 hover:underline">
                 info@barnhaussteelbuilders.com
               </a>{' '}
               with the subject line &quot;Data Deletion Request&quot;. Please include your name and email address so we can locate your records.
@@ -141,7 +141,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <p className="mt-2">
               <strong>Barnhaus Steel Builders / Empower Building AI</strong><br />
-              Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-blue-600 hover:underline">info@barnhaussteelbuilders.com</a>
+              Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-brand-600 hover:underline">info@barnhaussteelbuilders.com</a>
             </p>
           </section>
         </div>

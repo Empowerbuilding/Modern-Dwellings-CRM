@@ -67,7 +67,7 @@ export function LifecycleStageSelect({ contactId, currentStage }: LifecycleStage
           value={stage || ''}
           onChange={(e) => handleChange(e.target.value as LifecycleStage)}
           disabled={isUpdating}
-          className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none ${currentColors} ${isUpdating ? 'opacity-50 cursor-wait' : ''}`}
+          className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer focus:ring-2 focus:ring-brand-500 outline-none ${currentColors} ${isUpdating ? 'opacity-50 cursor-wait' : ''}`}
         >
           {LIFECYCLE_STAGES.map((s) => (
             <option key={s} value={s}>

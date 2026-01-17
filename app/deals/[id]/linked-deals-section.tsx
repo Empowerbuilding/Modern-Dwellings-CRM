@@ -118,7 +118,7 @@ export function LinkedDealsSection({ dealId, linkedDeals: initialLinkedDeals }: 
         <h2 className="font-medium text-gray-900">Linked Deals</h2>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          className="text-sm text-brand-600 hover:text-brand-700 font-medium"
         >
           + Link Deal
         </button>
@@ -135,9 +135,9 @@ export function LinkedDealsSection({ dealId, linkedDeals: initialLinkedDeals }: 
               key={link.id}
               className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg group"
             >
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="flex-shrink-0 w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center">
                 {link.relationship_type === 'referral_source' && (
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 )}
@@ -157,7 +157,7 @@ export function LinkedDealsSection({ dealId, linkedDeals: initialLinkedDeals }: 
                   <div>
                     <Link
                       href={`/deals/${link.linked_deal.id}`}
-                      className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                      className="text-sm font-medium text-gray-900 hover:text-brand-600"
                     >
                       {link.linked_deal.title}
                     </Link>
@@ -219,7 +219,7 @@ export function LinkedDealsSection({ dealId, linkedDeals: initialLinkedDeals }: 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Type to search deals..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 autoFocus
               />
             </div>
@@ -262,7 +262,7 @@ export function LinkedDealsSection({ dealId, linkedDeals: initialLinkedDeals }: 
 
             {/* Selected deal */}
             {selectedDeal && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mb-4 p-3 bg-brand-50 border border-brand-200 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-900">{selectedDeal.title}</p>
@@ -293,7 +293,7 @@ export function LinkedDealsSection({ dealId, linkedDeals: initialLinkedDeals }: 
                     key={type}
                     className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                       relationshipType === type
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-brand-500 bg-brand-50'
                         : 'border-gray-200 hover:bg-gray-50'
                     }`}
                   >
@@ -328,7 +328,7 @@ export function LinkedDealsSection({ dealId, linkedDeals: initialLinkedDeals }: 
               <button
                 onClick={handleLink}
                 disabled={!selectedDeal || isPending}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg disabled:opacity-50"
               >
                 {isPending ? 'Linking...' : 'Link Deal'}
               </button>

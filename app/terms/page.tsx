@@ -11,7 +11,7 @@ export default function TermsOfServicePage() {
       <div className="max-w-3xl mx-auto px-4 py-12">
         <Link
           href="/"
-          className="text-sm text-blue-600 hover:text-blue-800 mb-8 inline-block"
+          className="text-sm text-brand-600 hover:text-brand-800 mb-8 inline-block"
         >
           &larr; Back to Home
         </Link>
@@ -71,7 +71,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">5. Data and Privacy</h2>
             <p>
               Your use of the Service is also governed by our{' '}
-              <Link href="/privacy" className="text-blue-600 hover:underline">
+              <Link href="/privacy" className="text-brand-600 hover:underline">
                 Privacy Policy
               </Link>
               . You retain ownership of all data you input into the Service. We will not access, use, or share your data except as described in our Privacy Policy or as required by law.
@@ -137,7 +137,7 @@ export default function TermsOfServicePage() {
             </p>
             <p className="mt-2">
               <strong>Barnhaus Steel Builders / Empower Building AI</strong><br />
-              Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-blue-600 hover:underline">info@barnhaussteelbuilders.com</a>
+              Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-brand-600 hover:underline">info@barnhaussteelbuilders.com</a>
             </p>
           </section>
         </div>

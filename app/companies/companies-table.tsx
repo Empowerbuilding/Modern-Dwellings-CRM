@@ -23,7 +23,7 @@ const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
 }
 
 const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
-  builder: 'bg-blue-100 text-blue-800',
+  builder: 'bg-brand-100 text-brand-800',
   consumer: 'bg-green-100 text-green-800',
   subcontractor: 'bg-orange-100 text-orange-800',
   engineer: 'bg-purple-100 text-purple-800',
@@ -105,7 +105,7 @@ export function CompaniesTable({ initialCompanies }: CompaniesTableProps) {
         <h1 className="text-2xl font-semibold text-gray-900">Companies</h1>
         <button
           onClick={handleAddNew}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
         >
           New Company
         </button>
@@ -119,13 +119,13 @@ export function CompaniesTable({ initialCompanies }: CompaniesTableProps) {
             placeholder="Search by name, city, or contact..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
           />
         </div>
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as ClientType | '')}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
         >
           <option value="">All Types</option>
           {CLIENT_TYPES.map((type) => (
@@ -202,7 +202,7 @@ export function CompaniesTable({ initialCompanies }: CompaniesTableProps) {
                     </td>
                     <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-900 text-right">
                       {company.open_deals_count > 0 ? (
-                        <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                        <span className="inline-flex items-center justify-center w-6 h-6 bg-brand-100 text-brand-800 rounded-full text-xs font-medium">
                           {company.open_deals_count}
                         </span>
                       ) : (

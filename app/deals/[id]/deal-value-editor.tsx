@@ -66,7 +66,7 @@ export function DealValueEditor({ dealId, currentValue }: DealValueEditorProps) 
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+        className="text-sm text-brand-600 hover:text-brand-700 font-medium"
       >
         Update Value
       </button>
@@ -115,7 +115,7 @@ export function DealValueEditor({ dealId, currentValue }: DealValueEditorProps) 
                   id="value"
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
-                  className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                   placeholder="0"
                   autoFocus
                 />
@@ -134,7 +134,7 @@ export function DealValueEditor({ dealId, currentValue }: DealValueEditorProps) 
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                 placeholder="e.g., Added engineering scope"
               />
             </div>
@@ -155,7 +155,7 @@ export function DealValueEditor({ dealId, currentValue }: DealValueEditorProps) 
             <button
               type="submit"
               disabled={isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg disabled:opacity-50"
             >
               {isPending ? 'Saving...' : 'Save'}
             </button>

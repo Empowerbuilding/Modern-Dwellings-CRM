@@ -52,7 +52,7 @@ export const STAGE_LABELS: Record<PipelineStage, string> = {
 }
 
 export const STAGE_COLORS: Record<PipelineStage, string> = {
-  qualified: 'bg-blue-100 text-blue-800',
+  qualified: 'bg-brand-100 text-brand-800',
   concept: 'bg-cyan-100 text-cyan-800',
   design: 'bg-indigo-100 text-indigo-800',
   engineering: 'bg-violet-100 text-violet-800',
@@ -80,7 +80,7 @@ export const LIFECYCLE_STAGE_LABELS: Record<LifecycleStage, string> = {
 
 export const LIFECYCLE_STAGE_COLORS: Record<LifecycleStage, string> = {
   subscriber: 'bg-gray-100 text-gray-800',
-  lead: 'bg-blue-100 text-blue-800',
+  lead: 'bg-brand-100 text-brand-800',
   mql: 'bg-purple-100 text-purple-800',
   sql: 'bg-orange-100 text-orange-800',
   customer: 'bg-green-100 text-green-800',
@@ -209,7 +209,7 @@ export const TASK_TYPE_LABELS: Record<TaskType, string> = {
 
 export const TASK_PRIORITY_COLORS: Record<TaskPriority, string> = {
   low: 'bg-gray-100 text-gray-800',
-  medium: 'bg-blue-100 text-blue-800',
+  medium: 'bg-brand-100 text-brand-800',
   high: 'bg-orange-100 text-orange-800',
   urgent: 'bg-red-100 text-red-800',
 }
@@ -217,7 +217,7 @@ export const TASK_PRIORITY_COLORS: Record<TaskPriority, string> = {
 export const TASK_TYPE_COLORS: Record<TaskType, string> = {
   to_do: 'bg-gray-100 text-gray-800',
   call: 'bg-green-100 text-green-800',
-  email: 'bg-blue-100 text-blue-800',
+  email: 'bg-brand-100 text-brand-800',
   meeting: 'bg-purple-100 text-purple-800',
   follow_up: 'bg-yellow-100 text-yellow-800',
 }

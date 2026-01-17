@@ -38,7 +38,7 @@ interface UpcomingMeetingsProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  scheduled: 'bg-blue-100 text-blue-700',
+  scheduled: 'bg-brand-100 text-brand-700',
   completed: 'bg-green-100 text-green-700',
   cancelled: 'bg-red-100 text-red-700',
   no_show: 'bg-orange-100 text-orange-700',
@@ -252,7 +252,7 @@ export function UpcomingMeetings({
                   {showContact && meeting.contact_id ? (
                     <Link
                       href={`/contacts/${meeting.contact_id}`}
-                      className="text-blue-600 hover:text-blue-700 hover:underline"
+                      className="text-brand-600 hover:text-brand-700 hover:underline"
                     >
                       {meeting.contact?.first_name} {meeting.contact?.last_name}
                     </Link>
@@ -308,7 +308,7 @@ export function UpcomingMeetings({
                     href={meeting.google_meet_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors"
                   >
                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 14.052l-1.676 1.095a.75.75 0 01-1.168-.625v-1.69H9.5a1.5 1.5 0 01-1.5-1.5v-2.664a1.5 1.5 0 011.5-1.5h5.55v-1.69a.75.75 0 011.168-.625l1.676 1.095a2.25 2.25 0 010 3.75l-1.676 1.095a.75.75 0 01-1.168-.625v-1.69H9.5v2.664h5.55v-1.69a.75.75 0 011.168-.625l1.676 1.095a2.25 2.25 0 010 3.75z" />

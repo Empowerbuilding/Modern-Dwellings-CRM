@@ -157,7 +157,7 @@ function ConfirmationPopover({
             e.stopPropagation()
             onConfirm()
           }}
-          className="px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          className="px-2 py-1 text-xs font-medium bg-brand-600 text-white rounded hover:bg-brand-700 transition-colors"
         >
           Yes
         </button>
@@ -484,7 +484,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                       type="checkbox"
                       checked={visibleColumns[col.key]}
                       onChange={() => toggleColumn(col.key)}
-                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
                     />
                     <span className="text-sm text-gray-700">{col.label}</span>
                   </label>
@@ -494,7 +494,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
           </div>
           <button
             onClick={handleAddNew}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
           >
             Add Task
           </button>
@@ -534,7 +534,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                 statusFilter === filter.value
                   ? filter.value === 'overdue'
                     ? 'bg-red-600 text-white'
-                    : 'bg-blue-600 text-white'
+                    : 'bg-brand-600 text-white'
                   : filter.value === 'overdue' && count > 0
                     ? 'bg-red-100 text-red-800 hover:bg-red-200'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -567,13 +567,13 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
             placeholder="Search tasks..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
           />
         </div>
         <select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | '')}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
         >
           <option value="">All Priorities</option>
           {TASK_PRIORITIES.map((priority) => (
@@ -585,7 +585,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as TaskType | '')}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
         >
           <option value="">All Types</option>
           {TASK_TYPES.map((type) => (
@@ -597,7 +597,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
         <select
           value={assigneeFilter}
           onChange={(e) => setAssigneeFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
         >
           <option value="">All Assignees</option>
           {users.map((user) => (
@@ -732,7 +732,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                               <Link
                                 href={`/contacts/${task.contact_id}?from=tasks`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="block text-blue-600 hover:text-blue-800 hover:underline"
+                                className="block text-brand-600 hover:text-brand-800 hover:underline"
                               >
                                 {task.contact_name}
                               </Link>
@@ -741,7 +741,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                               <Link
                                 href={`/deals/${task.deal_id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="block text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[150px]"
+                                className="block text-brand-600 hover:text-brand-800 hover:underline truncate max-w-[150px]"
                               >
                                 {task.deal_title}
                               </Link>
@@ -750,7 +750,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                               <Link
                                 href={`/companies/${task.company_id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="block text-blue-600 hover:text-blue-800 hover:underline"
+                                className="block text-brand-600 hover:text-brand-800 hover:underline"
                               >
                                 {task.company_name}
                               </Link>
@@ -767,7 +767,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                             <a
                               href={`mailto:${task.contact_email}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                              className="text-brand-600 hover:text-brand-800 hover:underline"
                             >
                               {task.contact_email}
                             </a>
@@ -782,7 +782,7 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
                             <a
                               href={`tel:${task.contact_phone}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                              className="text-brand-600 hover:text-brand-800 hover:underline"
                             >
                               {task.contact_phone}
                             </a>

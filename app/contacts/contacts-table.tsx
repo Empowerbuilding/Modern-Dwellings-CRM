@@ -46,7 +46,7 @@ const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
 }
 
 const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
-  builder: 'bg-blue-100 text-blue-800',
+  builder: 'bg-brand-100 text-brand-800',
   consumer: 'bg-green-100 text-green-800',
   subcontractor: 'bg-orange-100 text-orange-800',
   engineer: 'bg-purple-100 text-purple-800',
@@ -481,7 +481,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
         <h1 className="text-2xl font-semibold text-gray-900">Contacts</h1>
         <button
           onClick={handleAddNew}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
         >
           Add Contact
         </button>
@@ -494,7 +494,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
           placeholder="Search by name, email, or company..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
         />
       </div>
 
@@ -505,7 +505,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
           onClick={() => setShowFilters(!showFilters)}
           className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
             showFilters || activeFilterCount > 0
-              ? 'bg-blue-50 border-blue-200 text-blue-700'
+              ? 'bg-brand-50 border-brand-200 text-brand-700'
               : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
           }`}
         >
@@ -514,7 +514,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
           </svg>
           Filters
           {activeFilterCount > 0 && (
-            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-blue-600 text-white rounded-full">
+            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-brand-600 text-white rounded-full">
               {activeFilterCount}
             </span>
           )}
@@ -563,7 +563,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                       checked={visibleColumns.has(column.key)}
                       onChange={() => toggleColumn(column.key)}
                       disabled={column.alwaysVisible}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                     />
                     <span className="text-sm text-gray-700">{column.label}</span>
                     {column.alwaysVisible && (
@@ -587,7 +587,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
               <select
                 value={filters.leadSource}
                 onChange={(e) => setFilters({ ...filters, leadSource: e.target.value as LeadSource | '' })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">All Sources</option>
                 {LEAD_SOURCES.map((source) => (
@@ -604,7 +604,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
               <select
                 value={filters.lifecycleStage}
                 onChange={(e) => setFilters({ ...filters, lifecycleStage: e.target.value as LifecycleStage | '' })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">All Stages</option>
                 {LIFECYCLE_STAGES.map((stage) => (
@@ -621,7 +621,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
               <select
                 value={filters.clientType}
                 onChange={(e) => setFilters({ ...filters, clientType: e.target.value as ClientType | '' })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">All Types</option>
                 {CLIENT_TYPES.map((type) => (
@@ -638,7 +638,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
               <select
                 value={filters.owner}
                 onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">All Owners</option>
                 <option value="unassigned">Unassigned</option>
@@ -657,7 +657,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                 type="date"
                 value={filters.dateFrom}
                 onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               />
             </div>
 
@@ -668,7 +668,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                 type="date"
                 value={filters.dateTo}
                 onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               />
             </div>
 
@@ -678,7 +678,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
               <select
                 value={filters.unsubscribed}
                 onChange={(e) => setFilters({ ...filters, unsubscribed: e.target.value as UnsubscribedFilter })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="all">All</option>
                 <option value="subscribed">Subscribed Only</option>
@@ -919,7 +919,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                       <td className="hidden xl:table-cell px-4 py-3">
                         {contact.owner_name ? (
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">
+                            <div className="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">
                               {contact.owner_name.split(' ').map(n => n[0]).join('')}
                             </div>
                             <span className="text-sm text-gray-700">{contact.owner_name}</span>
@@ -1030,7 +1030,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                       onClick={() => setCurrentPage(item)}
                       className={`px-3 py-1.5 text-sm font-medium rounded-lg ${
                         currentPage === item
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-brand-600 text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >

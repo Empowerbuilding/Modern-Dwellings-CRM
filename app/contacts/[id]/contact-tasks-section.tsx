@@ -106,7 +106,7 @@ function ConfirmationPopover({
             e.stopPropagation()
             onConfirm()
           }}
-          className="px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          className="px-2 py-1 text-xs font-medium bg-brand-600 text-white rounded hover:bg-brand-700 transition-colors"
         >
           Yes
         </button>
@@ -248,7 +248,7 @@ function AddTaskModal({
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 placeholder="Task title"
                 autoFocus
               />
@@ -261,7 +261,7 @@ function AddTaskModal({
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none resize-none"
                 rows={2}
                 placeholder="Optional description"
               />
@@ -275,7 +275,7 @@ function AddTaskModal({
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   {TASK_PRIORITIES.map((priority) => (
                     <option key={priority} value={priority}>
@@ -292,7 +292,7 @@ function AddTaskModal({
                 <select
                   value={formData.task_type}
                   onChange={(e) => setFormData({ ...formData, task_type: e.target.value as TaskType })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   {TASK_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -312,7 +312,7 @@ function AddTaskModal({
                   type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
 
@@ -324,7 +324,7 @@ function AddTaskModal({
                   type="time"
                   value={formData.due_time}
                   onChange={(e) => setFormData({ ...formData, due_time: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
             </div>
@@ -336,7 +336,7 @@ function AddTaskModal({
               <select
                 value={formData.assigned_to}
                 onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
               >
                 <option value="">Unassigned</option>
                 {users.map((user) => (
@@ -355,7 +355,7 @@ function AddTaskModal({
                 <select
                   value={formData.deal_id}
                   onChange={(e) => setFormData({ ...formData, deal_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
                 >
                   <option value="">No deal</option>
                   {deals.map((deal) => (
@@ -378,7 +378,7 @@ function AddTaskModal({
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Creating...' : 'Create Task'}
               </button>
@@ -458,7 +458,7 @@ export function ContactTasksSection({
         </div>
         <button
           onClick={() => setAddModalOpen(true)}
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          className="text-sm text-brand-600 hover:text-brand-800 font-medium"
         >
           + Add Task
         </button>
@@ -493,7 +493,7 @@ export function ContactTasksSection({
                 <div className="flex-1 min-w-0">
                   <Link
                     href={`/tasks?taskId=${task.id}`}
-                    className="text-sm font-medium text-gray-900 hover:text-blue-600 block truncate"
+                    className="text-sm font-medium text-gray-900 hover:text-brand-600 block truncate"
                   >
                     {task.title}
                   </Link>

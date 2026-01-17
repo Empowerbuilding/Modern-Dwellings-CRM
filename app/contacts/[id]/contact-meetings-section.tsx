@@ -59,7 +59,7 @@ export function ContactMeetingsSection({ contactId }: ContactMeetingsSectionProp
         </h2>
         <Link
           href="/settings/calendar"
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-sm text-brand-600 hover:text-brand-700"
         >
           Schedule
         </Link>
@@ -67,7 +67,7 @@ export function ContactMeetingsSection({ contactId }: ContactMeetingsSectionProp
 
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-gray-300 border-t-brand-600 rounded-full animate-spin" />
         </div>
       ) : totalMeetings === 0 ? (
         <div className="text-center py-6">
@@ -94,7 +94,7 @@ export function ContactMeetingsSection({ contactId }: ContactMeetingsSectionProp
               onClick={() => setActiveTab('upcoming')}
               className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'upcoming'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-brand-600 text-brand-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -104,7 +104,7 @@ export function ContactMeetingsSection({ contactId }: ContactMeetingsSectionProp
               onClick={() => setActiveTab('past')}
               className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'past'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-brand-600 text-brand-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >

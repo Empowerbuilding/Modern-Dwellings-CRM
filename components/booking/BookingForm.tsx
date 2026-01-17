@@ -223,7 +223,7 @@ export default function BookingForm({
     const fieldError = errors[`custom_${field.label}`]
     const value = customFieldValues[field.label] || ''
 
-    const baseInputClasses = `block w-full rounded-lg border px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+    const baseInputClasses = `block w-full rounded-lg border px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors ${
       fieldError ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
     }`
 
@@ -308,7 +308,7 @@ export default function BookingForm({
   }
 
   const inputClasses = (hasError: boolean) =>
-    `block w-full rounded-lg border px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+    `block w-full rounded-lg border px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors ${
       hasError ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
     }`
 
@@ -331,7 +331,7 @@ export default function BookingForm({
             <button
               type="button"
               onClick={onBack}
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline"
+              className="text-brand-600 hover:text-brand-700 text-sm font-medium hover:underline"
             >
               Edit
             </button>
@@ -468,7 +468,7 @@ export default function BookingForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 disabled:bg-brand-400 disabled:cursor-not-allowed transition-colors"
           >
             {isSubmitting ? (
               <>

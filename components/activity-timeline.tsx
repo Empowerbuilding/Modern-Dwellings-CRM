@@ -74,7 +74,7 @@ const ACTIVITY_ICONS: Record<ActivityType, JSX.Element> = {
 const ACTIVITY_COLORS: Record<ActivityType, string> = {
   page_view: 'bg-indigo-100 text-indigo-600',
   form_submit: 'bg-cyan-100 text-cyan-600',
-  email_sent: 'bg-blue-100 text-blue-600',
+  email_sent: 'bg-brand-100 text-brand-600',
   sms_sent: 'bg-purple-100 text-purple-600',
   call: 'bg-green-100 text-green-600',
   note: 'bg-gray-100 text-gray-600',
@@ -284,7 +284,7 @@ export function ActivityTimeline({
               {hasMore && !showAll && (
                 <button
                   onClick={() => setShowAll(true)}
-                  className="mt-2 w-full py-2 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  className="mt-2 w-full py-2 text-sm text-brand-600 hover:text-brand-800 font-medium transition-colors"
                 >
                   Show {activities.length - maxItems} more activities
                 </button>
