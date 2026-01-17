@@ -39,6 +39,7 @@ const COLUMN_CONFIGS: ColumnConfig[] = [
 ]
 
 const COLUMN_STORAGE_KEY = 'crm-task-board-columns'
+const SORT_STORAGE_KEY = 'crm-task-board-sort'
 
 const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All Tasks' },
@@ -182,8 +183,28 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | ''>('')
   const [typeFilter, setTypeFilter] = useState<TaskType | ''>('')
   const [assigneeFilter, setAssigneeFilter] = useState<string>('')
-  const [sortField, setSortField] = useState<SortField>('due_date')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [sortField, setSortField] = useState<SortField>(() => {
+    if (typeof window === 'undefined') return 'due_date'
+    try {
+      const stored = localStorage.getItem(SORT_STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.field) return parsed.field as SortField
+      }
+    } catch {}
+    return 'due_date'
+  })
+  const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
+    if (typeof window === 'undefined') return 'asc'
+    try {
+      const stored = localStorage.getItem(SORT_STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.direction) return parsed.direction as SortDirection
+      }
+    } catch {}
+    return 'asc'
+  })
   const [slideOverOpen, setSlideOverOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskWithRelations | null>(null)
   const [confirmingTaskId, setConfirmingTaskId] = useState<string | null>(null)
@@ -333,12 +354,19 @@ export function TaskBoard({ initialTasks, users, contacts, deals, companies, ini
   }, [tasks, search, statusFilter, priorityFilter, typeFilter, assigneeFilter, sortField, sortDirection])
 
   const handleSort = (field: SortField) => {
+    let newDirection: SortDirection = 'asc'
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+      newDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+      setSortDirection(newDirection)
     } else {
       setSortField(field)
       setSortDirection('asc')
     }
+    // Save to localStorage
+    localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify({
+      field: sortField === field ? field : field,
+      direction: sortField === field ? newDirection : 'asc'
+    }))
   }
 
   const handleCheckboxClick = (task: TaskWithRelations, e: React.MouseEvent) => {

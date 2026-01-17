@@ -89,6 +89,7 @@ const COLUMNS: ColumnConfig[] = [
 ]
 
 const STORAGE_KEY = 'contacts-visible-columns'
+const SORT_STORAGE_KEY = 'contacts-sort'
 
 function getDefaultVisibleColumns(): Set<ColumnKey> {
   return new Set(COLUMNS.filter(c => c.defaultVisible).map(c => c.key))
@@ -188,8 +189,28 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<Filters>(defaultFilters)
   const [showFilters, setShowFilters] = useState(false)
-  const [sortField, setSortField] = useState<SortField>('created_at')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [sortField, setSortField] = useState<SortField>(() => {
+    if (typeof window === 'undefined') return 'created_at'
+    try {
+      const stored = localStorage.getItem(SORT_STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.field) return parsed.field as SortField
+      }
+    } catch {}
+    return 'created_at'
+  })
+  const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
+    if (typeof window === 'undefined') return 'desc'
+    try {
+      const stored = localStorage.getItem(SORT_STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.direction) return parsed.direction as SortDirection
+      }
+    } catch {}
+    return 'desc'
+  })
   const [slideOverOpen, setSlideOverOpen] = useState(false)
   const [editingContact, setEditingContact] = useState<ContactWithCompany | null>(null)
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(getDefaultVisibleColumns)
@@ -373,12 +394,19 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
   }, [filteredAndSortedContacts, currentPage])
 
   const handleSort = (field: SortField) => {
+    let newDirection: SortDirection = 'asc'
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+      newDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+      setSortDirection(newDirection)
     } else {
       setSortField(field)
       setSortDirection('asc')
     }
+    // Save to localStorage
+    localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify({
+      field: sortField === field ? field : field,
+      direction: sortField === field ? newDirection : 'asc'
+    }))
   }
 
   const handleRowClick = (contact: ContactWithCompany) => {
