@@ -118,23 +118,23 @@ export function Sidebar() {
         `}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 bg-white">
           <div className="flex items-center">
             <img
               src="https://ozhkjwcjsifdhfdexayd.supabase.co/storage/v1/object/public/website-images/Showcase/showcase-builders-logo (2).avif"
               alt="Logo"
-              className="h-10 w-auto rounded-lg bg-white"
+              className="h-10 w-auto"
               onError={(e) => {
                 console.error('Logo failed to load');
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-            <span className="ml-3 text-white font-semibold md:hidden lg:block">CRM</span>
+            <span className="ml-3 text-slate-900 font-semibold md:hidden lg:block">CRM</span>
           </div>
           {/* Mobile close button */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="p-1 text-slate-400 hover:text-white md:hidden"
+            className="p-1 text-slate-400 hover:text-slate-900 md:hidden"
             aria-label="Close menu"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
