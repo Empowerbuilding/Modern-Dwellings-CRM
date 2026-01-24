@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase-server'
 import type { Company, Contact, Deal, Activity, ClientType, DealType, ActivityType, NoteWithAuthor } from '@/lib/types'
+import { isDealWon, isDealInPipeline } from '@/lib/types'
 import { CompanyActions } from './company-actions'
 import { NotesSection } from '@/components/notes-section'
 import { CompanyDealsSection } from './company-deals-section'
@@ -15,6 +16,7 @@ const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   subcontractor: 'Subcontractor',
   engineer: 'Engineer',
   architect: 'Architect',
+  realtor: 'Realtor',
 }
 
 const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
@@ -23,6 +25,7 @@ const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
   subcontractor: 'bg-orange-100 text-orange-800',
   engineer: 'bg-purple-100 text-purple-800',
   architect: 'bg-pink-100 text-pink-800',
+  realtor: 'bg-teal-100 text-teal-800',
 }
 
 const DEAL_TYPE_LABELS: Record<DealType, string> = {
@@ -171,29 +174,14 @@ export default async function CompanyDetailPage({
     notFound()
   }
 
-  // Calculate revenue from won deals
-  // B2C: won = concept, design, engineering, complete
-  // B2B: won = active, complete
+  // Calculate revenue from won deals (contract_signed, in_construction, completed)
   const totalRevenue = deals
-    .filter((d) => {
-      if (d.sales_type === 'b2c') {
-        return ['concept', 'design', 'engineering', 'complete'].includes(d.stage)
-      }
-      return ['active', 'complete'].includes(d.stage)
-    })
+    .filter((d) => isDealWon(d.stage))
     .reduce((sum, d) => sum + (d.value ?? 0), 0)
 
-  // Calculate open deals value (not yet won)
-  // B2C: open = qualified only
-  // B2B: open = qualified, proposal
+  // Calculate open deals value (in pipeline, not yet won)
   const openDealsValue = deals
-    .filter((d) => {
-      if (d.stage === 'lost') return false
-      if (d.sales_type === 'b2c') {
-        return d.stage === 'qualified'
-      }
-      return ['qualified', 'proposal'].includes(d.stage)
-    })
+    .filter((d) => isDealInPipeline(d.stage))
     .reduce((sum, d) => sum + (d.value ?? 0), 0)
 
   return (

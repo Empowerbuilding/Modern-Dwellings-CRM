@@ -12,11 +12,10 @@ import { updateDealStage } from '@/lib/supabase'
 import {
   type PipelineStage,
   type DealType,
-  type SalesType,
   type User,
   STAGE_LABELS,
-  getStagesForSalesType,
-  isB2CWonStage,
+  PIPELINE_STAGES,
+  isDealInPipeline,
 } from '@/lib/types'
 import type { DealWithCompany } from './page'
 
@@ -30,13 +29,14 @@ function getInitials(name: string): string {
 }
 
 const STAGE_DOT_COLORS: Record<PipelineStage, string> = {
-  qualified: 'bg-brand-500',
-  concept: 'bg-cyan-500',
-  design: 'bg-indigo-500',
-  engineering: 'bg-violet-500',
-  proposal: 'bg-yellow-500',
-  active: 'bg-purple-500',
-  complete: 'bg-green-500',
+  new_lead: 'bg-brand-500',
+  contacted: 'bg-cyan-500',
+  consultation_scheduled: 'bg-indigo-500',
+  consultation_complete: 'bg-violet-500',
+  proposal_sent: 'bg-yellow-500',
+  contract_signed: 'bg-purple-500',
+  in_construction: 'bg-orange-500',
+  completed: 'bg-green-500',
   lost: 'bg-red-500',
 }
 
@@ -83,15 +83,14 @@ interface PipelineBoardProps {
 
 export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
   const [deals, setDeals] = useState<DealWithCompany[]>(initialDeals)
-  const [salesType, setSalesType] = useState<SalesType>('b2c')
   const [ownerFilter, setOwnerFilter] = useState<string>('all') // 'all' | owner_id
   const [updating, setUpdating] = useState<string | null>(null)
 
-  const stages = getStagesForSalesType(salesType)
+  const stages = PIPELINE_STAGES
 
-  // Filter deals by sales type, owner, and group by stage
+  // Filter deals by owner and group by stage
   const { filteredDeals, dealsByStage, totalPipelineValue } = useMemo(() => {
-    let filtered = deals.filter((deal) => deal.sales_type === salesType)
+    let filtered = deals
 
     // Apply owner filter
     if (ownerFilter !== 'all') {
@@ -106,22 +105,13 @@ export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
       {} as Record<PipelineStage, DealWithCompany[]>
     )
 
-    // Pipeline value = deals not yet won or lost
-    // B2C: only qualified (concept/design/engineering are won categories)
-    // B2B: qualified, proposal (active/complete are won)
+    // Pipeline value = deals in active pipeline stages (not won, not lost)
     const totalValue = filtered
-      .filter((d) => {
-        if (d.stage === 'lost') return false
-        if (salesType === 'b2c') {
-          return d.stage === 'qualified'
-        }
-        // B2B: exclude active and complete (won stages)
-        return d.stage !== 'complete' && d.stage !== 'active'
-      })
+      .filter((d) => isDealInPipeline(d.stage))
       .reduce((sum, d) => sum + (d.value || 0), 0)
 
     return { filteredDeals: filtered, dealsByStage: byStage, totalPipelineValue: totalValue }
-  }, [deals, salesType, ownerFilter, stages])
+  }, [deals, ownerFilter, stages])
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result
@@ -180,30 +170,6 @@ export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex flex-wrap items-center gap-3">
-          {/* Sales Type Toggle */}
-          <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setSalesType('b2c')}
-              className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                salesType === 'b2c'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              B2C
-            </button>
-            <button
-              onClick={() => setSalesType('b2b')}
-              className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                salesType === 'b2b'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              B2B
-            </button>
-          </div>
-
           {/* Owner Filter */}
           <select
             value={ownerFilter}
@@ -224,14 +190,6 @@ export function PipelineBoard({ initialDeals, users }: PipelineBoardProps) {
           <span className="font-medium text-gray-900">{formatCurrency(totalPipelineValue)}</span> pipeline
         </div>
       </div>
-
-      {/* Workflow description - hidden on mobile */}
-      <p className="hidden sm:block text-xs text-gray-500 mb-4">
-        {salesType === 'b2c'
-          ? 'Consumer workflow: Qualified deals move to Concept, Design, or Engineering when won. Same client can have multiple deals.'
-          : 'Builder workflow: One company = many deals over time (design, software, referral fees)'
-        }
-      </p>
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4">

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import type { Deal, DealType, SalesType, PipelineStage, Company, Contact, User } from '@/lib/types'
-import { getStagesForSalesType, STAGE_LABELS } from '@/lib/types'
+import type { Deal, DealType, PipelineStage, Company, Contact, User } from '@/lib/types'
+import { PIPELINE_STAGES, STAGE_LABELS } from '@/lib/types'
 
 const DEAL_TYPES: DealType[] = [
   'custom_design',
@@ -42,7 +42,6 @@ interface FormData {
   owner_id: string
   value: string
   stage: PipelineStage
-  sales_type: SalesType
   deal_type: DealType | ''
   probability: string
   expected_close_date: string
@@ -64,8 +63,7 @@ export function DealSlideOver({
     contact_id: '',
     owner_id: '',
     value: '',
-    stage: 'qualified',
-    sales_type: 'b2c',
+    stage: 'new_lead',
     deal_type: '',
     probability: '',
     expected_close_date: '',
@@ -75,7 +73,7 @@ export function DealSlideOver({
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const stages = getStagesForSalesType(formData.sales_type)
+  const stages = PIPELINE_STAGES
 
   useEffect(() => {
     if (deal) {
@@ -86,7 +84,6 @@ export function DealSlideOver({
         owner_id: deal.owner_id ?? '',
         value: deal.value?.toString() ?? '',
         stage: deal.stage,
-        sales_type: deal.sales_type,
         deal_type: deal.deal_type ?? '',
         probability: deal.probability?.toString() ?? '',
         expected_close_date: deal.expected_close_date ?? '',
@@ -109,7 +106,6 @@ export function DealSlideOver({
         owner_id: formData.owner_id || null,
         value: formData.value ? parseFloat(formData.value) : null,
         stage: formData.stage,
-        sales_type: formData.sales_type,
         deal_type: formData.deal_type || null,
         probability: formData.probability ? parseInt(formData.probability) : null,
         expected_close_date: formData.expected_close_date || null,
@@ -200,44 +196,22 @@ export function DealSlideOver({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sales Type *
-                </label>
-                <select
-                  required
-                  value={formData.sales_type}
-                  onChange={(e) => {
-                    const newSalesType = e.target.value as SalesType
-                    const newStages = getStagesForSalesType(newSalesType)
-                    // Reset stage if current stage isn't valid for new sales type
-                    const newStage = newStages.includes(formData.stage) ? formData.stage : 'qualified'
-                    setFormData({ ...formData, sales_type: newSalesType, stage: newStage })
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
-                >
-                  <option value="b2c">B2C</option>
-                  <option value="b2b">B2B</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Stage *
-                </label>
-                <select
-                  required
-                  value={formData.stage}
-                  onChange={(e) => setFormData({ ...formData, stage: e.target.value as PipelineStage })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
-                >
-                  {stages.map((stage) => (
-                    <option key={stage} value={stage}>
-                      {STAGE_LABELS[stage]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Stage *
+              </label>
+              <select
+                required
+                value={formData.stage}
+                onChange={(e) => setFormData({ ...formData, stage: e.target.value as PipelineStage })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white"
+              >
+                {stages.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {STAGE_LABELS[stage]}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

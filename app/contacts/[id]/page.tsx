@@ -34,6 +34,7 @@ const CLIENT_TYPE_LABELS: Record<string, string> = {
   subcontractor: 'Subcontractor',
   engineer: 'Engineer',
   architect: 'Architect',
+  realtor: 'Realtor',
 }
 
 function formatDate(dateString?: string | null): string {

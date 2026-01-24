@@ -11,6 +11,7 @@ const CLIENT_TYPES: ClientType[] = [
   'subcontractor',
   'engineer',
   'architect',
+  'realtor',
 ]
 
 const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
@@ -19,6 +20,7 @@ const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   subcontractor: 'Subcontractor',
   engineer: 'Engineer',
   architect: 'Architect',
+  realtor: 'Realtor',
 }
 
 interface CompanyActionsProps {

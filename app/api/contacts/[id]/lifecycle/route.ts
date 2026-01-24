@@ -2,7 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { sendFacebookEvent, type FacebookEventName } from '@/lib/facebook-conversions'
-import type { LifecycleStage, ClientType, SalesType } from '@/lib/types'
+import type { LifecycleStage, ClientType } from '@/lib/types'
 
 // Service role client for bypassing RLS
 const supabaseAdmin = createSupabaseClient(
@@ -63,15 +63,6 @@ const LEAD_SOURCE_LABELS: Record<string, string> = {
   other: 'Other',
 }
 
-// Determine sales type based on client type
-// Consumer = B2C, everything else = B2B
-function getSalesType(clientType: ClientType | null): SalesType {
-  if (clientType === 'consumer') {
-    return 'b2c'
-  }
-  return 'b2b'
-}
-
 // Create a deal for the contact when they become MQL
 async function createDealForMQL(contact: ContactRow): Promise<{ id: string; title: string } | null> {
   const timestamp = new Date().toISOString()
@@ -92,9 +83,8 @@ async function createDealForMQL(contact: ContactRow): Promise<{ id: string; titl
     ? LEAD_SOURCE_LABELS[contact.lead_source] || contact.lead_source
     : 'Lead'
   const dealTitle = `${contact.first_name} ${contact.last_name} - ${sourceLabel}`
-  const salesType = getSalesType(contact.client_type)
 
-  console.log(`[${timestamp}] Auto-creating deal for MQL contact ${contact.id}: ${dealTitle} (${salesType})`)
+  console.log(`[${timestamp}] Auto-creating deal for MQL contact ${contact.id}: ${dealTitle}`)
 
   const { data: newDeal, error: dealError } = await supabaseAdmin
     .from('deals')
@@ -102,8 +92,7 @@ async function createDealForMQL(contact: ContactRow): Promise<{ id: string; titl
       contact_id: contact.id,
       company_id: contact.company_id,
       title: dealTitle,
-      stage: 'qualified',
-      sales_type: salesType,
+      stage: 'new_lead',
     })
     .select('id, title')
     .single()
@@ -121,7 +110,6 @@ async function createDealForMQL(contact: ContactRow): Promise<{ id: string; titl
     title: `Deal auto-created: ${dealTitle}`,
     description: 'Deal automatically created when contact became Marketing Qualified',
     metadata: {
-      sales_type: salesType,
       auto_created: true,
       trigger: 'mql_lifecycle_stage',
     },

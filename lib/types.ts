@@ -1,69 +1,81 @@
 // Enum types matching your business domain
-export type ClientType = 'builder' | 'consumer' | 'subcontractor' | 'engineer' | 'architect'
+export type ClientType = 'builder' | 'consumer' | 'subcontractor' | 'engineer' | 'architect' | 'realtor'
 
 export type DealType = 'custom_design' | 'builder_design' | 'engineering' | 'software_fees' | 'referral' | 'budget_builder' | 'marketing'
 
-export type SalesType = 'b2c' | 'b2b'
-
-// Combined stages from both workflows
-// B2C: qualified → (concept OR design OR engineering) → complete → lost
-//      (concept/design/engineering are won deal categories, not a progression)
-// B2B: qualified → proposal → active → complete → lost (still a progression)
+// Consumer pipeline stages (linear progression)
 export type PipelineStage =
-  | 'qualified'
-  | 'concept'      // B2C only
-  | 'design'       // B2C only
-  | 'engineering'  // B2C only
-  | 'proposal'     // B2B only
-  | 'active'       // B2B only
-  | 'complete'
+  | 'new_lead'
+  | 'contacted'
+  | 'consultation_scheduled'
+  | 'consultation_complete'
+  | 'proposal_sent'
+  | 'contract_signed'
+  | 'in_construction'
+  | 'completed'
   | 'lost'
 
-// Stage configurations by sales type
-export const B2C_STAGES: PipelineStage[] = ['qualified', 'concept', 'design', 'engineering', 'complete', 'lost']
-export const B2B_STAGES: PipelineStage[] = ['qualified', 'proposal', 'active', 'complete', 'lost']
+// All pipeline stages in order (excluding lost which is a terminal state)
+export const PIPELINE_STAGES: PipelineStage[] = [
+  'new_lead',
+  'contacted',
+  'consultation_scheduled',
+  'consultation_complete',
+  'proposal_sent',
+  'contract_signed',
+  'in_construction',
+  'completed',
+  'lost',
+]
 
-// B2C won stages (deal categories) - deals skip directly to one of these from qualified
-export const B2C_WON_STAGES: PipelineStage[] = ['concept', 'design', 'engineering']
+// Stages that count as "pipeline" (potential deals not yet won)
+export const PIPELINE_ACTIVE_STAGES: PipelineStage[] = [
+  'new_lead',
+  'contacted',
+  'consultation_scheduled',
+  'consultation_complete',
+  'proposal_sent',
+]
 
-// Check if a B2C deal is in a "won" state (in a category or complete)
-export function isB2CWonStage(stage: PipelineStage): boolean {
-  return B2C_WON_STAGES.includes(stage) || stage === 'complete'
+// Stages that count as "won" (deal converted to customer)
+export const WON_STAGES: PipelineStage[] = [
+  'contract_signed',
+  'in_construction',
+  'completed',
+]
+
+// Check if a deal is won (contract signed or beyond)
+export function isDealWon(stage: PipelineStage): boolean {
+  return WON_STAGES.includes(stage)
 }
 
-// Check if a deal is won based on sales type
-export function isDealWon(stage: PipelineStage, salesType: SalesType): boolean {
-  if (salesType === 'b2c') {
-    return isB2CWonStage(stage)
-  }
-  // B2B: won when active or complete
-  return stage === 'active' || stage === 'complete'
+// Check if a deal is in active pipeline (not won, not lost)
+export function isDealInPipeline(stage: PipelineStage): boolean {
+  return PIPELINE_ACTIVE_STAGES.includes(stage)
 }
 
 export const STAGE_LABELS: Record<PipelineStage, string> = {
-  qualified: 'Qualified',
-  concept: 'Concept',
-  design: 'Design',
-  engineering: 'Engineering',
-  proposal: 'Proposal',
-  active: 'Active',
-  complete: 'Complete',
+  new_lead: 'New Lead',
+  contacted: 'Contacted',
+  consultation_scheduled: 'Consultation Scheduled',
+  consultation_complete: 'Consultation Complete',
+  proposal_sent: 'Proposal Sent',
+  contract_signed: 'Contract Signed',
+  in_construction: 'In Construction',
+  completed: 'Completed',
   lost: 'Lost',
 }
 
 export const STAGE_COLORS: Record<PipelineStage, string> = {
-  qualified: 'bg-brand-100 text-brand-800',
-  concept: 'bg-cyan-100 text-cyan-800',
-  design: 'bg-indigo-100 text-indigo-800',
-  engineering: 'bg-violet-100 text-violet-800',
-  proposal: 'bg-yellow-100 text-yellow-800',
-  active: 'bg-purple-100 text-purple-800',
-  complete: 'bg-green-100 text-green-800',
+  new_lead: 'bg-brand-100 text-brand-800',
+  contacted: 'bg-cyan-100 text-cyan-800',
+  consultation_scheduled: 'bg-indigo-100 text-indigo-800',
+  consultation_complete: 'bg-violet-100 text-violet-800',
+  proposal_sent: 'bg-yellow-100 text-yellow-800',
+  contract_signed: 'bg-purple-100 text-purple-800',
+  in_construction: 'bg-orange-100 text-orange-800',
+  completed: 'bg-green-100 text-green-800',
   lost: 'bg-red-100 text-red-800',
-}
-
-export function getStagesForSalesType(salesType: SalesType): PipelineStage[] {
-  return salesType === 'b2c' ? B2C_STAGES : B2B_STAGES
 }
 
 export type LeadSource = 'facebook_lead_ad' | 'referral' | 'cost_calc' | 'guide_download' | 'empower_website' | 'barnhaus_contact' | 'barnhaus_store_contact' | 'shopify_order' | 'calendar_booking' | 'direct_phone_call' | 'other'
@@ -160,7 +172,6 @@ export interface Deal {
   title: string
   value: number | null
   stage: PipelineStage
-  sales_type: SalesType
   deal_type: DealType | null
   probability: number | null
   expected_close_date: string | null

@@ -12,6 +12,7 @@ const CLIENT_TYPES: ClientType[] = [
   'subcontractor',
   'engineer',
   'architect',
+  'realtor',
 ]
 
 const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
@@ -20,6 +21,7 @@ const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   subcontractor: 'Subcontractor',
   engineer: 'Engineer',
   architect: 'Architect',
+  realtor: 'Realtor',
 }
 
 const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
@@ -28,6 +30,7 @@ const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
   subcontractor: 'bg-orange-100 text-orange-800',
   engineer: 'bg-purple-100 text-purple-800',
   architect: 'bg-pink-100 text-pink-800',
+  realtor: 'bg-teal-100 text-teal-800',
 }
 
 function formatCurrency(value: number): string {

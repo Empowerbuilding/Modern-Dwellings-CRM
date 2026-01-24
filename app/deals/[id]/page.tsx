@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { supabase, getDealValueHistory, getLinkedDeals } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase-server'
 import type { Deal, Company, Contact, DealValueHistory, DealType, User, Activity, NoteWithAuthor } from '@/lib/types'
-import { STAGE_LABELS, STAGE_COLORS, getStagesForSalesType } from '@/lib/types'
+import { STAGE_LABELS, STAGE_COLORS, PIPELINE_STAGES } from '@/lib/types'
 import { DealValueEditor } from './deal-value-editor'
 import { LinkedDealsSection } from './linked-deals-section'
 import { DealActions } from './deal-actions'
@@ -42,6 +42,7 @@ const CLIENT_TYPE_LABELS: Record<string, string> = {
   subcontractor: 'Subcontractor',
   engineer: 'Engineer',
   architect: 'Architect',
+  realtor: 'Realtor',
 }
 
 function formatCurrency(value: number): string {
@@ -224,7 +225,7 @@ export default async function DealDetailPage({
     getCurrentUserId(),
   ])
 
-  const stages = getStagesForSalesType(deal.sales_type)
+  const stages = PIPELINE_STAGES
   const currentStageIndex = stages.indexOf(deal.stage)
 
   // Calculate value changes
@@ -254,13 +255,6 @@ export default async function DealDetailPage({
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span className={`px-2 py-1 rounded text-xs font-medium ${STAGE_COLORS[deal.stage]}`}>
                   {STAGE_LABELS[deal.stage]}
-                </span>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  deal.sales_type === 'b2c'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-brand-100 text-brand-700'
-                }`}>
-                  {deal.sales_type === 'b2c' ? 'B2C' : 'B2B'}
                 </span>
                 {deal.deal_type && (
                   <span className="text-xs sm:text-sm text-gray-500">

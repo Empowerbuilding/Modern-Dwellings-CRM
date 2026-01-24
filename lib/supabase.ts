@@ -113,7 +113,7 @@ export async function getLinkedDeals(
       relationship_type,
       created_at,
       linked_deal:deals!linked_deals_linked_deal_id_fkey(
-        id, title, value, stage, sales_type, deal_type, company_id,
+        id, title, value, stage, deal_type, company_id,
         companies(name)
       )
     `)
@@ -129,7 +129,7 @@ export async function getLinkedDeals(
       relationship_type,
       created_at,
       linked_deal:deals!linked_deals_deal_id_fkey(
-        id, title, value, stage, sales_type, deal_type, company_id,
+        id, title, value, stage, deal_type, company_id,
         companies(name)
       )
     `)

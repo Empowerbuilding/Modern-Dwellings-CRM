@@ -48,7 +48,6 @@ interface DealCreated {
   value: number | null
   stage: string
   stage_label: string
-  sales_type: string
   contact_name: string | null
   company_name: string | null
   created_at: string
@@ -62,7 +61,6 @@ interface DealMoved {
   from_stage_label: string
   to_stage: string
   to_stage_label: string
-  sales_type: string
   contact_name: string | null
   moved_at: string
 }
@@ -254,7 +252,6 @@ export async function GET(request: NextRequest) {
         title,
         value,
         stage,
-        sales_type,
         created_at,
         contacts(first_name, last_name),
         companies(name)
@@ -269,7 +266,6 @@ export async function GET(request: NextRequest) {
       value: deal.value,
       stage: deal.stage,
       stage_label: STAGE_LABELS[deal.stage as keyof typeof STAGE_LABELS] || deal.stage,
-      sales_type: deal.sales_type,
       contact_name: deal.contacts
         ? `${(deal.contacts as any).first_name} ${(deal.contacts as any).last_name}`
         : null,
@@ -303,7 +299,7 @@ export async function GET(request: NextRequest) {
 
       const { data: dealDetails } = await supabase
         .from('deals')
-        .select('id, title, value, sales_type')
+        .select('id, title, value')
         .in('id', dealIds)
 
       const dealMap = new Map((dealDetails || []).map((d: any) => [d.id, d]))
@@ -326,7 +322,6 @@ export async function GET(request: NextRequest) {
             from_stage_label: STAGE_LABELS[fromStage as keyof typeof STAGE_LABELS] || fromStage,
             to_stage: toStage,
             to_stage_label: STAGE_LABELS[toStage as keyof typeof STAGE_LABELS] || toStage,
-            sales_type: deal.sales_type,
             contact_name: activity.contacts
               ? `${(activity.contacts as any).first_name} ${(activity.contacts as any).last_name}`
               : null,

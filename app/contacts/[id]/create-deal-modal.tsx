@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import type { Contact, SalesType, LeadSource } from '@/lib/types'
+import type { Contact, LeadSource } from '@/lib/types'
 
 const LEAD_SOURCE_LABELS: Record<string, string> = {
   facebook: 'Facebook',
@@ -35,7 +35,6 @@ interface CreateDealModalProps {
 
 export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalProps) {
   const router = useRouter()
-  const [salesType, setSalesType] = useState<SalesType>('b2c')
   const [value, setValue] = useState<string>('')
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,8 +59,7 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
           company_id: contact.company_id,
           title: dealTitle,
           value: value ? parseFloat(value) : null,
-          stage: 'qualified',
-          sales_type: salesType,
+          stage: 'new_lead',
         })
         .select('id, title')
         .single()
@@ -75,7 +73,6 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
         activity_type: 'deal_created',
         title: `Deal created: ${dealTitle}`,
         metadata: {
-          sales_type: salesType,
           value: value ? parseFloat(value) : null,
         },
       })
@@ -93,7 +90,6 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
   const handleClose = () => {
     setCreatedDeal(null)
     setValue('')
-    setSalesType('b2c')
     setError(null)
     onClose()
   }
@@ -164,39 +160,6 @@ export function CreateDealModal({ contact, isOpen, onClose }: CreateDealModalPro
                 <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">Deal Title</p>
                   <p className="text-sm font-medium text-gray-900">{dealTitle}</p>
-                </div>
-
-                {/* Sales Type */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sales Type *
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSalesType('b2c')}
-                      className={`px-4 py-3 rounded-lg border-2 text-sm font-medium transition-colors ${
-                        salesType === 'b2c'
-                          ? 'border-green-500 bg-green-50 text-green-700'
-                          : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <span className="block text-lg mb-1">B2C</span>
-                      <span className="block text-xs font-normal opacity-75">Consumer</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSalesType('b2b')}
-                      className={`px-4 py-3 rounded-lg border-2 text-sm font-medium transition-colors ${
-                        salesType === 'b2b'
-                          ? 'border-brand-500 bg-brand-50 text-brand-700'
-                          : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <span className="block text-lg mb-1">B2B</span>
-                      <span className="block text-xs font-normal opacity-75">Business</span>
-                    </button>
-                  </div>
                 </div>
 
                 {/* Deal Value */}

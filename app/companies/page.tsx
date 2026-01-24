@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Company, Contact, Deal } from '@/lib/types'
+import { isDealWon } from '@/lib/types'
 import { CompaniesTable } from './companies-table'
 
 export const dynamic = 'force-dynamic'
@@ -30,8 +31,8 @@ async function getCompaniesWithStats(): Promise<CompanyWithStats[]> {
   // Fetch deals for stats
   const { data: deals } = await supabase
     .from('deals')
-    .select('company_id, stage, value, sales_type')
-    .returns<Pick<Deal, 'company_id' | 'stage' | 'value' | 'sales_type'>[]>()
+    .select('company_id, stage, value')
+    .returns<Pick<Deal, 'company_id' | 'stage' | 'value'>[]>()
 
   const contactsByCompany = new Map<string, string>()
   contacts?.forEach((c) => {
@@ -45,14 +46,8 @@ async function getCompaniesWithStats(): Promise<CompanyWithStats[]> {
     if (d.company_id) {
       const stats = dealStatsByCompany.get(d.company_id) ?? { openCount: 0, revenue: 0 }
 
-      // Determine if deal is won based on sales type
-      // B2C: won = concept, design, engineering, complete
-      // B2B: won = active, complete
-      const isWon = d.sales_type === 'b2c'
-        ? ['concept', 'design', 'engineering', 'complete'].includes(d.stage)
-        : ['active', 'complete'].includes(d.stage)
-
-      if (isWon) {
+      // Won = contract_signed, in_construction, completed
+      if (isDealWon(d.stage)) {
         stats.revenue += d.value ?? 0
       } else if (d.stage !== 'lost') {
         stats.openCount += 1

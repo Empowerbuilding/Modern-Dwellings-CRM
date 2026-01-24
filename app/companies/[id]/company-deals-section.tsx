@@ -100,7 +100,7 @@ function AddDealModal({
           value: dealValue,
           deal_type: formData.deal_type || null,
           expected_close_date: formData.expected_close_date || null,
-          stage: 'qualified' as PipelineStage,
+          stage: 'new_lead' as PipelineStage,
           company_id: companyId,
           contact_id: formData.contact_id || null,
           owner_id: crmUser?.id || null,
@@ -338,7 +338,7 @@ export function CompanyDealsSection({
                     {deal.value ? formatCurrency(deal.value) : '-'}
                   </td>
                   <td className="py-2 text-sm text-gray-600 text-right">
-                    {deal.stage === 'complete' || deal.stage === 'lost'
+                    {deal.stage === 'completed' || deal.stage === 'lost'
                       ? formatDate(deal.actual_close_date)
                       : formatDate(deal.expected_close_date)}
                   </td>

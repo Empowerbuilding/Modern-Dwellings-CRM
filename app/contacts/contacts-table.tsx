@@ -35,7 +35,7 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   other: 'Other',
 }
 
-const CLIENT_TYPES: ClientType[] = ['consumer', 'builder', 'subcontractor', 'engineer', 'architect']
+const CLIENT_TYPES: ClientType[] = ['consumer', 'builder', 'subcontractor', 'engineer', 'architect', 'realtor']
 
 const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   builder: 'Builder',
@@ -43,6 +43,7 @@ const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   subcontractor: 'Subcontractor',
   engineer: 'Engineer',
   architect: 'Architect',
+  realtor: 'Realtor',
 }
 
 const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
@@ -51,6 +52,7 @@ const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
   subcontractor: 'bg-orange-100 text-orange-800',
   engineer: 'bg-purple-100 text-purple-800',
   architect: 'bg-pink-100 text-pink-800',
+  realtor: 'bg-teal-100 text-teal-800',
 }
 
 const LIFECYCLE_STAGES: LifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'customer']
