@@ -8,13 +8,9 @@ import { useQuickAddDeal } from './context'
 import { useAuth } from '@/components/auth-provider'
 
 const DEAL_TYPES: { value: DealType; label: string }[] = [
-  { value: 'custom_design', label: 'Custom Design' },
-  { value: 'builder_design', label: 'Builder Design' },
-  { value: 'engineering', label: 'Engineering' },
-  { value: 'software_fees', label: 'Software Fees' },
-  { value: 'referral', label: 'Referral' },
-  { value: 'budget_builder', label: 'Budget Builder' },
-  { value: 'marketing', label: 'Marketing' },
+  { value: 'new_construction', label: 'New Construction' },
+  { value: 'remodel', label: 'Remodel' },
+  { value: 'addition', label: 'Addition' },
 ]
 
 interface CompanyOption {

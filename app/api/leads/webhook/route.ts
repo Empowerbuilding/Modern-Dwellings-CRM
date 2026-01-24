@@ -29,11 +29,7 @@ interface LeadWebhookPayload {
 
 // Determine lifecycle stage based on lead source
 function getLifecycleStageForSource(source: LeadSource): LifecycleStage {
-  // Calendar bookings are more engaged - they're leads
-  if (source === 'calendar_booking') {
-    return 'lead'
-  }
-  // All other sources start as subscribers
+  // All sources start as subscribers
   // They become 'lead' when they book a meeting or take a more engaged action
   return 'subscriber'
 }
@@ -42,13 +38,10 @@ function getLifecycleStageForSource(source: LeadSource): LifecycleStage {
 // These sources are typically consumer/homeowner leads
 function getClientTypeForSource(source: LeadSource): 'consumer' | null {
   const consumerSources: LeadSource[] = [
-    'cost_calc',
-    'facebook_lead_ad',
-    'shopify_order',
-    'barnhaus_store_contact',
-    'guide_download',
-    'barnhaus_contact',
-    'calendar_booking',
+    'cost_calculator',
+    'pdf_download',
+    'contact_form',
+    'facebook_ad',
   ]
   return consumerSources.includes(source) ? 'consumer' : null
 }
@@ -300,7 +293,7 @@ function formatContactNotes(source: LeadSource, metadata?: Record<string, unknow
   lines.push(`Source: ${formatSource(source)}`)
 
   // Handle cost calculator specific fields
-  if (source === 'cost_calc') {
+  if (source === 'cost_calculator') {
     if (metadata.estimated_price || metadata.estimated_cost || metadata.build_cost) {
       const cost = metadata.estimated_price || metadata.estimated_cost || metadata.build_cost
       lines.push(`Estimated Build Cost: ${formatCurrency(Number(cost))}`)
@@ -380,15 +373,12 @@ function formatKey(key: string): string {
 // Helper to format source for deal title and notes
 function formatSource(source: string): string {
   const sourceMap: Record<string, string> = {
-    facebook_lead_ad: 'Facebook Lead Ad',
-    referral: 'Referral',
-    cost_calc: 'Cost Calculator',
-    guide_download: 'Guide Download',
-    empower_website: 'Empower Website',
-    barnhaus_contact: 'Barnhaus Contact',
-    barnhaus_store_contact: 'Barnhaus Store',
-    shopify_order: 'Shopify Order',
-    calendar_booking: 'Calendar Booking',
+    cost_calculator: 'Cost Calculator',
+    pdf_download: 'PDF Download',
+    contact_form: 'Contact Form',
+    facebook_ad: 'Facebook Ad',
+    phone_call: 'Direct Phone Call',
+    email: 'Direct Email',
     other: 'Other',
   }
   return sourceMap[source] || source

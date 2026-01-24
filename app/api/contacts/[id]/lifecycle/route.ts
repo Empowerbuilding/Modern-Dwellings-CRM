@@ -50,16 +50,12 @@ interface ContactRow {
 }
 
 const LEAD_SOURCE_LABELS: Record<string, string> = {
-  facebook_lead_ad: 'Facebook Lead Ad',
-  referral: 'Referral',
-  cost_calc: 'Cost Calculator',
-  guide_download: 'Guide Download',
-  empower_website: 'Empower Website',
-  barnhaus_contact: 'Barnhaus Contact',
-  barnhaus_store_contact: 'Barnhaus Store',
-  shopify_order: 'Shopify Order',
-  calendar_booking: 'Calendar Booking',
-  direct_phone_call: 'Direct Phone Call',
+  cost_calculator: 'Cost Calculator',
+  pdf_download: 'PDF Download',
+  contact_form: 'Contact Form',
+  facebook_ad: 'Facebook Ad',
+  phone_call: 'Direct Phone Call',
+  email: 'Direct Email',
   other: 'Other',
 }
 

@@ -1,7 +1,7 @@
 // Enum types matching your business domain
 export type ClientType = 'builder' | 'consumer' | 'subcontractor' | 'engineer' | 'architect' | 'realtor'
 
-export type DealType = 'custom_design' | 'builder_design' | 'engineering' | 'software_fees' | 'referral' | 'budget_builder' | 'marketing'
+export type DealType = 'new_construction' | 'remodel' | 'addition'
 
 // Consumer pipeline stages (linear progression)
 export type PipelineStage =
@@ -78,7 +78,7 @@ export const STAGE_COLORS: Record<PipelineStage, string> = {
   lost: 'bg-red-100 text-red-800',
 }
 
-export type LeadSource = 'facebook_lead_ad' | 'referral' | 'cost_calc' | 'guide_download' | 'empower_website' | 'barnhaus_contact' | 'barnhaus_store_contact' | 'shopify_order' | 'calendar_booking' | 'direct_phone_call' | 'other'
+export type LeadSource = 'cost_calculator' | 'pdf_download' | 'contact_form' | 'facebook_ad' | 'phone_call' | 'email' | 'other'
 
 export type LifecycleStage = 'subscriber' | 'lead' | 'mql' | 'sql' | 'customer'
 

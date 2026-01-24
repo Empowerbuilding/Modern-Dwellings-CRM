@@ -18,23 +18,15 @@ interface CompanyDealsSectionProps {
 }
 
 const DEAL_TYPE_LABELS: Record<DealType, string> = {
-  custom_design: 'Custom Design',
-  builder_design: 'Builder Design',
-  engineering: 'Engineering',
-  software_fees: 'Software Fees',
-  referral: 'Referral',
-  budget_builder: 'Budget Builder',
-  marketing: 'Marketing',
+  new_construction: 'New Construction',
+  remodel: 'Remodel',
+  addition: 'Addition',
 }
 
 const DEAL_TYPES: DealType[] = [
-  'custom_design',
-  'builder_design',
-  'engineering',
-  'software_fees',
-  'referral',
-  'budget_builder',
-  'marketing',
+  'new_construction',
+  'remodel',
+  'addition',
 ]
 
 function formatCurrency(value: number): string {

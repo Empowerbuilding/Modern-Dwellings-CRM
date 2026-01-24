@@ -41,23 +41,15 @@ const STAGE_DOT_COLORS: Record<PipelineStage, string> = {
 }
 
 const DEAL_TYPE_COLORS: Record<DealType, string> = {
-  custom_design: 'border-l-brand-500',
-  builder_design: 'border-l-indigo-500',
-  engineering: 'border-l-orange-500',
-  software_fees: 'border-l-green-500',
-  referral: 'border-l-pink-500',
-  budget_builder: 'border-l-yellow-500',
-  marketing: 'border-l-purple-500',
+  new_construction: 'border-l-brand-500',
+  remodel: 'border-l-indigo-500',
+  addition: 'border-l-orange-500',
 }
 
 const DEAL_TYPE_LABELS: Record<DealType, string> = {
-  custom_design: 'Custom Design',
-  builder_design: 'Builder Design',
-  engineering: 'Engineering',
-  software_fees: 'Software Fees',
-  referral: 'Referral',
-  budget_builder: 'Budget Builder',
-  marketing: 'Marketing',
+  new_construction: 'New Construction',
+  remodel: 'Remodel',
+  addition: 'Addition',
 }
 
 function formatCurrency(value: number): string {

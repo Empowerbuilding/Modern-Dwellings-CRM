@@ -7,23 +7,12 @@ import { supabase } from '@/lib/supabase'
 import type { Contact, LeadSource } from '@/lib/types'
 
 const LEAD_SOURCE_LABELS: Record<string, string> = {
-  facebook: 'Facebook',
-  facebook_ad: 'Facebook Ad',
-  facebook_lead_ad: 'Facebook Lead Ad',
-  google: 'Google',
-  referral: 'Referral',
-  website: 'Website',
+  cost_calculator: 'Cost Calculator',
+  pdf_download: 'PDF Download',
   contact_form: 'Contact Form',
-  cost_calc: 'Cost Calculator',
-  cold: 'Cold',
-  repeat: 'Repeat',
-  guide_download: 'Guide Download',
-  empower_website: 'Empower Website',
-  barnhaus_contact: 'Barnhaus Contact',
-  barnhaus_store_contact: 'Barnhaus Store',
-  shopify_order: 'Shopify Order',
-  calendar_booking: 'Calendar Booking',
-  direct_phone_call: 'Direct Phone Call',
+  facebook_ad: 'Facebook Ad',
+  phone_call: 'Direct Phone Call',
+  email: 'Direct Email',
   other: 'Other',
 }
 
