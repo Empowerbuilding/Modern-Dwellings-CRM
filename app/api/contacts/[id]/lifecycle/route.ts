@@ -212,6 +212,7 @@ export async function PUT(
             clientUserAgent: contact.client_user_agent,
             externalId: contact.id,
           },
+          eventSourceUrl: 'https://showcasebuilders.com',
           customData: {
             leadEventSource: 'crm_lifecycle_update',
           },

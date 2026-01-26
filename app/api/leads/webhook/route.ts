@@ -212,6 +212,7 @@ export async function POST(request: NextRequest) {
             clientUserAgent: clientUserAgent || null,
             externalId: contactId,
           },
+          eventSourceUrl: 'https://showcasebuilders.com',
           customData: {
             leadEventSource: payload.source,
           },
