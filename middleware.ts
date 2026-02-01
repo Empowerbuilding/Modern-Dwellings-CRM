@@ -52,6 +52,7 @@ export async function middleware(request: NextRequest) {
   // Public API routes that use their own authentication (e.g., API key) or are public
   const isPublicApiRoute =
     request.nextUrl.pathname === '/api/leads/webhook' ||
+    request.nextUrl.pathname === '/api/companies/webhook' ||
     request.nextUrl.pathname === '/api/activities/track' ||
     // Calendar booking APIs (public for guests)
     request.nextUrl.pathname === '/api/calendar/availability' ||
