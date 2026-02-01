@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Terms of Service - Empower Building AI',
-  description: 'Terms of Service for Empower Building AI CRM',
+  title: 'Terms of Service - Showcase Builders',
+  description: 'Terms of Service for Showcase Builders CRM',
 }
 
 export default function TermsOfServicePage() {
@@ -24,14 +24,14 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">1. Acceptance of Terms</h2>
             <p>
-              By accessing and using the Empower Building AI CRM service (&quot;Service&quot;), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
+              By accessing and using the Showcase Builders CRM service (&quot;Service&quot;), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">2. Description of Service</h2>
             <p>
-              Empower Building AI provides a customer relationship management (CRM) platform designed for construction, design, and building businesses. The Service includes:
+              Showcase Builders provides a customer relationship management (CRM) platform designed for construction, design, and building businesses. The Service includes:
             </p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Contact and lead management</li>
@@ -88,14 +88,14 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">7. Intellectual Property</h2>
             <p>
-              The Service and its original content, features, and functionality are owned by Barnhaus Steel Builders / Empower Building AI and are protected by international copyright, trademark, and other intellectual property laws.
+              The Service and its original content, features, and functionality are owned by Showcase Builders and are protected by international copyright, trademark, and other intellectual property laws.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">8. Limitation of Liability</h2>
             <p>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL BARNHAUS STEEL BUILDERS, EMPOWER BUILDING AI, OR ITS AFFILIATES BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL SHOWCASE BUILDERS, OR ITS AFFILIATES BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.
             </p>
             <p className="mt-2">
               THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
@@ -105,7 +105,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">9. Indemnification</h2>
             <p>
-              You agree to indemnify and hold harmless Barnhaus Steel Builders, Empower Building AI, and their officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses arising out of your use of the Service or violation of these Terms.
+              You agree to indemnify and hold harmless Showcase Builders, and their officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses arising out of your use of the Service or violation of these Terms.
             </p>
           </section>
 
@@ -136,8 +136,8 @@ export default function TermsOfServicePage() {
               If you have any questions about these Terms, please contact us at:
             </p>
             <p className="mt-2">
-              <strong>Barnhaus Steel Builders / Empower Building AI</strong><br />
-              Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-brand-600 hover:underline">info@barnhaussteelbuilders.com</a>
+              <strong>Showcase Builders</strong><br />
+              Email: <a href="mailto:info@showcasebuilders.com" className="text-brand-600 hover:underline">info@showcasebuilders.com</a>
             </p>
           </section>
         </div>

@@ -1,18 +1,18 @@
 # Website Activity Tracking
 
-This guide explains how to add activity tracking to your websites (Barnhaus, Empower, etc.) to capture visitor behavior and connect it to CRM contacts.
+This guide explains how to add activity tracking to your websites to capture visitor behavior and connect it to CRM contacts.
 
 ## Quick Start
 
 Add this script tag before `</body>` on your website:
 
 ```html
-<script src="https://crm.yourdomain.com/tracking.js" data-site="barnhaus"></script>
+<script src="https://crm.yourdomain.com/tracking.js" data-site="showcase"></script>
 ```
 
 Replace:
 - `crm.yourdomain.com` with your CRM domain
-- `barnhaus` with your site identifier (`barnhaus` or `empower`)
+- `showcase` with your site identifier
 
 ## How It Works
 
@@ -35,7 +35,7 @@ Replace:
   <!-- Your content -->
 
   <!-- Add before closing body tag -->
-  <script src="https://crm.yourdomain.com/tracking.js" data-site="barnhaus"></script>
+  <script src="https://crm.yourdomain.com/tracking.js" data-site="showcase"></script>
 </body>
 </html>
 ```
@@ -47,7 +47,7 @@ Enable console logging for development:
 ```html
 <script
   src="https://crm.yourdomain.com/tracking.js"
-  data-site="barnhaus"
+  data-site="showcase"
   data-debug="true"
 ></script>
 ```
@@ -56,7 +56,7 @@ Enable console logging for development:
 
 | Attribute | Required | Description |
 |-----------|----------|-------------|
-| `data-site` | Yes | Site identifier: `barnhaus`, `empower` |
+| `data-site` | Yes | Site identifier: `showcase` |
 | `data-debug` | No | Set to `"true"` to enable console logging |
 | `data-endpoint` | No | Custom API endpoint (defaults to same origin as script) |
 
@@ -143,8 +143,8 @@ Each activity includes:
   "activity_type": "page_view",
   "title": "Visited Cost Calculator",
   "metadata": {
-    "site": "barnhaus",
-    "page_url": "https://barnhaus.com/cost-calculator",
+    "site": "showcase",
+    "page_url": "https://showcasebuilders.com/cost-calculator",
     "page_title": "Cost Calculator",
     "page_path": "/cost-calculator",
     "referrer": "https://google.com",
@@ -198,8 +198,7 @@ The tracking endpoint is rate-limited to 60 requests per minute per IP address. 
 
 | Site | Identifier |
 |------|------------|
-| Barnhaus | `barnhaus` |
-| Empower | `empower` |
+| Showcase | `showcase` |
 
 ## API Reference
 
@@ -215,7 +214,7 @@ Track an activity from external websites.
   "title": "Visited Home Page",
   "page_url": "https://example.com/",
   "metadata": {
-    "site": "barnhaus",
+    "site": "showcase",
     "page_title": "Home Page"
   }
 }

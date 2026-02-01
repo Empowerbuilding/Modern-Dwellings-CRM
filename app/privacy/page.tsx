@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Privacy Policy - Empower Building AI',
-  description: 'Privacy Policy for Empower Building AI CRM',
+  title: 'Privacy Policy - Showcase Builders',
+  description: 'Privacy Policy for Showcase Builders CRM',
 }
 
 export default function PrivacyPolicyPage() {
@@ -24,10 +24,10 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">Company Information</h2>
             <p>
-              This Privacy Policy applies to the services provided by <strong>Barnhaus Steel Builders</strong> and <strong>Empower Building AI</strong>.
+              This Privacy Policy applies to the services provided by <strong>Showcase Builders</strong>.
             </p>
             <p className="mt-2">
-              Contact Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-brand-600 hover:underline">info@barnhaussteelbuilders.com</a>
+              Contact Email: <a href="mailto:info@showcasebuilders.com" className="text-brand-600 hover:underline">info@showcasebuilders.com</a>
             </p>
           </section>
 
@@ -104,8 +104,8 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">Data Deletion Requests</h2>
             <p>
               To request deletion of your personal data, please contact us at{' '}
-              <a href="mailto:info@barnhaussteelbuilders.com" className="text-brand-600 hover:underline">
-                info@barnhaussteelbuilders.com
+              <a href="mailto:info@showcasebuilders.com" className="text-brand-600 hover:underline">
+                info@showcasebuilders.com
               </a>{' '}
               with the subject line &quot;Data Deletion Request&quot;. Please include your name and email address so we can locate your records.
             </p>
@@ -140,8 +140,8 @@ export default function PrivacyPolicyPage() {
               If you have any questions about this Privacy Policy, please contact us at:
             </p>
             <p className="mt-2">
-              <strong>Barnhaus Steel Builders / Empower Building AI</strong><br />
-              Email: <a href="mailto:info@barnhaussteelbuilders.com" className="text-brand-600 hover:underline">info@barnhaussteelbuilders.com</a>
+              <strong>Showcase Builders</strong><br />
+              Email: <a href="mailto:info@showcasebuilders.com" className="text-brand-600 hover:underline">info@showcasebuilders.com</a>
             </p>
           </section>
         </div>

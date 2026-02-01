@@ -204,7 +204,7 @@ export default function CalendarSettingsPage() {
   }
 
   async function handleCopyLink(slug: string) {
-    const url = `https://crm.empowerbuilding.ai/book/${slug}`
+    const url = `https://crm.showcasebuilders.com/book/${slug}`
     try {
       await navigator.clipboard.writeText(url)
       setToast({ message: 'Link copied to clipboard!', type: 'success' })
@@ -521,7 +521,7 @@ export default function CalendarSettingsPage() {
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Direct Link</h3>
                 <p className="text-xs text-gray-500 mb-2">Share this link directly with clients:</p>
                 <code className="block text-xs bg-gray-50 p-3 rounded-lg text-gray-700 overflow-x-auto">
-                  https://crm.empowerbuilding.ai/book/{meetingTypes[0]?.slug || 'your-slug'}
+                  https://crm.showcasebuilders.com/book/{meetingTypes[0]?.slug || 'your-slug'}
                 </code>
               </div>
 
@@ -530,8 +530,8 @@ export default function CalendarSettingsPage() {
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Popup Button</h3>
                 <p className="text-xs text-gray-500 mb-2">Opens booking in a modal overlay:</p>
                 <pre className="text-xs bg-gray-50 p-3 rounded-lg text-gray-700 overflow-x-auto whitespace-pre-wrap">
-{`<script src="https://crm.empowerbuilding.ai/booking-widget.js"></script>
-<button onclick="BarnhausBooking.open('${meetingTypes[0]?.slug || 'your-slug'}')">
+{`<script src="https://crm.showcasebuilders.com/booking-widget.js"></script>
+<button onclick="ShowcaseBooking.open('${meetingTypes[0]?.slug || 'your-slug'}')">
   Schedule a Call
 </button>`}
                 </pre>
@@ -543,9 +543,9 @@ export default function CalendarSettingsPage() {
                 <p className="text-xs text-gray-500 mb-2">Embed directly in your page:</p>
                 <pre className="text-xs bg-gray-50 p-3 rounded-lg text-gray-700 overflow-x-auto whitespace-pre-wrap">
 {`<div id="booking-container"></div>
-<script src="https://crm.empowerbuilding.ai/booking-widget.js"></script>
+<script src="https://crm.showcasebuilders.com/booking-widget.js"></script>
 <script>
-  BarnhausBooking.render('${meetingTypes[0]?.slug || 'your-slug'}', '#booking-container');
+  ShowcaseBooking.render('${meetingTypes[0]?.slug || 'your-slug'}', '#booking-container');
 </script>`}
                 </pre>
               </div>
@@ -555,7 +555,7 @@ export default function CalendarSettingsPage() {
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Advanced Options</h3>
                 <p className="text-xs text-gray-500 mb-2">Callbacks for booking events:</p>
                 <pre className="text-xs bg-gray-50 p-3 rounded-lg text-gray-700 overflow-x-auto whitespace-pre-wrap">
-{`BarnhausBooking.open('${meetingTypes[0]?.slug || 'your-slug'}', {
+{`ShowcaseBooking.open('${meetingTypes[0]?.slug || 'your-slug'}', {
   onBooked: function(meeting) {
     console.log('Booked:', meeting);
     // Track conversion, show thank you, etc.

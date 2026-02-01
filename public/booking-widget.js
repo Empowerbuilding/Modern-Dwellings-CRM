@@ -1,23 +1,23 @@
 /**
- * Barnhaus Booking Widget
+ * Showcase Booking Widget
  * Embed meeting scheduling on any website
  *
  * Usage:
  *
  * Popup:
- *   <script src="https://crm.empowerbuilding.ai/booking-widget.js"></script>
- *   <button onclick="BarnhausBooking.open('your-slug')">Book a Meeting</button>
+ *   <script src="https://crm.showcasebuilders.com/booking-widget.js"></script>
+ *   <button onclick="ShowcaseBooking.open('your-slug')">Book a Meeting</button>
  *
  * Inline:
  *   <div id="booking"></div>
- *   <script src="https://crm.empowerbuilding.ai/booking-widget.js"></script>
- *   <script>BarnhausBooking.render('your-slug', '#booking');</script>
+ *   <script src="https://crm.showcasebuilders.com/booking-widget.js"></script>
+ *   <script>ShowcaseBooking.render('your-slug', '#booking');</script>
  */
 (function() {
   'use strict';
 
-  window.BarnhausBooking = {
-    domain: 'crm.empowerbuilding.ai',
+  window.ShowcaseBooking = {
+    domain: 'crm.showcasebuilders.com',
     _activeOverlay: null,
 
     /**
@@ -128,7 +128,7 @@
 
       // Create overlay
       var overlay = document.createElement('div');
-      overlay.id = 'barnhaus-booking-overlay';
+      overlay.id = 'showcase-booking-overlay';
       overlay.style.cssText = [
         'position: fixed',
         'top: 0',
@@ -199,12 +199,12 @@
         if (!event.data || typeof event.data !== 'object') return;
 
         switch (event.data.type) {
-          case 'barnhaus-booking-ready':
-          case 'barnhaus-booking-resize':
+          case 'showcase-booking-ready':
+          case 'showcase-booking-resize':
             var newHeight = Math.min(event.data.height + 20, window.innerHeight * 0.85);
             iframe.style.height = newHeight + 'px';
             break;
-          case 'barnhaus-booking-complete':
+          case 'showcase-booking-complete':
             if (options.onBooked) {
               options.onBooked(event.data.meeting);
             }
@@ -280,7 +280,7 @@
       var container = document.querySelector(containerSelector);
 
       if (!container) {
-        console.error('BarnhausBooking: Container not found:', containerSelector);
+        console.error('ShowcaseBooking: Container not found:', containerSelector);
         return null;
       }
 
@@ -304,17 +304,17 @@
         if (!event.data || typeof event.data !== 'object') return;
 
         switch (event.data.type) {
-          case 'barnhaus-booking-ready':
+          case 'showcase-booking-ready':
             // Set both height and min-height so iframe can shrink to fit content
             iframe.style.height = event.data.height + 'px';
             iframe.style.minHeight = event.data.height + 'px';
             if (options.onReady) options.onReady();
             break;
-          case 'barnhaus-booking-resize':
+          case 'showcase-booking-resize':
             iframe.style.height = event.data.height + 'px';
             iframe.style.minHeight = event.data.height + 'px';
             break;
-          case 'barnhaus-booking-complete':
+          case 'showcase-booking-complete':
             if (options.onBooked) {
               options.onBooked(event.data.meeting);
             }
