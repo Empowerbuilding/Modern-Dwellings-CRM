@@ -30,8 +30,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/')
-    router.refresh()
+    window.location.href = '/'
   }
 
   return (
