@@ -49,11 +49,25 @@ const CLIENT_TYPE_COLORS: Record<ClientType, string> = {
 
 const LIFECYCLE_STAGES: LifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'customer']
 
-type SortField = 'name' | 'company' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'created_at' | 'updated_at' | 'role' | 'owner'
+type LeadScore = 'hot' | 'medium' | 'cold'
+
+const LEAD_SCORE_LABELS: Record<LeadScore, string> = {
+  hot: 'Hot',
+  medium: 'Medium',
+  cold: 'Cold',
+}
+
+const LEAD_SCORE_STYLES: Record<LeadScore, string> = {
+  hot: 'bg-red-100 text-red-700 border border-red-200',
+  medium: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+  cold: 'bg-gray-100 text-gray-600 border border-gray-200',
+}
+
+type SortField = 'name' | 'company' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'lead_score' | 'created_at' | 'updated_at' | 'role' | 'owner'
 type SortDirection = 'asc' | 'desc'
 type UnsubscribedFilter = 'all' | 'subscribed' | 'unsubscribed'
 
-type ColumnKey = 'name' | 'company' | 'type' | 'email' | 'phone' | 'lead_source' | 'lifecycle_stage' | 'owner' | 'role' | 'created_at' | 'created_time' | 'updated_at' | 'unsubscribed'
+type ColumnKey = 'name' | 'company' | 'type' | 'email' | 'phone' | 'lead_source' | 'lead_score' | 'lifecycle_stage' | 'owner' | 'role' | 'created_at' | 'created_time' | 'updated_at' | 'unsubscribed'
 
 interface ColumnConfig {
   key: ColumnKey
@@ -73,6 +87,7 @@ const COLUMNS: ColumnConfig[] = [
   { key: 'email', label: 'Email', defaultVisible: true, sortable: true, sortField: 'email', hideOnMobile: true, hideOnTablet: true },
   { key: 'phone', label: 'Phone', defaultVisible: true, sortable: true, sortField: 'phone', hideOnMobile: true, hideOnTablet: true },
   { key: 'lead_source', label: 'Lead Source', defaultVisible: true, sortable: true, sortField: 'lead_source', hideOnMobile: true, hideOnTablet: true },
+  { key: 'lead_score', label: 'Lead Score', defaultVisible: true, sortable: true, sortField: 'lead_score', hideOnMobile: true, hideOnTablet: true },
   { key: 'lifecycle_stage', label: 'Lifecycle Stage', defaultVisible: true, sortable: true, sortField: 'lifecycle_stage', hideOnMobile: true, hideOnTablet: true },
   { key: 'owner', label: 'Owner', defaultVisible: true, sortable: true, sortField: 'owner', hideOnMobile: true, hideOnTablet: true },
   { key: 'role', label: 'Role', defaultVisible: false, sortable: true, sortField: 'role', hideOnMobile: true, hideOnTablet: true },
@@ -145,8 +160,11 @@ function formatTime(dateString?: string): string {
   })
 }
 
+type LeadScoreFilter = '' | 'hot' | 'medium' | 'cold' | 'unscored'
+
 interface Filters {
   leadSource: LeadSource | ''
+  leadScore: LeadScoreFilter
   lifecycleStage: LifecycleStage | ''
   clientType: ClientType | ''
   owner: string
@@ -157,6 +175,7 @@ interface Filters {
 
 const defaultFilters: Filters = {
   leadSource: '',
+  leadScore: '',
   lifecycleStage: '',
   clientType: '',
   owner: '',
@@ -210,6 +229,9 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(getDefaultVisibleColumns)
   const [showColumnPicker, setShowColumnPicker] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [scoringAll, setScoringAll] = useState(false)
+  const [scoreAllToast, setScoreAllToast] = useState<string | null>(null)
+  const [scoringContactId, setScoringContactId] = useState<string | null>(null)
   const columnPickerRef = useRef<HTMLDivElement>(null)
 
   // Load visible columns from localStorage on mount
@@ -241,6 +263,7 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
   const activeFilterCount = useMemo(() => {
     let count = 0
     if (filters.leadSource) count++
+    if (filters.leadScore) count++
     if (filters.lifecycleStage) count++
     if (filters.clientType) count++
     if (filters.owner) count++
@@ -271,6 +294,15 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
     // Lead source filter
     if (filters.leadSource) {
       result = result.filter((contact) => contact.lead_source === filters.leadSource)
+    }
+
+    // Lead score filter
+    if (filters.leadScore) {
+      if (filters.leadScore === 'unscored') {
+        result = result.filter((contact) => !contact.lead_score)
+      } else {
+        result = result.filter((contact) => contact.lead_score === filters.leadScore)
+      }
     }
 
     // Lifecycle stage filter
@@ -345,6 +377,10 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
         case 'lead_source':
           aVal = a.lead_source
           bVal = b.lead_source
+          break
+        case 'lead_score':
+          aVal = a.lead_score
+          bVal = b.lead_score
           break
         case 'lifecycle_stage':
           aVal = a.lifecycle_stage
@@ -434,6 +470,59 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
     setFilters(defaultFilters)
   }
 
+  const handleScoreAll = async () => {
+    setScoringAll(true)
+    setScoreAllToast(null)
+    try {
+      const response = await fetch('/api/contacts/score-all', { method: 'POST' })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.scored > 0) {
+          // Update local contacts with new scores
+          const scoreMap = new Map(data.results.map((r: { id: string; score: string }) => [r.id, r.score]))
+          setContacts((prev) =>
+            prev.map((c) => {
+              const newScore = scoreMap.get(c.id) as LeadScore | undefined
+              if (newScore) {
+                return { ...c, lead_score: newScore }
+              }
+              return c
+            })
+          )
+          setScoreAllToast(`Scored ${data.scored} contact${data.scored === 1 ? '' : 's'}`)
+        } else {
+          setScoreAllToast('All contacts already scored')
+        }
+        setTimeout(() => setScoreAllToast(null), 3000)
+      }
+    } catch {
+      setScoreAllToast('Failed to score contacts')
+      setTimeout(() => setScoreAllToast(null), 5000)
+    } finally {
+      setScoringAll(false)
+    }
+  }
+
+  const handleScoreContact = async (e: React.MouseEvent, contactId: string) => {
+    e.stopPropagation()
+    setScoringContactId(contactId)
+    try {
+      const response = await fetch(`/api/contacts/${contactId}/score`, { method: 'POST' })
+      if (response.ok) {
+        const data = await response.json()
+        setContacts((prev) =>
+          prev.map((c) =>
+            c.id === contactId ? { ...c, lead_score: data.score, lead_score_reason: data.reason } : c
+          )
+        )
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setScoringContactId(null)
+    }
+  }
+
   const toggleColumn = (key: ColumnKey) => {
     const column = COLUMNS.find(c => c.key === key)
     if (column?.alwaysVisible) return
@@ -473,12 +562,28 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
     <>
       <div className="flex items-center justify-between mb-6 pt-14 md:pt-0">
         <h1 className="text-2xl font-semibold text-gray-900">Contacts</h1>
-        <button
-          onClick={handleAddNew}
-          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
-        >
-          Add Contact
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={handleScoreAll}
+              disabled={scoringAll}
+              className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              {scoringAll ? 'Scoring...' : 'Score All'}
+            </button>
+            {scoreAllToast && (
+              <div className="absolute top-full right-0 mt-1 z-10 whitespace-nowrap px-3 py-1.5 text-xs font-medium rounded-lg bg-green-100 text-green-800 border border-green-200">
+                {scoreAllToast}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={handleAddNew}
+            className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
+          >
+            Add Contact
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -490,6 +595,27 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
           onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
         />
+      </div>
+
+      {/* Lead Score Quick Filter */}
+      <div className="flex items-center gap-1 mb-4">
+        {(['' , 'hot', 'medium', 'cold', 'unscored'] as const).map((value) => {
+          const label = value === '' ? 'All' : value === 'unscored' ? 'Unscored' : LEAD_SCORE_LABELS[value]
+          const isActive = filters.leadScore === value
+          return (
+            <button
+              key={value || 'all'}
+              onClick={() => setFilters({ ...filters, leadScore: value })}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                isActive
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {label}
+            </button>
+          )
+        })}
       </div>
 
       {/* Filter and Column Controls */}
@@ -744,6 +870,16 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                   </th>
                 )}
 
+                {/* Lead Score */}
+                {isColumnVisible('lead_score') && (
+                  <th
+                    onClick={() => handleSort('lead_score')}
+                    className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  >
+                    Score <SortIcon field="lead_score" />
+                  </th>
+                )}
+
                 {/* Lifecycle Stage */}
                 {isColumnVisible('lifecycle_stage') && (
                   <th
@@ -891,6 +1027,28 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                           </span>
                         ) : (
                           <span className="text-sm text-gray-400">-</span>
+                        )}
+                      </td>
+                    )}
+
+                    {/* Lead Score */}
+                    {isColumnVisible('lead_score') && (
+                      <td className="hidden lg:table-cell px-4 py-3">
+                        {contact.lead_score ? (
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${LEAD_SCORE_STYLES[contact.lead_score as LeadScore]}`}
+                            title={contact.lead_score_reason || undefined}
+                          >
+                            {LEAD_SCORE_LABELS[contact.lead_score as LeadScore]}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={(e) => handleScoreContact(e, contact.id)}
+                            disabled={scoringContactId === contact.id}
+                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-50 text-gray-400 border border-gray-200 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                          >
+                            {scoringContactId === contact.id ? 'Scoring...' : 'Unscored'}
+                          </button>
                         )}
                       </td>
                     )}

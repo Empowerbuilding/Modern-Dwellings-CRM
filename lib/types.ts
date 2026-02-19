@@ -160,6 +160,9 @@ export interface Contact {
   notes: string | null
   unsubscribed: boolean
   unsubscribed_at: string | null
+  lead_score: 'hot' | 'medium' | 'cold' | null
+  lead_score_reason: string | null
+  lead_score_updated_at: string | null
   created_at?: string
   updated_at?: string
 }

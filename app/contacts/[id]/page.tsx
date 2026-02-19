@@ -11,6 +11,7 @@ import { ContactMeetingsSection } from './contact-meetings-section'
 import { LifecycleStageSelect } from './lifecycle-stage-select'
 import { ContactOwnerSelect } from './contact-owner-select'
 import { ContactTasksSection, type TaskWithRelations } from './contact-tasks-section'
+import { LeadScoreBadge } from './lead-score-badge'
 
 export const dynamic = 'force-dynamic'
 
@@ -267,6 +268,11 @@ export default async function ContactDetailPage({
                     Primary Contact
                   </span>
                 )}
+                <LeadScoreBadge
+                  contactId={contact.id}
+                  initialScore={contact.lead_score}
+                  initialReason={contact.lead_score_reason}
+                />
               </div>
               <div className="mt-3">
                 <LifecycleStageSelect

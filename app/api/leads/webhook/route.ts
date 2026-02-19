@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import type { LeadSource, LifecycleStage } from '@/lib/types'
 import { sendFacebookEvent } from '@/lib/facebook-conversions'
+import { scoreContact } from '@/lib/lead-scoring'
 
 // Use service role key for server-side operations (bypasses RLS)
 const supabase = createClient(
@@ -180,6 +181,22 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Auto-score the new contact
+      try {
+        const { score, reason } = scoreContact(payload.source, contactNotes)
+        await supabase
+          .from('contacts')
+          .update({
+            lead_score: score,
+            lead_score_reason: reason,
+            lead_score_updated_at: new Date().toISOString(),
+          })
+          .eq('id', contactId)
+        console.log(`[${timestamp}] Lead scored: ${score} (${reason})`)
+      } catch (scoreError) {
+        console.error(`[${timestamp}] Lead scoring error (non-fatal):`, scoreError)
+      }
+
       // Log contact_created activity
       await supabase.from('activities').insert({
         contact_id: contactId,
@@ -295,37 +312,36 @@ function formatContactNotes(source: LeadSource, metadata?: Record<string, unknow
 
   // Handle cost calculator specific fields
   if (source === 'cost_calculator') {
-    if (metadata.estimated_price || metadata.estimated_cost || metadata.build_cost) {
-      const cost = metadata.estimated_price || metadata.estimated_cost || metadata.build_cost
-      lines.push(`Estimated Build Cost: ${formatCurrency(Number(cost))}`)
-    }
-
     // Build project summary line
     const projectParts: string[] = []
     if (metadata.bedrooms) projectParts.push(`${metadata.bedrooms}BR`)
     if (metadata.bathrooms) projectParts.push(`${metadata.bathrooms}BA`)
-    if (metadata.sqft || metadata.square_feet) {
-      const sqft = metadata.sqft || metadata.square_feet
-      projectParts.push(`${Number(sqft).toLocaleString()} sq ft`)
-    }
+    if (metadata.living_sqft) projectParts.push(`${Number(metadata.living_sqft).toLocaleString()} sq ft`)
     if (projectParts.length > 0) {
       lines.push(`Project: ${projectParts.join(' • ')}`)
     }
 
-    if (metadata.location || metadata.city) {
-      lines.push(`Location: ${metadata.location || metadata.city}`)
-    }
+    if (metadata.location) lines.push(`Location: ${metadata.location}`)
+    if (metadata.foundation) lines.push(`Foundation: ${metadata.foundation}`)
+    if (metadata.roof_pitch) lines.push(`Roof Pitch: ${metadata.roof_pitch}`)
+    if (metadata.interior_finish) lines.push(`Interior Finish: ${metadata.interior_finish}`)
+    if (metadata.garage_spaces) lines.push(`Garage Spaces: ${metadata.garage_spaces}`)
+    if (metadata.patio_sqft) lines.push(`Patio: ${Number(metadata.patio_sqft).toLocaleString()} sq ft`)
+    if (metadata.sustainability_score) lines.push(`Sustainability Score: ${metadata.sustainability_score}/10`)
 
-    if (metadata.foundation) {
-      lines.push(`Foundation: ${metadata.foundation}`)
-    }
-
-    if (metadata.stories) {
-      lines.push(`Stories: ${metadata.stories}`)
-    }
-
-    if (metadata.garage) {
-      lines.push(`Garage: ${metadata.garage}`)
+    // Estimated build costs by tier
+    const hasCosts = metadata.economy_owner_cost || metadata.economy_contractor_cost
+      || metadata.standard_owner_cost || metadata.standard_contractor_cost
+      || metadata.premium_owner_cost || metadata.premium_contractor_cost
+    if (hasCosts) {
+      lines.push('')
+      lines.push('--- Estimated Build Costs ---')
+      if (metadata.economy_owner_cost) lines.push(`Economy (Owner-Build): ${formatCurrency(Number(metadata.economy_owner_cost))}`)
+      if (metadata.economy_contractor_cost) lines.push(`Economy (w/ Contractor): ${formatCurrency(Number(metadata.economy_contractor_cost))}`)
+      if (metadata.standard_owner_cost) lines.push(`Standard (Owner-Build): ${formatCurrency(Number(metadata.standard_owner_cost))}`)
+      if (metadata.standard_contractor_cost) lines.push(`Standard (w/ Contractor): ${formatCurrency(Number(metadata.standard_contractor_cost))}`)
+      if (metadata.premium_owner_cost) lines.push(`Premium (Owner-Build): ${formatCurrency(Number(metadata.premium_owner_cost))}`)
+      if (metadata.premium_contractor_cost) lines.push(`Premium (w/ Contractor): ${formatCurrency(Number(metadata.premium_contractor_cost))}`)
     }
   } else {
     // For other sources, include any provided metadata
