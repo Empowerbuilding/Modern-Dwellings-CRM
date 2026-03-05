@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
             lastName: contact.last_name,
             externalId: contact.id,
           },
-          eventSourceUrl: 'https://showcasebuilders.com',
+          eventSourceUrl: 'https://moderndwellings.com',
           customData: {
             leadEventSource: 'crm_manual_creation',
           },

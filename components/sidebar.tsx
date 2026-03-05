@@ -119,15 +119,7 @@ export function Sidebar() {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-center px-4 border border-slate-800 bg-white relative">
-          <img
-            src="https://ozhkjwcjsifdhfdexayd.supabase.co/storage/v1/object/public/website-images/Showcase/showcase-builders-logo (2).avif"
-            alt="Logo"
-            className="h-10 w-auto"
-            onError={(e) => {
-              console.error('Logo failed to load');
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+          <span className="text-lg font-bold text-slate-800 tracking-tight">Modern Dwellings</span>
           {/* Mobile close button */}
           <button
             onClick={() => setMobileOpen(false)}

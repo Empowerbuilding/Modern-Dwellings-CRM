@@ -62,7 +62,7 @@ interface TrackPayload {
 }
 
 // Valid site identifiers
-const VALID_SITES = ['barnhaus', 'empower', 'showcase', 'unknown']
+const VALID_SITES = ['barnhaus', 'empower', 'showcase', 'modern_dwellings', 'unknown']
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
