@@ -65,7 +65,8 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname === '/api/unsubscribe' ||
     request.nextUrl.pathname === '/api/unsubscribe/status' ||
     // CRM Summary API (for n8n automation)
-    request.nextUrl.pathname === '/api/crm-summary'
+    request.nextUrl.pathname === '/api/crm-summary' ||
+    request.nextUrl.pathname === '/api/contacts'
 
   // If user is not logged in and trying to access protected route, redirect to login
   if (!user && !isAuthPage && !isPublicApiRoute && !isBookingPage && !isUnsubscribePage) {
