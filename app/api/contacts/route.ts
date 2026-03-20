@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabaseAdmin
     .from('contacts')
-    .select('id, first_name, last_name, email, phone, lead_source, lifecycle_stage, created_at, budget, notes')
+    .select('id, first_name, last_name, email, phone, lead_source, lifecycle_stage, created_at, notes')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
