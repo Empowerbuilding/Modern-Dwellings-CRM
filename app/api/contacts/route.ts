@@ -185,3 +185,42 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// GET /api/contacts - Read contacts via webhook API key (for agent access)
+export async function GET(request: NextRequest) {
+  const apiKey = request.headers.get('x-api-key')
+  const validKey = process.env.WEBHOOK_API_KEY
+
+  if (!apiKey || apiKey !== validKey) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { searchParams } = new URL(request.url)
+  const limit = parseInt(searchParams.get('limit') || '50')
+  const offset = parseInt(searchParams.get('offset') || '0')
+  const stage = searchParams.get('stage')
+  const source = searchParams.get('source')
+  const days = searchParams.get('days') // e.g. ?days=7 for last 7 days
+
+  let query = supabaseAdmin
+    .from('contacts')
+    .select('id, first_name, last_name, email, phone, lead_source, lifecycle_stage, created_at, budget, notes')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (stage) query = query.eq('lifecycle_stage', stage)
+  if (source) query = query.eq('lead_source', source)
+  if (days) {
+    const since = new Date()
+    since.setDate(since.getDate() - parseInt(days))
+    query = query.gte('created_at', since.toISOString())
+  }
+
+  const { data, error, count } = await query
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ contacts: data, total: count, offset, limit })
+}
