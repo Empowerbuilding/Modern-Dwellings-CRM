@@ -28,14 +28,9 @@
     debug: currentScript.getAttribute('data-debug') === 'true'
   };
 
-  // Get default endpoint from script src or hardcoded CRM URL
+  // Get default endpoint from script src or hardcoded fallback
   function getDefaultEndpoint() {
-    var src = currentScript.getAttribute('src') || '';
-    if (src.indexOf('://') !== -1) {
-      var parts = src.split('/');
-      return parts[0] + '//' + parts[2] + '/api/activities/track';
-    }
-    // Fallback: find the crm script tag by src
+    // Try to find tracking.js script tag in DOM
     var allScripts = document.getElementsByTagName('script');
     for (var i = 0; i < allScripts.length; i++) {
       var s = allScripts[i].getAttribute('src') || '';
@@ -44,7 +39,8 @@
         return p[0] + '//' + p[2] + '/api/activities/track';
       }
     }
-    return '/api/activities/track';
+    // Hardcoded fallback — always points to CRM
+    return 'https://crm.moderndwellings.com/api/activities/track';
   }
 
   // Debug logging
