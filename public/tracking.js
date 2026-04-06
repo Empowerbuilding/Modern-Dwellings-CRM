@@ -28,12 +28,21 @@
     debug: currentScript.getAttribute('data-debug') === 'true'
   };
 
-  // Get default endpoint from script src
+  // Get default endpoint from script src or hardcoded CRM URL
   function getDefaultEndpoint() {
     var src = currentScript.getAttribute('src') || '';
     if (src.indexOf('://') !== -1) {
       var parts = src.split('/');
       return parts[0] + '//' + parts[2] + '/api/activities/track';
+    }
+    // Fallback: find the crm script tag by src
+    var allScripts = document.getElementsByTagName('script');
+    for (var i = 0; i < allScripts.length; i++) {
+      var s = allScripts[i].getAttribute('src') || '';
+      if (s.indexOf('tracking.js') !== -1 && s.indexOf('://') !== -1) {
+        var p = s.split('/');
+        return p[0] + '//' + p[2] + '/api/activities/track';
+      }
     }
     return '/api/activities/track';
   }
