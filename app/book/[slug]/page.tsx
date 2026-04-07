@@ -740,7 +740,7 @@ export default function BookingPage() {
           <div className="flex flex-col md:flex-row">
             {/* Left Panel - Calendar (hidden on mobile when viewing times) */}
             <div
-              className={`p-6 md:p-8 md:w-1/2 ${mobileStep === 'times' ? 'hidden md:block' : ''}`}
+              className={`p-5 md:w-1/2 ${mobileStep === 'times' ? 'hidden md:block' : ''}`}
               style={{ backgroundColor: brandColor }}
             >
               {/* Logo */}
@@ -832,7 +832,7 @@ export default function BookingPage() {
             </div>
 
             {/* Right Panel - Time Slots (hidden on mobile when viewing calendar) */}
-            <div className={`p-6 md:p-8 md:w-1/2 bg-white ${mobileStep === 'calendar' ? 'hidden md:block' : ''}`}>
+            <div className={`p-5 md:w-1/2 bg-white ${mobileStep === 'calendar' ? 'hidden md:block' : ''}`}>
               {/* Mobile back button */}
               <button
                 onClick={goBackToMobileCalendar}
