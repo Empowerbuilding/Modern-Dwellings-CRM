@@ -919,7 +919,7 @@ export default function BookingPage() {
                   <p className="text-sm mt-1">Please select another date.</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                <div className="space-y-2 max-h-[220px] sm:max-h-[500px] overflow-y-auto">
                   {slots.map((slot) => {
                     const isAvailable = slot.available !== false
                     const isBlocked = slot.blockedReason === 'busy' || slot.blockedReason === 'meeting'
