@@ -22,6 +22,7 @@ const LEAD_SOURCES: LeadSource[] = [
   'facebook_ad',
   'phone_call',
   'email',
+  'calendar_booking',
   'other',
 ]
 
