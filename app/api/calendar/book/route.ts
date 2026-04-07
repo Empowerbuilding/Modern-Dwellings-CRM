@@ -345,7 +345,7 @@ export async function POST(request: NextRequest) {
       const result = await createCalendarEvent({
         accessToken,
         calendarId: calendarIntegration.calendar_id || 'primary',
-        summary: `${firstName} ${lastName} and Barnhaus Introductory Phone Call`,
+        summary: `${firstName} ${lastName} and ${meetingType.title}`,
         description: descriptionParts.join('\n'),
         startTime: startDate,
         endTime: endDate,
