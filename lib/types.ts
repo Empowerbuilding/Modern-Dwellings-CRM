@@ -78,7 +78,7 @@ export const STAGE_COLORS: Record<PipelineStage, string> = {
   lost: 'bg-red-100 text-red-800',
 }
 
-export type LeadSource = 'cost_calculator' | 'pdf_download' | 'contact_form' | 'facebook_ad' | 'phone_call' | 'email' | 'other'
+export type LeadSource = 'cost_calculator' | 'pdf_download' | 'contact_form' | 'facebook_ad' | 'phone_call' | 'email' | 'calendar_booking' | 'other'
 
 export type LifecycleStage = 'subscriber' | 'lead' | 'mql' | 'sql' | 'customer'
 

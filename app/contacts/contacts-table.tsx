@@ -14,6 +14,7 @@ const LEAD_SOURCES: LeadSource[] = [
   'facebook_ad',
   'phone_call',
   'email',
+  'calendar_booking',
   'other',
 ]
 
@@ -24,6 +25,7 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   facebook_ad: 'Facebook Ad',
   phone_call: 'Direct Phone Call',
   email: 'Direct Email',
+  calendar_booking: 'Calendar Booking',
   other: 'Other',
 }
 
