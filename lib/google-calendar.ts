@@ -260,6 +260,7 @@ export async function createCalendarEvent(params: {
   }
 
   const url = new URL(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`)
+  url.searchParams.set('sendUpdates', 'all') // sends Google Calendar invite email to attendees
   if (addGoogleMeet) {
     url.searchParams.set('conferenceDataVersion', '1')
   }
