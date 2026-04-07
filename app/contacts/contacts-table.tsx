@@ -26,6 +26,7 @@ const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   phone_call: 'Direct Phone Call',
   email: 'Direct Email',
   calendar_booking: 'Calendar Booking',
+  calendar_booking: 'Calendar Booking',
   other: 'Other',
 }
 

@@ -13,6 +13,7 @@ const LEAD_SOURCE_LABELS: Record<string, string> = {
   facebook_ad: 'Facebook Ad',
   phone_call: 'Direct Phone Call',
   email: 'Direct Email',
+  calendar_booking: 'Calendar Booking',
   other: 'Other',
 }
 
