@@ -123,6 +123,18 @@ export async function POST(request: NextRequest) {
           .update(updateData)
           .eq('id', contactId)
       }
+
+      // Add a note for existing contacts so form data is visible in the CRM
+      if (contactNotes) {
+        const { error: noteError } = await supabase.from('notes').insert({
+          contact_id: contactId,
+          content: `Re-submitted form:\n${contactNotes}`,
+        })
+        if (noteError) {
+          console.error(`[${timestamp}] Failed to create note for existing contact:`, noteError)
+        }
+      }
+
       console.log(`[${timestamp}] Using existing contact: ${contactId}`)
     } else {
       // Determine client_type based on source
@@ -345,6 +357,21 @@ function formatContactNotes(source: LeadSource, metadata?: Record<string, unknow
       if (metadata.standard_contractor_cost) lines.push(`Standard (w/ Contractor): ${formatCurrency(Number(metadata.standard_contractor_cost))}`)
       if (metadata.premium_owner_cost) lines.push(`Premium (Owner-Build): ${formatCurrency(Number(metadata.premium_owner_cost))}`)
       if (metadata.premium_contractor_cost) lines.push(`Premium (w/ Contractor): ${formatCurrency(Number(metadata.premium_contractor_cost))}`)
+    }
+  } else if (source === 'empower_facebook_lead_ad') {
+    // Empower Facebook Lead Ad specific fields
+    if (metadata.ad_name) lines.push(`Ad: ${metadata.ad_name}`)
+    if (metadata.adset_name) lines.push(`Ad Set: ${metadata.adset_name}`)
+    if (metadata.form_name) lines.push(`Form: ${metadata.form_name}`)
+    if (metadata.looking_for_leads) lines.push(`Looking For: ${String(metadata.looking_for_leads).replace(/_/g, ' ')}`)
+    if (metadata.annual_revenue) lines.push(`Annual Revenue: ${String(metadata.annual_revenue).replace(/_/g, ' ')}`)
+    if (metadata.services_needed) lines.push(`Services Needed: ${String(metadata.services_needed).replace(/_/g, ' ')}`)
+    // Any other form fields not explicitly handled
+    const handledKeys = ['ad_name', 'adset_name', 'form_name', 'form_id', 'looking_for_leads', 'annual_revenue', 'services_needed']
+    for (const [key, value] of Object.entries(metadata)) {
+      if (handledKeys.includes(key)) continue
+      if (value === null || value === undefined || value === '') continue
+      lines.push(`${formatKey(key)}: ${String(value)}`)
     }
   } else {
     // For other sources, include any provided metadata
