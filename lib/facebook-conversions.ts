@@ -164,12 +164,12 @@ export async function sendFacebookEvent(params: SendFacebookEventParams): Promis
   }
 
   // Build the event payload
-  // Using 'website' for CAPI action_source
+  // Using 'system_generated' since events are sent from our CRM backend, not browser
   const eventPayload: Record<string, unknown> = {
     event_name: eventName,
     event_time: Math.floor(eventTime.getTime() / 1000),
     event_id: finalEventId,
-    action_source: 'website',
+    action_source: 'system_generated',
     user_data: userDataPayload,
   }
 
