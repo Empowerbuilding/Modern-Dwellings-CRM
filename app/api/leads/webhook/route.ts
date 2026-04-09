@@ -316,7 +316,7 @@ function formatContactNotes(source: LeadSource, metadata?: Record<string, unknow
     const projectParts: string[] = []
     if (metadata.bedrooms) projectParts.push(`${metadata.bedrooms}BR`)
     if (metadata.bathrooms) projectParts.push(`${metadata.bathrooms}BA`)
-    if (metadata.living_sqft) projectParts.push(`${Number(metadata.living_sqft).toLocaleString()} sq ft`)
+    if (metadata.living_sqft || metadata.living_space) projectParts.push(`${Number(metadata.living_sqft || metadata.living_space).toLocaleString()} sq ft`)
     if (projectParts.length > 0) {
       lines.push(`Project: ${projectParts.join(' • ')}`)
     }
@@ -325,8 +325,8 @@ function formatContactNotes(source: LeadSource, metadata?: Record<string, unknow
     if (metadata.foundation) lines.push(`Foundation: ${metadata.foundation}`)
     if (metadata.roof_pitch) lines.push(`Roof Pitch: ${metadata.roof_pitch}`)
     if (metadata.interior_finish) lines.push(`Interior Finish: ${metadata.interior_finish}`)
-    if (metadata.garage_spaces) lines.push(`Garage Spaces: ${metadata.garage_spaces}`)
-    if (metadata.patio_sqft) lines.push(`Patio: ${Number(metadata.patio_sqft).toLocaleString()} sq ft`)
+    if (metadata.garage_spaces || metadata.garage_bays) lines.push(`Garage Spaces: ${metadata.garage_spaces || metadata.garage_bays}`)
+    if (metadata.patio_sqft || metadata.patio_space) lines.push(`Patio: ${Number(metadata.patio_sqft || metadata.patio_space).toLocaleString()} sq ft`)
     if (metadata.sustainability_score) lines.push(`Sustainability Score: ${metadata.sustainability_score}/10`)
 
     // Estimated build costs by tier
