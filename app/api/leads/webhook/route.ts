@@ -39,10 +39,13 @@ function getLifecycleStageForSource(source: LeadSource): LifecycleStage {
 // These sources are typically consumer/homeowner leads
 function getClientTypeForSource(source: LeadSource): 'consumer' | null {
   const consumerSources: LeadSource[] = [
-    'cost_calculator',
-    'pdf_download',
-    'contact_form',
-    'facebook_ad',
+    'facebook_lead_ad',
+    'cost_calc',
+    'guide_download',
+    'empower_website',
+    'barnhaus_contact',
+    'barnhaus_store_contact',
+    'shopify_order',
   ]
   return consumerSources.includes(source) ? 'consumer' : null
 }
@@ -311,7 +314,7 @@ function formatContactNotes(source: LeadSource, metadata?: Record<string, unknow
   lines.push(`Source: ${formatSource(source)}`)
 
   // Handle cost calculator specific fields
-  if (source === 'cost_calculator') {
+  if (source === 'cost_calc') {
     // Build project summary line
     const projectParts: string[] = []
     if (metadata.bedrooms) projectParts.push(`${metadata.bedrooms}BR`)
@@ -390,12 +393,15 @@ function formatKey(key: string): string {
 // Helper to format source for deal title and notes
 function formatSource(source: string): string {
   const sourceMap: Record<string, string> = {
-    cost_calculator: 'Cost Calculator',
-    pdf_download: 'PDF Download',
-    contact_form: 'Contact Form',
-    facebook_ad: 'Facebook Ad',
-    phone_call: 'Direct Phone Call',
-    email: 'Direct Email',
+    facebook_lead_ad: 'Facebook Lead Ad',
+    referral: 'Referral',
+    cost_calc: 'Cost Calculator',
+    guide_download: 'Guide Download',
+    empower_website: 'Empower Website',
+    barnhaus_contact: 'Barnhaus Contact Form',
+    barnhaus_store_contact: 'Barnhaus Store Contact',
+    shopify_order: 'Shopify Order',
+    calendar_booking: 'Calendar Booking',
     other: 'Other',
   }
   return sourceMap[source] || source

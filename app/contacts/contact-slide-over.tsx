@@ -16,23 +16,27 @@ interface DuplicateContact {
 }
 
 const LEAD_SOURCES: LeadSource[] = [
-  'cost_calculator',
-  'pdf_download',
-  'contact_form',
-  'facebook_ad',
-  'phone_call',
-  'email',
+  'facebook_lead_ad',
+  'referral',
+  'cost_calc',
+  'guide_download',
+  'empower_website',
+  'barnhaus_contact',
+  'barnhaus_store_contact',
+  'shopify_order',
   'calendar_booking',
   'other',
 ]
 
 const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
-  cost_calculator: 'Cost Calculator',
-  pdf_download: 'PDF Download',
-  contact_form: 'Contact Form',
-  facebook_ad: 'Facebook Ad',
-  phone_call: 'Direct Phone Call',
-  email: 'Direct Email',
+  facebook_lead_ad: 'Facebook Lead Ad',
+  referral: 'Referral',
+  cost_calc: 'Cost Calculator',
+  guide_download: 'Guide Download',
+  empower_website: 'Empower Website',
+  barnhaus_contact: 'Barnhaus Contact Form',
+  barnhaus_store_contact: 'Barnhaus Store Contact',
+  shopify_order: 'Shopify Order',
   calendar_booking: 'Calendar Booking',
   other: 'Other',
 }
