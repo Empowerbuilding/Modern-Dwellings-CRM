@@ -195,7 +195,6 @@ export async function sendFacebookEvent(params: SendFacebookEventParams): Promis
 
   const requestBody = {
     data: [eventPayload],
-    test_event_code: 'TEST68592',
   }
 
   console.log('[Facebook CAPI] Request payload:', JSON.stringify(requestBody, null, 2))
