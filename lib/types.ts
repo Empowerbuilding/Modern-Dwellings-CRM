@@ -133,6 +133,7 @@ export interface Company {
   state: string | null
   phone: string | null
   notes: string | null
+  meeting_scheduled_at: string | null
   created_at?: string
   updated_at?: string
 }
@@ -163,6 +164,7 @@ export interface Contact {
   lead_score: 'hot' | 'medium' | 'cold' | null
   lead_score_reason: string | null
   lead_score_updated_at: string | null
+  meeting_scheduled_at: string | null
   created_at?: string
   updated_at?: string
 }
@@ -181,6 +183,7 @@ export interface Deal {
   actual_close_date: string | null
   lost_reason: string | null
   notes: string | null
+  meeting_scheduled_at: string | null
   created_at?: string
   updated_at?: string
 }
@@ -252,6 +255,7 @@ export interface Task {
   reminder_at: string | null
   completed: boolean
   completed_at: string | null
+  meeting_scheduled_at: string | null
   created_at?: string
   updated_at?: string
 }
