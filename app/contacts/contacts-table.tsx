@@ -69,7 +69,7 @@ type SortField = 'name' | 'company' | 'email' | 'phone' | 'lead_source' | 'lifec
 type SortDirection = 'asc' | 'desc'
 type UnsubscribedFilter = 'all' | 'subscribed' | 'unsubscribed'
 
-type ColumnKey = 'name' | 'company' | 'type' | 'email' | 'phone' | 'lead_source' | 'lead_score' | 'lifecycle_stage' | 'owner' | 'role' | 'created_at' | 'created_time' | 'updated_at' | 'unsubscribed'
+type ColumnKey = 'name' | 'company' | 'type' | 'email' | 'phone' | 'lead_source' | 'lead_score' | 'lifecycle_stage' | 'owner' | 'role' | 'created_at' | 'created_time' | 'updated_at' | 'unsubscribed' | 'meeting_scheduled_at'
 
 interface ColumnConfig {
   key: ColumnKey
@@ -96,6 +96,7 @@ const COLUMNS: ColumnConfig[] = [
   { key: 'created_at', label: 'Created Date', defaultVisible: true, sortable: true, sortField: 'created_at', hideOnMobile: true, hideOnTablet: true },
   { key: 'created_time', label: 'Created Time', defaultVisible: false, hideOnMobile: true, hideOnTablet: true },
   { key: 'updated_at', label: 'Updated At', defaultVisible: false, sortable: true, sortField: 'updated_at', hideOnMobile: true, hideOnTablet: true },
+  { key: 'meeting_scheduled_at', label: 'Meeting', defaultVisible: true, hideOnMobile: true, hideOnTablet: false },
   { key: 'unsubscribed', label: 'Unsubscribed', defaultVisible: false, hideOnMobile: true, hideOnTablet: true },
 ]
 
@@ -945,6 +946,13 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                     Unsubscribed
                   </th>
                 )}
+
+                {/* Meeting */}
+                {isColumnVisible('meeting_scheduled_at') && (
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Meeting
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -1124,6 +1132,18 @@ export function ContactsTable({ initialContacts, companies, users }: ContactsTab
                             No
                           </span>
                         )}
+                      </td>
+                    )}
+
+                    {/* Meeting */}
+                    {isColumnVisible('meeting_scheduled_at') && (
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {contact.meeting_scheduled_at
+                          ? new Date(contact.meeting_scheduled_at).toLocaleString('en-US', {
+                              month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+                              hour12: true, timeZone: 'America/Chicago'
+                            }) + ' CDT'
+                          : <span className="text-gray-400">—</span>}
                       </td>
                     )}
                   </tr>
