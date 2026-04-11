@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Format metadata into contact notes
-    const contactNotes = formatContactNotes(payload.source, payload.metadata)
+    const contactNotes = formatContactNotes(payload.source, payload.metadata, payload.email, payload.phone)
 
     // Check if contact already exists by email
     const { data: existingContact } = await supabase
@@ -300,15 +300,20 @@ export async function POST(request: NextRequest) {
 }
 
 // Format metadata into nicely structured notes for contact
-function formatContactNotes(source: LeadSource, metadata?: Record<string, unknown>): string {
+function formatContactNotes(source: LeadSource, metadata?: Record<string, unknown>, email?: string, phone?: string): string {
   if (!metadata || Object.keys(metadata).length === 0) {
-    return `Source: ${formatSource(source)}`
+    const lines = [`Source: ${formatSource(source)}`]
+    if (email) lines.push(`Email: ${email}`)
+    if (phone) lines.push(`Phone: ${phone}`)
+    return lines.join('\n')
   }
 
   const lines: string[] = []
 
   // Add source
   lines.push(`Source: ${formatSource(source)}`)
+  if (email) lines.push(`Email: ${email}`)
+  if (phone) lines.push(`Phone: ${phone}`)
 
   // Handle cost calculator specific fields
   if (source === 'cost_calculator') {
