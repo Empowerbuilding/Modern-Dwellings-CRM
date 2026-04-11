@@ -126,7 +126,8 @@ function getAttributionFromActivities(activities: Activity[]): AttributionData {
 }
 
 async function getContactNotes(contactId: string): Promise<NoteWithAuthor[]> {
-  const { data, error } = await (supabase.from('notes') as any)
+  const serverSupabase = await createClient()
+  const { data, error } = await (serverSupabase.from('notes') as any)
     .select('*, author:created_by(id, name)')
     .eq('contact_id', contactId)
     .order('created_at', { ascending: false })
