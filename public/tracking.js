@@ -15,7 +15,7 @@
   // Configuration
   var STORAGE_KEY = '_crm_visitor_id';
   var LAST_VIEW_KEY = '_crm_last_view';
-  var DEBOUNCE_MS = 1000; // Minimum time between page views
+  var DEBOUNCE_MS = 5000; // Minimum time between page views (5s prevents Next.js hydration duplicates)
   var RETRY_ATTEMPTS = 2;
   var RETRY_DELAY_MS = 1000;
 
@@ -334,17 +334,12 @@
 
     // Track SPA navigation (History API)
     var originalPushState = history.pushState;
-    var originalReplaceState = history.replaceState;
 
     history.pushState = function() {
       originalPushState.apply(this, arguments);
       setTimeout(trackPageView, 0);
     };
 
-    history.replaceState = function() {
-      originalReplaceState.apply(this, arguments);
-      setTimeout(trackPageView, 0);
-    };
 
     window.addEventListener('popstate', function() {
       setTimeout(trackPageView, 0);
