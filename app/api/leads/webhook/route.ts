@@ -24,6 +24,8 @@ interface LeadWebhookPayload {
   utm_source?: string
   utm_medium?: string
   utm_campaign?: string
+  utm_content?: string
+  utm_term?: string
   metadata?: Record<string, unknown>
   anonymous_id?: string  // For linking anonymous page views to the new contact
 }
@@ -280,6 +282,8 @@ export async function POST(request: NextRequest) {
         utm_source: payload.utm_source || null,
         utm_medium: payload.utm_medium || null,
         utm_campaign: payload.utm_campaign || null,
+        utm_content: payload.utm_content || null,
+        utm_term: payload.utm_term || null,
         fbclid: payload.fbclid || null,
       },
       anonymous_id: payload.anonymous_id || null,
