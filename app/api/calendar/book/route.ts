@@ -351,7 +351,7 @@ export async function POST(request: NextRequest) {
         endTime: endDate,
         attendeeEmail: email,
         addGoogleMeet: true,
-        timezone: meetingType.timezone,
+        timezone: timezone, // use visitor's timezone so calendar invite matches what they booked
       })
 
       googleEventId = result.eventId
