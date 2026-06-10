@@ -8,6 +8,7 @@ import {
 import { isOverlapping } from '@/lib/availability'
 import { sendFacebookEvent } from '@/lib/facebook-conversions'
 import type { LifecycleStage } from '@/lib/types'
+import { fireEnrichment } from '@/lib/enrichment'
 
 // Service role client for database operations
 const supabase = createClient(
@@ -522,6 +523,11 @@ export async function POST(request: NextRequest) {
           console.error(`[${timestamp}] Failed to log contact_created activity:`, activityError)
         } else {
           console.log(`[${timestamp}] Logged contact_created activity`)
+        }
+
+        // ── Trestle + Attom enrichment — fire and forget, non-blocking
+        if (body.phone) {
+          fireEnrichment(supabase, contact.id, body.phone, ' [calendar_booking]')
         }
       }
     }
