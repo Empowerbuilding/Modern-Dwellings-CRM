@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // ── Trestle reverse phone enrichment ─────────────────────────────────────────
 export async function enrichWithTrestle(phone: string) {
@@ -93,7 +93,8 @@ export async function enrichWithAttom(
 // ── Fire-and-forget enrichment for a contact (Trestle → chain Attom) ─────────
 // Call this after any new contact is created. Pass the supabase service client.
 export function fireEnrichment(
-  supabase: ReturnType<typeof createClient>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
   contactId: string,
   phone: string,
   label = '',
