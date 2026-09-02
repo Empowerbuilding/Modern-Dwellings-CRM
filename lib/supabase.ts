@@ -20,10 +20,28 @@ function createSupabaseClient(): SupabaseClient<Database> {
       detectSessionInUrl: false,
     },
     // Attach the logged-in session JWT to every query (falls back to anon when logged out)
-    // so RLS policies can be scoped to authenticated users.
+    // so RLS policies can be scoped to authenticated users. Works in both contexts:
+    // - client components: session from the @supabase/ssr browser client
+    // - server components / RSC (this module is imported by server pages):
+    //   session from the request cookies via next/headers
     accessToken: async () => {
-      const { data } = await createAuthClient().auth.getSession()
-      return data.session?.access_token ?? null
+      try {
+        if (typeof window === 'undefined') {
+          const { cookies } = await import('next/headers')
+          const { createServerClient } = await import('@supabase/ssr')
+          const store = await cookies()
+          const server = createServerClient(supabaseUrl, supabaseAnonKey, {
+            cookies: { getAll: () => store.getAll(), setAll: () => {} },
+          })
+          const { data } = await server.auth.getSession()
+          return data.session?.access_token ?? null
+        }
+        const { data } = await createAuthClient().auth.getSession()
+        return data.session?.access_token ?? null
+      } catch {
+        // No request context (build time / static render) → query as anon
+        return null
+      }
     },
     global: {
       // Disable Next.js fetch caching so data is always fresh
