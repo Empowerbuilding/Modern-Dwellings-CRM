@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createAuthClient } from './supabase-browser'
 import type { Database, PipelineStage, DealValueHistory, DealRelationshipType, LinkedDealWithDetails, Deal } from './types'
 import { getInverseRelationship } from './types'
 
@@ -17,6 +18,12 @@ function createSupabaseClient(): SupabaseClient<Database> {
       persistSession: false,
       autoRefreshToken: false,
       detectSessionInUrl: false,
+    },
+    // Attach the logged-in session JWT to every query (falls back to anon when logged out)
+    // so RLS policies can be scoped to authenticated users.
+    accessToken: async () => {
+      const { data } = await createAuthClient().auth.getSession()
+      return data.session?.access_token ?? null
     },
     global: {
       // Disable Next.js fetch caching so data is always fresh
